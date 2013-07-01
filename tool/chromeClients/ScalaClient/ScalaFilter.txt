@@ -1,0 +1,181 @@
+// Scala Filter
+// ver 0.2.0
+// Scala bench version
+
+inputIdentity:
+{
+    "id": "SublimeSocketChromeScalaClient"
+}
+->checkAPICompatibility:
+{
+    "version": "0.8.7"
+}
+->defineFilter: 
+{
+    "name": "scala",
+    "patterns": [
+        {
+            "[[]ant:scalac[]] (.*):([0-9].*?): error: (.*)": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "appendRegion": {
+                            "line": "groups[1]",
+                            "message": "\"groups[2]\"",
+                            "view": "groups[0]",
+                            "condition": "keyword"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^start": {
+                "selectors": [
+                    {
+                        "eraseAllRegion": {}
+                    }
+                ]
+            }
+        },
+        {
+            "^BUILD SUCCESSFUL": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "scala compile succeeded."
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "scala compile succeeded."
+                        }
+                    },
+                    {
+                        "monocastMessage": {
+                            "target": "SublimeSocketChromeScalaClient",
+                            "message": "end",
+                            "sender": "scalacompilefinished"
+                        }
+                    },
+                    {
+                        "monocastMessage": {
+                            "target": "SublimeSocketChromeScalaClient",
+                            "message": "/Users/sassembla/Desktop/HelloWorld/src/main/scala/HelloWorld.scala",
+                            "sender": "scalasaved"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^BUILD FAILED": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "scala compile failure."
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "scala compile failure."
+                        }
+                    },
+                    {
+                        "monocastMessage": {
+                            "target": "SublimeSocketChromeScalaClient",
+                            "message": "end",
+                            "sender": "scalacompilefinished"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^Total time: ([0-9].*) secs": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "filterSource[]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
+->setReactor:
+{
+    "target": "scala",
+    "event": "on_selection_modified",
+    "replacefromto": {
+        "view": "view"
+    },
+    "interval": 100,
+    "selectors": [
+        {
+            "containsRegions": {
+                "target": "scala",
+                "emit": "ss_errorEmitted",
+                "view": "replace"
+            }
+        }
+    ]
+}
+->setReactor:
+{
+    "target": "scala",
+    "event": "ss_errorEmitted",
+    "replacefromto": {
+        "message": "message",
+        "line": "title"
+    },
+    "selectors": [
+        {
+            "notify": {
+                "title": "defaultTitle",
+                "message": "defaultMessage"
+            }
+        }
+    ]
+}
+->setReactor: 
+{
+    "target": "scala",
+    "event": "on_post_save",
+    "interval": 100,
+    "replacefromto": {
+        "path": "message"
+    },
+    "selectors": [
+        {
+            "monocastMessage": {
+                "target": "SublimeSocketChromeScalaClient",
+                "message": "replace_stuff",
+                "sender": "scalasaved"
+            }
+        }
+    ]
+}
+->showAtLog:
+{
+    "message": "scala-compilation sequence ready!"
+}
+->showStatusMessage:
+{
+    "message": "scala-compilation sequence ready!"
+}

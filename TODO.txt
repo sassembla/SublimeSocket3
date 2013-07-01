@@ -1,0 +1,124 @@
+TODO
+
+ST3対応
+	betaに挑む→region周りがよくわかってないけどそれ以外だいたい何とかなったんじゃないだろうか。
+	
+
+TimerEvent ほか、SS上で動くもの
+	アイデアベースで、要る機能から作る。Filters
+√	TimeEvent
+		setInterval(interval)	-return timerId
+		timerList							-return timerIds
+		remove(timerId)
+
+		→Reactorとして実装された。実行が重なりすぎる事で問題がでるようであれば、対処する。
+			現在03/10/13 17:47:54までは平和に動いている。
+
+√	KeyValueStoreとは名ばかりのグローバルな値貯蔵庫
+		√setKV(key,value) //unavailable from api directly
+		√getV(key)				//unavailable from api directly
+		√showValue(key)
+		√showAll
+		√removeValue(key)
+		√clear
+
+√	defineFilter
+		√フィルタの定義が可能
+
+√	runFilter
+		√フィルタの実行が可能
+
+√	setEvent
+		√イベントに対してリスナをセット可能
+
+√	monocastMessage
+		√リスナに対して簡単なメッセージをセット可能
+		マルチバイト情報の送付
+
+√	eval エラーハンドリング
+		√エラー出たとき封印せねば。
+
+		√eval 変数の定義を自力でできるのか？→無理。名前が異なるヤツを数種類用意しておくんだなー。
+
+√	MessagePack
+		√ちょうどよくハッカソンあったので積んでみた。
+		bufferとか、重量の有る物を外部に出すときに使用したい。
+		今のところmsgpackブランチのみOn。
+
+√	TranslateFilterの概念追加
+	√defineFilter -> runFilter
+
+√	runSetting/TestRun
+	必要。ファイル位置を読み込ませて、書いてあるのを順に実行する。改行とtabは無視される。
+	runSetting
+
+√	setTargetView
+	APIとして、どのViewに対するものか、セットする必要がある。
+	一回のAPIStreamで、どのViewに対して filterを掛けた要素を入れるのか　というのがセットできれば良いのかなあ。
+	送る側で判別したくないな。filterから合成すればいいか。
+
+√	書き込み対象Viewファイルの識別
+	targetSettingみたいなのを行ってからrepl、で良い気がする。
+	それで、セット先のviewの有無が決まる。
+	開いてないファイルとかもあり得る。
+	evalでの対象を分けてやれば良いか。
+	→専用の枠を持つ事で対応。必要であればinputグループみたいなのでストリームをわけるとかか。
+
+√	表示リセット機構
+	viewに乗っているエラーを更新する。
+	
+	√マウスオンでメッセージを表示したり候補に出したりする
+	→undoなどで消しきれない要項が生まれる可能性があるので、view自体から管理外のものも消すように調整中。
+
+√	showAtLog
+	SublimeSocketのログコンソールに文言を表示
+	あっ、、コレ便利、、、
+
+√	runShell
+	外部プロセス実行
+	√	パラメータを配列からkvに変換
+	√	delayを追加（あんまり良い事無い気がする）
+	√	文字列中の半角スペース" "を_へと置き換え　妥協した。
+	√	@s@s@　マークを半角スペース" "へと変換　出力側で" "をこの値に変換できるなら、spaceが出せる。　妥協した。
+	
+√	notify
+	内蔵のnotificationツールを使う。暫定だけど、有効なのが判ったので。
+
+√	FoundationReactor
+	ビューに対象ファイルが存在しない、など、エディタ側の基礎で発生するイベントと、
+	そのリアクターの定義。
+
+√	runWithBuffer
+	Viewのバッファを出力、受け取り先でのファイル上書きを可能にする。
+	特定のイベント ss_f_runWithBuffer を敷設しておき、
+	runWithBufferを実行することで、Viewのバッファを取り出し、送信する。
+
+	
+
+APIヘのコメント機構
+	ss@コメント/API:JSON
+	で実現できると思う。 ->の間には入らない。
+
+
+やりたいけどどうやったらいいか判らないもの
+	STのConsoleの内容をそのまま送る
+		printとかを使っての出力は可能だけど、めんどいし、、
+
+	サジェストからのアクション
+		やりたい。イテレーションを区別出来れば可能なはず。
+		→3系だと選択肢を明示的にツールチップで出せるので、使える。
+
+	Go/Back
+		アクションを検知、開くアクションを迂回して外部からSTに対して実行させる
+		アクションはSwipeにしたいけど。なんか既に叶っていそう。
+
+	toolTip
+		完全に外部アプリケーションになる。
+		ツールチップを別ウインドウとして展開、押したらフィックスイベントを発動、など。
+		Growlで実装できるのでは
+		→完了、GrowlではなくMacのNotifierを使用できる。
+			実装自体はrunShellを使用している。
+			→notifyに変更できた。
+
+
+

@@ -1,0 +1,26 @@
+[
+    {
+        "caption": "SublimeSocket: on",
+        "command": "socketon"
+    },
+    
+    {
+        "caption": "SublimeSocket: on > open preference",
+        "command": "on_then_openpref"
+    },
+
+    {
+        "caption": "SublimeSocket: open preference",
+        "command": "openpreference"
+    },
+
+    {
+        "caption": "SublimeSocket: status",
+        "command": "statuscheck"
+    },
+
+    {
+        "caption": "SublimeSocket: off",
+        "command": "socketoff"
+    }
+]

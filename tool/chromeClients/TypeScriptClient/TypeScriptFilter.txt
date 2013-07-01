@@ -1,0 +1,181 @@
+// TypeScript Filter
+// ver 0.6.0
+
+inputIdentity:
+{
+    "id": "SublimeSocketChromeClient"
+}
+->checkAPICompatibility:
+{
+    "version": "0.8.7"
+}
+->defineFilter: 
+{
+    "name": "typescript",
+    "patterns": [
+        {
+            "(.*)[.]ts[ ][(]([0-9]*),.*: (.*)": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "appendRegion": {
+                            "line": "groups[1]",
+                            "message": "\"groups[2]\"",
+                            "view": "groups[0].ts",
+                            "condition": "keyword"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "(.*)[.]ts[(]([0-9]*),.*: (.*)": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "filterSource[]"
+                        }
+                    },
+                    {
+                        "appendRegion": {
+                            "line": "groups[1]",
+                            "message": "\"groups[2]\"",
+                            "view": "groups[0].ts",
+                            "condition": "keyword"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^start": {
+                "selectors": [
+                    {
+                        "eraseAllRegion": {}
+                    }
+                ]
+            }
+        },
+        {
+            "^typescript compile succeeded.": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "typescript compile succeeded."
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "typescript compile succeeded."
+                        }
+                    },
+                    {
+                        "monocastMessage": {
+                            "target": "SublimeSocketChromeClient",
+                            "message": "end",
+                            "sender": "typescriptcompilefinished"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^typescript compile failure.": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "typescript compile failure."
+                        }
+                    },
+                    {
+                        "showAtLog": {
+                            "message": "typescript compile failure."
+                        }
+                    },
+                    {
+                        "monocastMessage": {
+                            "target": "SublimeSocketChromeClient",
+                            "message": "end",
+                            "sender": "typescriptcompilefinished"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
+->setReactor:
+{
+    "target": "typescript",
+    "event": "on_selection_modified",
+    "replacefromto": {
+        "view": "view"
+    },
+    "interval": 100,
+    "selectors": [
+        {
+            "containsRegions": {
+                "target": "typescript",
+                "emit": "ss_errorEmitted",
+                "view": "replace"
+            }
+        }
+    ]
+}
+->setReactor:
+{
+    "target": "typescript",
+    "event": "ss_errorEmitted",
+    "replacefromto": {
+        "message": "message",
+        "line": "title"
+    },
+    "selectors": [
+        {
+            "notify": {
+                "title": "defaultTitle",
+                "message": "defaultMessage"
+            }
+        }
+    ]
+}
+->setReactor: 
+{
+    "target": "typescript",
+    "event": "on_post_save",
+    "interval": 100,
+    "replacefromto": {
+        "path": "message"
+    },
+    "selectors": [
+        {
+            "monocastMessage": {
+                "target": "SublimeSocketChromeClient",
+                "message": "replace_stuff",
+                "sender": "typescriptsaved"
+            }
+        }
+    ]
+}
+->showAtLog:
+{
+    "message": "typescript-compilation sequence ready!"
+}
+->showStatusMessage:
+{
+    "message": "typescript-compilation sequence ready!"
+}
