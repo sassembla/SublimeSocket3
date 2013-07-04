@@ -304,8 +304,6 @@ class SublimeSocketAPI:
 		kvPairArray.insert(0, main) 
 
 		runnable = ' '.join(kvPairArray)
-		encodedRunnable = runnable.encode('utf8')
-
 		debugFlag = False
 
 		if SublimeSocketAPISettings.RUNSHELL_DEBUG in params:
@@ -313,10 +311,10 @@ class SublimeSocketAPI:
 			
 
 		if debugFlag:
-			print("encodedRunnable", encodedRunnable)
+			print("runnable", runnable)
 		
-		if len(encodedRunnable):
-			subprocess.call(encodedRunnable, shell=True)
+		if len(runnable):
+			subprocess.call(runnable, shell=True)
 
 	## emit message to clients.
 	# broadcast messages if no-"target" key.

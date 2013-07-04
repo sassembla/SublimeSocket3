@@ -20,7 +20,7 @@ API_PARAM_CONCAT	= "|"
 API_PARAM_DELIM		= ","
 
 
-API_VERSION = "1.2.0"
+API_VERSION = "1.2.1"
 SOCKET_VERSION = 3	# for Sublime Text 3
 
 # SublimeSocket internal event definition
