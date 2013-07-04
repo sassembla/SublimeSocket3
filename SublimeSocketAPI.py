@@ -259,6 +259,9 @@ class SublimeSocketAPI:
 			delay = params[SublimeSocketAPISettings.RUNSHELL_DELAY]
 			del params[SublimeSocketAPISettings.RUNSHELL_DELAY]
 			
+			if type(delay) is str:
+				delay = int(delay)
+				
 			sublime.set_timeout(self.runShell(params), delay)
 
 			return
