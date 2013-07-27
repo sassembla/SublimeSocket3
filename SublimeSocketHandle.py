@@ -140,6 +140,7 @@ class SublimeSocketThread(threading.Thread):
       }
 
       return self._server.getKVStoredItem(eventName, eventParam)
+      
   def currentConnections(self):
     self._server.showCurrentStatusAndConnections()
   
@@ -181,6 +182,7 @@ class CaptureEditing(sublime_plugin.EventListener):
 
   def on_query_completions(self, view, prefix, locations):
     ret = self.get("on_query_completions", view)
+    
     if ret:
       return ret
 

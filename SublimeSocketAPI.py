@@ -643,12 +643,11 @@ class SublimeSocketAPI:
 			# straight full match in viewSourceStr. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
 			for viewKey in viewKeys:
 				# replace path-expression by component with &.
-				viewKey = viewKey.replace("\\", "&")
-				viewKey = viewKey.replace("/", "&")
+				viewSearchKey = viewKey.replace("\\", "&")
+				viewSearchKey = viewSearchKey.replace("/", "&")
 
-				if re.findall(viewKey, viewSourceStr):
-					viewKeyDash = viewKey.replace("&", "/")
-					return viewDict[viewKeyDash][SublimeSocketAPISettings.VIEW_SELF]
+				if re.findall(viewSearchKey, viewSourceStr):
+					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
 
 			# partial match in viewSourceStr. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
@@ -863,19 +862,19 @@ class SublimeSocketAPI:
 			
 			return (a, b)
 			
-		completionStrs = map(transformToStr, completions)
+		completionStrs = list(map(transformToStr, completions))
 		
 		currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
 
 		view = self.internal_detectViewInstance(currentViewPath)
 
-		# # memory view size as lockcount. unlock completion when reduce size than this count
-		# lockcount = view.size()
+		# memory view size as lockcount. unlock completion when reduce size than this count
+		lockcount = view.size()
 		
-		# # set completion
-		# self.server.updateCompletion(identity, completionStrs, lockcount)
-		# # display completions
-		# view.run_command("auto_complete")
+		# set completion
+		self.server.updateCompletion(identity, completionStrs, lockcount)
+		# display completions
+		view.run_command("auto_complete")
 
 	def openPage(self, params):
 		assert SublimeSocketAPISettings.OPENPAGE_IDENTITY in params, "openPage require 'identity' param."
