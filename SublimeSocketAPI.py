@@ -867,14 +867,14 @@ class SublimeSocketAPI:
 		currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
 
 		view = self.internal_detectViewInstance(currentViewPath)
-
-		# memory view size as lockcount. unlock completion when reduce size than this count
-		lockcount = view.size()
-		
-		# set completion
-		self.server.updateCompletion(identity, completionStrs, lockcount)
-		# display completions
-		view.run_command("auto_complete")
+		if view:
+			# memory view size as lockcount. unlock completion when reduce size than this count
+			lockcount = view.size()
+			
+			# set completion
+			self.server.updateCompletion(identity, completionStrs, lockcount)
+			# display completions
+			view.run_command("auto_complete")
 
 	def openPage(self, params):
 		assert SublimeSocketAPISettings.OPENPAGE_IDENTITY in params, "openPage require 'identity' param."

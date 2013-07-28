@@ -578,7 +578,7 @@ class SublimeWSServer:
 
 					body = bodyView.substr(bodyView.word(currentRegion))
 					path = bodyView.file_name()
-
+					path = path.replace(":","&").replace("\\", "/")
 					# get line num
 					sel = bodyView.sel()[0]
 					(row, col) = bodyView.rowcol(sel.a)
