@@ -189,6 +189,17 @@ class SublimeSocketAPI:
 				self.eventEmit(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_CANCELCOMPLETION):
+				self.cancelCompletion(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_PREPARECOMPLETION):
+				self.prepareCompletion(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
+				self.runCompletion(params)
+				break
 			if case(SublimeSocketAPISettings.API_OPENPAGE):
 				self.openPage(params)
 				break
@@ -351,7 +362,19 @@ class SublimeSocketAPI:
 
 	## send message to the specific client.
 	def monocastMessage(self, params):
-		
+		if SublimeSocketAPISettings.OUTPUT_FORMAT in params:
+			format = params[SublimeSocketAPISettings.OUTPUT_FORMAT]
+			for key in params:
+				if key != SublimeSocketAPISettings.OUTPUT_TARGET:
+					if key != SublimeSocketAPISettings.OUTPUT_FORMAT:
+						currentParam = params[key]
+						format = format.replace(key, currentParam)
+
+			params[SublimeSocketAPISettings.OUTPUT_MESSAGE] = format
+			del params[SublimeSocketAPISettings.OUTPUT_FORMAT]
+			self.monocastMessage(params)
+			return
+
 		assert SublimeSocketAPISettings.OUTPUT_TARGET in params, "monocastMessage require 'target' param"
 		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "monocastMessage require 'message' param"
 		
@@ -620,10 +643,10 @@ class SublimeSocketAPI:
 			# straight full match in viewSourceStr. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
 			for viewKey in viewKeys:
 				# replace path-expression by component with &.
-				viewKey = viewKey.replace("\\", "&")
-				viewKey = viewKey.replace("/", "&")
+				viewSearchKey = viewKey.replace("\\", "&")
+				viewSearchKey = viewSearchKey.replace("/", "&")
 
-				if re.findall(viewKey, viewSourceStr):
+				if re.findall(viewSearchKey, viewSourceStr):
 					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
 
 			# partial match in viewSourceStr. "ccc.d" vs "********* ccc.d ************"
@@ -773,6 +796,85 @@ class SublimeSocketAPI:
 
 		self.server.fireKVStoredItem(eventName, params)
 
+
+	def cancelCompletion(self, params):
+		assert SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params, "cancelCompletion require 'view' param."
+		assert SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER in params, "cancelCompletion require 'trigger' param."
+
+		if params[SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER] in SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGERS:
+			trigger = params[SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER]
+
+			for case in PythonSwitch(trigger):
+				if case(SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER_BASEREDUCED):
+					currentViewSize = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW].size()
+					completionLockCountDict = self.server.getCurrentCompletingsDict()
+					if SublimeSocketAPISettings.RUNCOMPLETION_LOCKCOUNT in completionLockCountDict:
+						completionLockCount = completionLockCountDict[SublimeSocketAPISettings.RUNCOMPLETION_LOCKCOUNT]
+						if currentViewSize < completionLockCount:
+							view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
+							
+							# cancel completion
+							def delayed_cancel_complete():
+								# cancel completions
+								view.run_command("hide_auto_complete")
+								
+							sublime.set_timeout(delayed_cancel_complete, 1)
+							self.prepareCompletion({SublimeSocketAPISettings.PREPARECOMPLETION_ID:"cancelled"})
+
+					break
+				if case():
+					break
+
+	def prepareCompletion(self, params):
+		assert SublimeSocketAPISettings.PREPARECOMPLETION_ID in params, "prepareCompletion require 'id' param."
+		self.server.prepareCompletion(params[SublimeSocketAPISettings.PREPARECOMPLETION_ID])
+
+	def runCompletion(self, params):
+		assert SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params, "runCompletion require 'view' param."
+		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
+		assert SublimeSocketAPISettings.RUNCOMPLETION_ID in params, "runCompletion require 'id' param."
+
+		identity = params[SublimeSocketAPISettings.RUNCOMPLETION_ID]
+
+		# cancelled
+		if self.server.isLoadingCompletion(identity):
+			pass
+		else:
+			return
+
+		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
+
+		formatHead = ""
+		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
+			formatHead = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD]
+
+		formatTail = ""
+		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
+			formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
+		
+		
+		def transformToStr(sourceDict):
+			a = formatHead
+			b = formatTail
+			for key in sourceDict:
+				a = a.replace(key, sourceDict[key])
+				b = b.replace(key, sourceDict[key])
+			
+			return (a, b)
+			
+		completionStrs = list(map(transformToStr, completions))
+		
+		currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
+
+		view = self.internal_detectViewInstance(currentViewPath)
+		if view:
+			# memory view size as lockcount. unlock completion when reduce size than this count
+			lockcount = view.size()
+			
+			# set completion
+			self.server.updateCompletion(identity, completionStrs, lockcount)
+			# display completions
+			view.run_command("auto_complete")
 
 	def openPage(self, params):
 		assert SublimeSocketAPISettings.OPENPAGE_IDENTITY in params, "openPage require 'identity' param."
