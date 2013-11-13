@@ -731,8 +731,14 @@ class SublimeSocketAPI:
 
 
 		anchor = params[SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR]
+
+		self.setWindowBasePath()
+
 		filePath = self.windowBasePath
-		folderPath = os.path.dirname(filePath)
+		if filePath:
+			folderPath = os.path.dirname(filePath)
+		else:
+			results[SublimeSocketAPISettings.GETALLFILEPATH_PATHS] = ""#return empty path
 		
 		depth = len(filePath.split("/"))-1
 		
