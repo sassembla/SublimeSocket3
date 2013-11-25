@@ -10,3 +10,5 @@ tool/chromeClients/TypeScriptClient/compileLog.log
 *.rtf
 
 doc/reference/2013:04:05 1-17-34.rtfd/*
+
+tool/chromeClients/ParseClient/*
