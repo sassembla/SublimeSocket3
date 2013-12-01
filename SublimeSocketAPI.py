@@ -89,6 +89,13 @@ class SublimeSocketAPI:
 				params[value] = results[key]
   		# python-switch
 		for case in PythonSwitch(command):
+			if case(SublimeSocketAPISettings.API_ASSERTKVS):
+				result = self.assertKVS(params)
+
+				buf = self.encoder.text(result, mask=0)
+				client.send(buf)
+				break
+
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
 				filePath = params[SublimeSocketAPISettings.RUNSETTING_FILEPATH]
 				result = self.runSetting(filePath, client)
@@ -413,6 +420,89 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param"
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 		print(SublimeSocketAPISettings.LOG_prefix, message)
+
+	def assertKVS(self, params):
+		results = []
+
+		# key is typed as JSON, 
+		# {"a": {"b": {"c": "d"}}}
+		# -> ここから、aのbのcの値がdである、みたいな形を出す。*でワイルドカードを赦す。
+		# paramsのメインキーの数だけ有り得る。forだ。
+		assertionDict = {}
+		for assertIdentityKey, nestedKeysAndTheValue in params.items():
+			print("assertIdentityKey", assertIdentityKey)
+			print("nestedKeysAndTheValue", nestedKeysAndTheValue)
+
+			
+			keysAndValueOneLine = []
+
+			# {key:{"a": {"b": {"c": "theValue"}}}}
+			# -> key:(["a","b","c"],"theValue")
+			def getKeysAndValueOneLine(key, value):
+
+				keysAndValueOneLine.append(key)
+				if type(value) is dict:
+					# 単に再帰
+					for currentKey, currentValue in value.items():
+						return getKeysAndValueOneLine(currentKey, currentValue)
+					
+				elif type(value) is list:
+					pass
+
+				else:
+					keysAndValueOneLine.append(value)
+					
+
+			[getKeysAndValueOneLine(key, coValue) for key, coValue in nestedKeysAndTheValue.items()]
+			assertionDict[assertIdentityKey] = (keysAndValueOneLine[0:-1], keysAndValueOneLine[-1])
+
+
+		# キーを一つずつとって、その値がKVSに含まれていて、かつ値が合致するかどうかを再帰でチェック。
+		def assertKV(keys, target, source, index):
+			# if nextKey == "*":,,,, not yet impemented
+			# 	# wildcard, means get first or False = no key, failure.
+
+
+			nextKey = keys[index+1]
+
+			if type(source) == dict:
+				nextSource = source[nextKey]
+
+			elif type(source) == list:
+				if type(nextKey) == int:
+					nextSource = source[nextKey]
+				else:
+					return (False, "target is list, should use number for index.")
+			else:
+				return (False, "no key error")
+
+			
+			# nextSourceの内容でチェック
+			if type(nextSource) == str:
+				if nextSource == target:
+					message = "matched.", keys, " = ", target
+					return (True, message)
+
+				else:
+					message = "not match,", keys, " expected:", target, ", actual:", nextSource
+					return (False, message)
+
+			elif type(nextSource) == dict:
+				return assertKV(keys, target, nextSource, index+1)
+			elif type(nextSource) == list:
+				return assertKV(keys, target, nextSource, index+1)
+			else:
+				print("not yet implemented,",type(nextSource))
+				pass
+
+			
+
+
+		# assertionDict build comoleted
+
+		results = [assertKV(assertionDict[key][0], assertionDict[key][1], self.server.getV(assertionDict[key][0][0]), 0) for key in assertionDict.keys()]
+		return str(results)
+
 
 	## is contains regions or not.
 	def containsRegions(self, params):

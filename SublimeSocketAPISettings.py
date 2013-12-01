@@ -20,8 +20,9 @@ API_PARAM_CONCAT	= "|"
 API_PARAM_DELIM		= ","
 
 
-API_VERSION = "1.3.0"
+API_VERSION = "1.3.1"
 SOCKET_VERSION = 3	# for Sublime Text 3
+
 
 # SublimeSocket internal event definition
 SS_EVENT_COLLECT	= "ss_collect"
@@ -64,6 +65,7 @@ API_VERSIONVERIFY	= "versionVerify"
 VERSIONVERIFY_SOCKETVERSION	= "socketVersion"
 VERSIONVERIFY_APIVERSION		= "apiVersion"
 
+API_ASSERTKVS		= "AssertKVS"
 
 API_RUNSETTING		= "runSetting"
 RUNSETTING_FILEPATH	= "path"
