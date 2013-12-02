@@ -472,7 +472,7 @@ class SublimeSocketAPI:
 				if type(nextKey) == int:
 					nextSource = source[nextKey]
 				else:
-					return (False, "target is list, should use number for index.")
+					return (False, "target is list, should be use number for index.")
 			else:
 				return (False, "no key error")
 
@@ -492,7 +492,7 @@ class SublimeSocketAPI:
 			elif type(nextSource) == list:
 				return assertKV(keys, target, nextSource, index+1)
 			else:
-				print("not yet implemented,",type(nextSource))
+				print("not yet implemented,", type(nextSource))
 				pass
 
 			
