@@ -1,4 +1,4 @@
-// can't use jp,,,,
+// can't use jp,,,,fmmmm
 
 // SublimeSocketAsset's testSuite
 
@@ -89,11 +89,8 @@ defineFilter:
     },
     "message": "not match."
 }
-->showAtLog:
-{
-	"message":"test over"
-}
-->showAtLog:
-{
-	"message":"test over"
+->monocastMessage:
+{	
+	"target":"sublimesockettest",
+	"message":"TOTAL:aaaa"
 }

@@ -32,10 +32,12 @@
         },
 
         onOpen: function () {
-          _WS.writeLog('<span class="label label-success">RESPONSE:CONNECTED</span>');
+          var subsPath = "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/resource/tests/tests.subs";
+
+          _WS.writeLog('<span class="label label-info">CONNECTED:'+ subsPath +'</span>');
 
           //call api then get callback
-          _WS.s.send('sublimesocket@inputIdentity:{\"id\":\"sublimesocketpreference\"}->runTests:{\"path\": \"/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/resource/tests/tests.subs\"}');
+          _WS.s.send('sublimesocket@inputIdentity:{\"id\":\"sublimesockettest\"}->runTests:{\"path\": \"' + subsPath + '\"}');
         },
 
         onClose: function () {
@@ -44,10 +46,13 @@
 
         onMessage: function (e) {
             var result = e.data;
-            if (result.indexOf("OK") == 0) {
+
+            if (result.indexOf("OK:") == 0) {
                 _WS.writeLog('<span class="label label-success">' + e.data + '</span>');
-            } else {
+            } else if (result.indexOf("Fail:") == 0) {
                 _WS.writeLog('<span class="label label-important">' + e.data + '</span>');
+            } else if (result.indexOf("TOTAL:") == 0) {
+                _WS.writeLog('<span class="label label-info">' + e.data + '</span>');
             }
         },
 

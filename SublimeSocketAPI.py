@@ -96,8 +96,7 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
 				assertedResult = self.assertResult(params, results)
-				print("asre over,")
-				print("assertedResult", assertedResult)
+
 				# send for display
 				buf = self.encoder.text(assertedResult, mask=0)
 				client.send(buf)
@@ -446,9 +445,6 @@ class SublimeSocketAPI:
 		if filePath.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
 			filePathArray = filePath.split(":")
 			filePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
-
-
-		print("ss: runTests:", filePath)
 		
 		settingFile = open(filePath, 'r')
 		setting = settingFile.read()
@@ -465,11 +461,10 @@ class SublimeSocketAPI:
 		# remove CRLF
 		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
 		
-		result = removeCRLF_setting
-		print("result", result)
+		source = removeCRLF_setting
 
 		# parse
-		self.parse(result, client)
+		self.parse(source, client)
 		
 	## assertions
 	def assertResult(self, params, results):
@@ -489,14 +484,13 @@ class SublimeSocketAPI:
 					if currentDict[key] in results[key]:
 						return "OK:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(results)
 			
-			print("failed,")
 			return "Fail:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + message + ":" +  str(results)
 
 		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
 			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
 
-		print("her oms", params, results)
-		return 
+		
+		return "undefined assertResult,,,"
 
 	def assertKVS(self, params):
 		print("assertResult", params)
@@ -535,7 +529,6 @@ class SublimeSocketAPI:
 			assertionDict[assertIdentityKey] = (keysAndValueOneLine[0:-1], keysAndValueOneLine[-1])
 
 
-		# キーを一つずつとって、その値がKVSに含まれていて、かつ値が合致するかどうかを再帰でチェック。
 		def assertKV(keys, target, source, index):
 			# if nextKey == "*":,,,, not yet impemented
 			# 	# wildcard, means get first or False = no key, failure.
@@ -554,8 +547,6 @@ class SublimeSocketAPI:
 			else:
 				return (False, "no key error")
 
-			
-			# nextSourceの内容でチェック
 			if type(nextSource) == str:
 				if nextSource == target:
 					message = "matched.", keys, " = ", target
