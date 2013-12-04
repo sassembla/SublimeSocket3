@@ -110,8 +110,52 @@
         
         <div>
           <select multiple="multiple" class="span9 offset2" style="height:280px" onchange="setter.set(this[this.selectedIndex].value)">
+          <option>
+ss@改行入りの文字列のフィルタチェック/defineFilter:{
+    "name": "13/12/04 18:16:49",
+    "patterns": [
+        {
+            "(.*)dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "should be 1/2:groups[0] in filterSource[]/."
+                        }
+                    }
+                ]
+            }
+        },
+        <!-- ヒットしないフィルタ -->
+        {
+            "^dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "dummy"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "dotall":true
+}
+->filtering:
+{
+    "name": "13/12/04 18:16:49",
+    "source": "1\\n2 dummyline",
+    "debug":false
+}
+->assertResult:
+{
+    "contains": {
+        "filtering": "13/12/04 18:16:49"
+    },
+    "message": "not match."
+}
+          </option>
             <option>
-ss@複数のKVS値チェック/AssertKVS:
+ss@複数のKVS値チェック/assertKVS:
 {
     "contains basename": {
         "DICT_VIEWS": {

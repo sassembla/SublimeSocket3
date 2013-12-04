@@ -1,5 +1,11 @@
 TODO
 
+Assertion API
+	KVSに関するAssertionを作成し、Testableにする。
+	Resultに関するAssertionを作成し、Testableにする。
+	TestSuiteを作成する。
+
+
 ST3対応
 	betaに挑む→region周りがよくわかってないけどそれ以外だいたい何とかなったんじゃないだろうか。
 	

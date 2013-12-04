@@ -49,6 +49,7 @@ class SublimeSocketAPI:
 					data = command_params[1].replace("\r\n", "\n")
 					data = data.replace("\r", "\n")
 					data = data.replace("\n", "\\n")
+					data = data.replace("\t", "    ")
 					params = json.loads(data)
 				except Exception as e:
 					print("JSON parse error", e, "source = ", command_params[1])
@@ -89,10 +90,18 @@ class SublimeSocketAPI:
 				params[value] = results[key]
   		# python-switch
 		for case in PythonSwitch(command):
-			if case(SublimeSocketAPISettings.API_ASSERTKVS):
-				result = self.assertKVS(params)
+			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
+				assertedResult = self.assertResult(params, results)
 
-				buf = self.encoder.text(result, mask=0)
+				# send for display
+				buf = self.encoder.text(assertedResult, mask=0)
+				client.send(buf)
+
+			if case(SublimeSocketAPISettings.API_ASSERTKVS):
+				assertedResult = self.assertKVS(params)
+
+				# send for display
+				buf = self.encoder.text(assertedResult, mask=0)
 				client.send(buf)
 				break
 
@@ -142,7 +151,7 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
 				# run filtering
-				self.runFiltering(params, client)
+				self.runFiltering(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETREACTOR):
@@ -229,7 +238,7 @@ class SublimeSocketAPI:
 				break
 
 			if case():
-				print("unknown command", command)
+				print("unknown command", command, "/")
 				break
 
 
@@ -421,6 +430,33 @@ class SublimeSocketAPI:
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 		print(SublimeSocketAPISettings.LOG_prefix, message)
 
+
+
+	## assertions
+	def assertResult(self, params, results):
+		assert SublimeSocketAPISettings.ASSERTRESULT_MESSAGE in params, "assertResult require 'message' param"
+		
+		message = params[SublimeSocketAPISettings.ASSERTRESULT_MESSAGE]
+		
+		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
+			print("contains hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS])
+			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS]
+
+			for key in currentDict:
+				if type(results[key]) is dict:
+					pass
+				elif type(results[key]) is list:
+					if currentDict[key] in results[key]:
+						return "OK:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(results)
+			
+			return message, str(results)
+
+		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
+			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
+
+		print("her oms", params, results)
+		return 
+
 	def assertKVS(self, params):
 		results = []
 
@@ -493,10 +529,6 @@ class SublimeSocketAPI:
 				return assertKV(keys, target, nextSource, index+1)
 			else:
 				print("not yet implemented,", type(nextSource))
-				pass
-
-			
-
 
 		# assertionDict build comoleted
 
@@ -538,7 +570,7 @@ class SublimeSocketAPI:
 		
 
 	## filtering. matching -> run API
-	def runFiltering(self, params, client):
+	def runFiltering(self, params, results):
 		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param"
 
 		filterName = params[SublimeSocketAPISettings.FILTER_NAME]
@@ -555,7 +587,7 @@ class SublimeSocketAPI:
 		filterPatternsArray = self.server.getV(SublimeSocketAPISettings.DICT_FILTERS)[filterName]
 
 		# print "filterPatternsArray", filterPatternsArray
-		results = []
+		currentResults = []
 		for pattern in filterPatternsArray:
 			# regx key filterSource
 			
@@ -568,7 +600,7 @@ class SublimeSocketAPI:
 			for key_executableDictPair in pattern.items():
 				(key, executablesDict) = key_executableDictPair
 			
-			src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """)"""
+			src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""
 			
 			debug = False
 			if type(params) == dict:
@@ -578,7 +610,6 @@ class SublimeSocketAPI:
 			if debug:
 				print("filterSource", filterSource)
 
-			patternIndex = 0
 
 			for searched in re.finditer(re.compile(r'%s' % key, re.M), filterSource):
 				
@@ -676,33 +707,19 @@ class SublimeSocketAPI:
 							print("filtering command:", command, "params:", params)
 
 						# execute
-						self.runAPI(command, params)
+						self.runAPI(command, params, results)
 						
 						# report
-						results.append("filter:" + filterName + " no:" + str(patternIndex) + " succeeded:" + str(command)+":"+str(params)+"	/	")
-						
-					# increment filter-index for report
-					patternIndex = patternIndex + 1
+						currentResults.append(filterName)
+
 				else:
 					if debug:
 						print("filtering not match")
 
-				# except Exception as e:
-				# 	print "filter error", str(e), "	/key",key, "/executablesDict",executablesDict
-				# 	while True:
-				# 		pass
-						
-				# 	return "filter error", str(e), "no:" + str(patternIndex)
-		
-
 		# return succeded signal
-		ret = str("".join(results))
-		if ret: 
-			buf = self.encoder.text(ret, mask=0)
-			client.send(buf)
-		else:
-			# print "no message"
-			pass
+		if 0 < len(currentResults):
+			# set params into results
+			results["filtering"] = currentResults
 
 	## set reactor for reactive-event
 	def setReactor(self, params, client):
