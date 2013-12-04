@@ -20,6 +20,11 @@
     },
 
     {
+        "caption": "SublimeSocket: test",
+        "command": "test"
+    },
+
+    {
         "caption": "SublimeSocket: off",
         "command": "socketoff"
     }

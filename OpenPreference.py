@@ -23,15 +23,17 @@ class Openpreference(sublime_plugin.TextCommand):
     host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
     port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
     
-
+    self.generateHTML(host, port, "resource/source.html", "tmp/preference.html")
+    
+  @classmethod
+  def generateHTML(self, host, port, sourcePath, outputPath):
     # create path of Preference.html
     currentPackagePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"
-    originalHtmlPath = "resource/source.html"
+    originalHtmlPath = sourcePath
     originalPath = currentPackagePath + originalHtmlPath
 
-    preferenceFilePath = "tmp/preference.html"
+    preferenceFilePath = outputPath
     preferencePath = currentPackagePath + preferenceFilePath
-
 
     html = ""
 
@@ -59,6 +61,14 @@ class Openpreference(sublime_plugin.TextCommand):
     # run on the other thread
     thread = BuildThread(command)
     thread.start()
+
+  @classmethod
+  def openSublimeSocketTest(self):
+    print("openSublimeSocketTest!!!")
+    host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
+    port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
+    
+    self.generateHTML(host, port, "resource/tests/tests.html", "tmp/tests.html")
 
 
 class BuildThread(threading.Thread):

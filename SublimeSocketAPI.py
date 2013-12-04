@@ -90,12 +90,18 @@ class SublimeSocketAPI:
 				params[value] = results[key]
   		# python-switch
 		for case in PythonSwitch(command):
+			if case(SublimeSocketAPISettings.API_RUNTESTS):
+				self.runTests(params, client)
+				break
+
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
 				assertedResult = self.assertResult(params, results)
-
+				print("asre over,")
+				print("assertedResult", assertedResult)
 				# send for display
 				buf = self.encoder.text(assertedResult, mask=0)
 				client.send(buf)
+				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTKVS):
 				assertedResult = self.assertKVS(params)
@@ -431,9 +437,43 @@ class SublimeSocketAPI:
 		print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
+	## run testus
+	def runTests(self, params, client):
+		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param"
+		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
+		
+		# check contains PREFIX or not
+		if filePath.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
+			filePathArray = filePath.split(":")
+			filePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
 
+
+		print("ss: runTests:", filePath)
+		
+		settingFile = open(filePath, 'r')
+		setting = settingFile.read()
+		settingFile.close()
+
+		# print "setting", setting
+
+		# remove //comment line
+		removeCommented_setting = re.sub(r'//.*', r'', setting)
+		
+		# remove spaces
+		removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
+		
+		# remove CRLF
+		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
+		
+		result = removeCRLF_setting
+		print("result", result)
+
+		# parse
+		self.parse(result, client)
+		
 	## assertions
 	def assertResult(self, params, results):
+		print("assertResult", params)
 		assert SublimeSocketAPISettings.ASSERTRESULT_MESSAGE in params, "assertResult require 'message' param"
 		
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_MESSAGE]
@@ -449,7 +489,8 @@ class SublimeSocketAPI:
 					if currentDict[key] in results[key]:
 						return "OK:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(results)
 			
-			return message, str(results)
+			print("failed,")
+			return "Fail:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + message + ":" +  str(results)
 
 		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
 			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
@@ -458,7 +499,8 @@ class SublimeSocketAPI:
 		return 
 
 	def assertKVS(self, params):
-		results = []
+		print("assertResult", params)
+		currentResults = []
 
 		# key is typed as JSON, 
 		# {"a": {"b": {"c": "d"}}}
@@ -532,8 +574,8 @@ class SublimeSocketAPI:
 
 		# assertionDict build comoleted
 
-		results = [assertKV(assertionDict[key][0], assertionDict[key][1], self.server.getV(assertionDict[key][0][0]), 0) for key in assertionDict.keys()]
-		return str(results)
+		currentResults = [assertKV(assertionDict[key][0], assertionDict[key][1], self.server.getV(assertionDict[key][0][0]), 0) for key in assertionDict.keys()]
+		return str(currentResults)
 
 
 	## is contains regions or not.
