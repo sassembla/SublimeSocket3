@@ -20,6 +20,11 @@
     },
 
     {
+        "caption": "SublimeSocket: on > test",
+        "command": "on_then_test"
+    },
+
+    {
         "caption": "SublimeSocket: test",
         "command": "test"
     },

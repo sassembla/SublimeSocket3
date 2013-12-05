@@ -39,7 +39,8 @@ defineFilter:
     "debug":false
 }
 ->assertResult:
-{
+{	
+	"id":"contains value",
     "contains": {
         "filtering": "13/12/04 18:16:49"
     },
@@ -84,6 +85,7 @@ defineFilter:
 }
 ->assertResult:
 {
+	"id":"not contains value",
     "contains": {
         "filtering": "13/12/04 18:16:49"
     },

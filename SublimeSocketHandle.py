@@ -42,6 +42,7 @@ class On_then_openpref(sublime_plugin.TextCommand):
     Socketon.startServer()
     Openpreference.openSublimeSocketPreference()
       
+
 class Test(sublime_plugin.TextCommand):
   def run(self, edit):
     global thread
@@ -52,6 +53,11 @@ class Test(sublime_plugin.TextCommand):
       notActivatedMessage = "SublimeSocket not yet activated."
       sublime.status_message(notActivatedMessage)
       print("ss:", notActivatedMessage)
+
+class On_then_test(sublime_plugin.TextCommand):
+   def run(self, edit):
+    Socketon.startServer()
+    Openpreference.openSublimeSocketTest()
 
 class Statuscheck(sublime_plugin.TextCommand):
   def run(self, edit):

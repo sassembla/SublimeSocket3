@@ -28,18 +28,36 @@ class SublimeSocketAPI:
 		self.encoder = SublimeWSEncoder()
 		self.windowBasePath = sublime.active_window().active_view().file_name()
 
+
+	def initResult(self, resultIdentity):
+		return {resultIdentity:{}}
+
+	def resetResults(self, results):
+		results = {}
+		return results
+
+	def setResultsParams(self, results, key, value):
+		# ここに制約を書く。コンテキストの値を常に持つようにすると良いと思うんだけど、値渡しだとつらぁい、、
+		# コンテキスト自体をclosureで書く、みたいなのができるのでは？
+		# 最初のインプット時点でIDを書いて制約つければOK、みたいな。
+		print("まだナンも入れてない", results, "newKey", key, "newValue", value)
+		return results
+
+	def addInnerResult(self, results, innerResults):
+		print("内部的なリザルトを付け加える。 外側は", results, "個別は", innerResults)
+		return results
+
+
 	## Parse the API command via WebSocket
-	def parse(self, data, client=None):
+	def parse(self, data, client=None, results=None):
 		# print("parse sourceData is ", data, "len", len(data))
+		print("parse開始の時点で", results)
 		
 		# SAMPLE: inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...
 		commands = data.split(SublimeSocketAPISettings.API_CONCAT_DELIM)
-		results = {}
-
 
     	# command and param  SAMPLE:		inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}
 		for commandIdentityAndParams in commands :
-
 			command_params = commandIdentityAndParams.split(SublimeSocketAPISettings.API_COMMAND_PARAMS_DELIM, 1)
 			command = command_params[0]
 
@@ -54,11 +72,21 @@ class SublimeSocketAPI:
 				except Exception as e:
 					print("JSON parse error", e, "source = ", command_params[1])
 					return
-
+					
 			self.runAPI(command, params, client, results)
+			
+		return results
+
+
+	def innerParse(self, data, client=None, results=None):
+		currentResults = self.initResult("inner:"+str(uuid.uuid4()))
+		partialResult = self.parse(data, client, currentResults)
+		return self.addInnerResult(results, partialResult)
+
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
 	def runAPI(self, command, params=None, client=None, results=None):
+		print("runAPIの時点で",results)
 		evalResults = "empty"
   	
 		# print("runAPI command", command)
@@ -155,8 +183,10 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
+				print("フィルタが走る前でのresultは",results)
 				# run filtering
 				self.runFiltering(params, results)
+				print("フィルタが走った後でのresultは",results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETREACTOR):
@@ -277,11 +307,11 @@ class SublimeSocketAPI:
 		# remove CRLF
 		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
 		
-		result = removeCRLF_setting
+		commands = removeCRLF_setting
 		# print "result", result
 
 		# parse
-		self.parse(result, client)
+		self.innerParse(commands, client)
 
 		return "runSettings:"+str(removeCRLF_setting)
 
@@ -463,34 +493,66 @@ class SublimeSocketAPI:
 		
 		source = removeCRLF_setting
 
-		# parse
-		self.parse(source, client)
+		# parse then get results
+		results = self.innerParse(source, client)
+
+		print("results", results)
+		
+		def countResult(result):
+			print("countResult result", result)
+			
+		[results(result) for result in results.values]
+		
+		# count OK: and Fail:
+		message = "TOTAL:"
+		buf = self.encoder.text(message, mask=0)
+		client.send(buf);
+
 		
 	## assertions
 	def assertResult(self, params, results):
-		print("assertResult", params)
+		print("assertだけは最優先で直さなければ。",results)
+		
+		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_MESSAGE in params, "assertResult require 'message' param"
 		
+		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_MESSAGE]
 		
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
-			print("contains hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS])
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS]
 
 			for key in currentDict:
+				if not key in results:
+					continue
+
 				if type(results[key]) is dict:
+					print("timeassert not yet applied")
 					pass
 				elif type(results[key]) is list:
 					if currentDict[key] in results[key]:
-						return "OK:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(results)
+						resultMessage = "OK:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(results)
+						results[assertionIdentity] = resultMessage
+						return resultMessage
 			
-			return "Fail:"+SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + message + ":" +  str(results)
+			# fail
+			resultMessage = "Fail:" + assertionIdentity + " " + SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + message + ":" +  str(results)
+			results[assertionIdentity] = resultMessage
+			return resultMessage
 
 		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
 			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
+			print("timeassert not yet implemented")
+			
+			# fail
+			resultMessage = "Fail:" + assertionIdentity + " " + SublimeSocketAPISettings.ASSERTRESULT_EXPECTS + " " + message + ":" +  str(results)
+			results[assertionIdentity] = resultMessage
+			return resultMessage
 
-		
-		return "undefined assertResult,,,"
+		resultMessage = "Fail:" + assertionIdentity + "assertion aborted by API. :" +  str(results)
+		results[assertionIdentity] = resultMessage
+		return resultMessage
+
 
 	def assertKVS(self, params):
 		print("assertResult", params)
@@ -604,6 +666,7 @@ class SublimeSocketAPI:
 
 	## filtering. matching -> run API
 	def runFiltering(self, params, results):
+		print("フィルタ開始", results)
 		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param"
 
 		filterName = params[SublimeSocketAPISettings.FILTER_NAME]
@@ -740,7 +803,7 @@ class SublimeSocketAPI:
 							print("filtering command:", command, "params:", params)
 
 						# execute
-						self.runAPI(command, params, results)
+						self.runAPI(command, params, None, results)
 						
 						# report
 						currentResults.append(filterName)
@@ -752,7 +815,8 @@ class SublimeSocketAPI:
 		# return succeded signal
 		if 0 < len(currentResults):
 			# set params into results
-			results["filtering"] = currentResults
+			self.setResultsParams(results, "filtering", currentResults)
+
 
 	## set reactor for reactive-event
 	def setReactor(self, params, client):

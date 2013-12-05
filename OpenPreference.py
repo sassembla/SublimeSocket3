@@ -64,7 +64,6 @@ class Openpreference(sublime_plugin.TextCommand):
 
   @classmethod
   def openSublimeSocketTest(self):
-    print("openSublimeSocketTest!!!")
     host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
     port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
     

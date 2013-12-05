@@ -58,7 +58,8 @@ class SublimeWSServer:
 		# self.intervals(), SERVER_INTERVAL_SEC)
 
 		# load settings
-		self.loadSettings()
+		results = self.api.initResult(str(uuid.uuid4()))
+		self.loadSettings(results)
 
 
 		self.listening = True
@@ -95,10 +96,11 @@ class SublimeWSServer:
 		
 
 	## load settings and run in mainThread
-	def loadSettings(self):
+	def loadSettings(self, results):
 		settingCommands = sublime.load_settings("SublimeSocket.sublime-settings").get('loadSettings')
 		for command in settingCommands:
-			self.api.runAPI(command)
+			print("loadSettingsからのrunAPI", results)
+			self.api.runAPI(command, None, None, results)
 
 	## update specific client's id
 	def updateClientId(self, client, params):
@@ -127,7 +129,14 @@ class SublimeWSServer:
 	def callAPI(self, apiData, clientId):
 		currentClient = [client for client in self.clients.values() if client.clientId == clientId][0]
 		
-		self.api.parse(apiData, currentClient)
+		# gen result id of toplevel
+		resultIdentity = str(uuid.uuid4())
+
+		def call(identity):
+			results = self.api.initResult(identity)
+			self.api.parse(apiData, currentClient, results)
+		
+		call(resultIdentity)
 
 		
 	## tearDown the server
@@ -361,6 +370,7 @@ class SublimeWSServer:
 					# replace or append
 					currentParams[toKey] = eventParam[fromKey]
 
+			print("runAllSelector内でのrunAPI？")
 			self.api.runAPI(command, currentParams)
 
 		[runForeachAPI(selector) for selector in selectorsArray]
@@ -368,7 +378,7 @@ class SublimeWSServer:
 
 
 	## emit event if params matches the regions that sink in view
-	def containsRegions(self, params):
+	def containsRegions(self, params, results=None):
 		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_VIEWS):
 			viewDict = self.getV(SublimeSocketAPISettings.DICT_VIEWS)
 
@@ -427,6 +437,7 @@ class SublimeWSServer:
 
 							messageDict = {}
 							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
+							print("containsRegionsからのrunAPI", results)
 							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict)
 							self.api.printout(message)
 							
