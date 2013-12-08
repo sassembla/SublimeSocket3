@@ -38,8 +38,8 @@ class SublimeSocketAPI:
 
 	def setResultsParams(self, results, apiFunc, value):
 		# only one key.
+		assert len(results) == 1, "in setResultsParams, too much keys found."
 		apiFuncIdentity = (apiFunc.__name__, str(uuid.uuid4()))
-		print("呼び出される単位でresultがでちゃう。ここをAPI単位で制限できるかな、、、呼ぶ側で制限するしかないな、、だったらAPIからreturnしちゃえばいいんじゃないかな、、、", apiFuncIdentity)
 		for key in results:
 			results[key][apiFuncIdentity] = value
 			return results
@@ -98,10 +98,8 @@ class SublimeSocketAPI:
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
 	def runAPI(self, command, params=None, client=None, results=None):
-		print("runAPIの時点で",results)
-		evalResults = "empty"
-  	
 		# print("runAPI command", command)
+		
 		# erase comment
 		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
 			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
@@ -195,10 +193,8 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
-				print("フィルタが走る前でのresultは",results)
 				# run filtering
 				self.runFiltering(params, results)
-				print("フィルタが走った後でのresultは",results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETREACTOR):
@@ -530,7 +526,6 @@ class SublimeSocketAPI:
 		def countAsserts(assertionIdAndResult):
 			for assertionId in assertionIdAndResult:
 				result = assertionIdAndResult[assertionId]
-				print("assertionIdAndResult result", result)
 				if SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS in result:
 					self.passed = self.passed + 1
 				else:
@@ -547,9 +542,13 @@ class SublimeSocketAPI:
 		
 	## assertions
 	def assertResult(self, params, results):
-		print("assertだけは最優先で直さなければ。",results)
-		
+		print("assertResult start", results, "params", params)
+
+		# assertResult start {'inner:a1c0066e-39ae-4fd1-b532-3c6589189c47': {('runFiltering', '3bb9aac6-fd1a-41c1-9046-c6288ed4f08c'): [{'13/12/04 18:16:49': {'message': 'should be 1/2:1\n2  in 1\n2 dummyline/.'}}]}} params {'id': 'contains value', 'message': 'notmatch.', 'contains': {'runFiltering': {'13/12/0418: 16: 49': {'message': 'shouldbe1/2: 1\n2in1\n2dummyline/.'}}}}
+
 		resultBodies = self.resultBody(results)
+		print("resultBodies", resultBodies)
+
 
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_MESSAGE in params, "assertResult require 'message' param"
@@ -557,41 +556,53 @@ class SublimeSocketAPI:
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_MESSAGE]
 		
+		def assertionMessage(assertType, identity, message):
+			return assertType + " " + identity + " : " + message
+
+		# contains
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS]
-
+			
+			# match
 			for key in currentDict:
-				if not key in resultBodies:
-					continue
+				for resultKey in resultBodies:
+					if resultKey[0] == key:
+						assertValue = currentDict[key]
+						assertTarget = resultBodies[resultKey]
 
-				if type(resultBodies[key]) is dict:
-					print("timeassert not yet applied")
-					pass
-				elif type(resultBodies[key]) is list:
-					if currentDict[key] in resultBodies[key]:
-						resultMessage = SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS + SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + key + ":" + currentDict[key] + " in " + str(resultBodies[key])
-						print("OKセットする", resultMessage)
-						results[assertionIdentity] = resultMessage
-						return resultMessage
+						if assertValue == assertTarget:
+							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+								assertionIdentity, 
+								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
+
+							return resultMessage
 			
 			# fail
-			resultMessage = SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL + SublimeSocketAPISettings.ASSERTRESULT_CONTAINS + " " + message
-			
+			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+							assertionIdentity, 
+							message)
+
+			print("fail, results", results)
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
 
+		# expect
 		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
 			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
 			print("timeassert not yet implemented")
 			
 			# fail
-			resultMessage = SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL + SublimeSocketAPISettings.ASSERTRESULT_EXPECTS + " " + message
-			print("failセットする2", resultMessage)
+			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+							assertionIdentity, 
+							message)
+
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
 
-		resultMessage = SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL + "assertion aborted by API."
-		print("failセットする3", resultMessage)
+		resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+			assertionIdentity,
+			"assertion aborted in assertResult API.")
+		
 		self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 		return resultMessage
 
@@ -708,7 +719,6 @@ class SublimeSocketAPI:
 
 	## filtering. matching -> run API
 	def runFiltering(self, params, results):
-		print("フィルタ開始", results)
 		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param"
 
 		filterName = params[SublimeSocketAPISettings.FILTER_NAME]
@@ -848,7 +858,7 @@ class SublimeSocketAPI:
 						self.runAPI(command, params, None, results)
 						
 						# report
-						currentResults.append(filterName)
+						currentResults.append({filterName:params})
 
 				else:
 					if debug:

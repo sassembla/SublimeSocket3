@@ -47,7 +47,7 @@
         onMessage: function (e) {
             var result = e.data;
 
-            if (result.indexOf("OK:") == 0) {
+            if (result.indexOf("Pass:") == 0) {
                 _WS.writeLog('<span class="label label-success">' + e.data + '</span>');
             } else if (result.indexOf("Fail:") == 0) {
                 _WS.writeLog('<span class="label label-important">' + e.data + '</span>');
