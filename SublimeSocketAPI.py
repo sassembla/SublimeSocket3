@@ -503,11 +503,10 @@ class SublimeSocketAPI:
 		source = removeCRLF_setting
 
 		# parse then get results
-		print("runTestsでのinnerParse", results)
 		results = self.innerParse(source, client, results)
 
+		# count Pass/Fail
 		def collectAsserts(key):
-
 			def detectAssert(results, keyAndId):
 				if keyAndId[0] is self.assertResult.__name__:
 					return results[keyAndId]
@@ -519,23 +518,23 @@ class SublimeSocketAPI:
 
 
 		assertedResultsWithNone = [collectAsserts(the1stInnerResultsKey) for the1stInnerResultsKey in results]
-		print("assertedResultsWithNone", assertedResultsWithNone)
 		
-		self.passed = 0
-		self.failed = 0
+
 		def countAsserts(assertionIdAndResult):
 			for assertionId in assertionIdAndResult:
 				result = assertionIdAndResult[assertionId]
 				if SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS in result:
-					self.passed = self.passed + 1
+					return 1
 				else:
-					self.failed = self.failed + 1
+					return -1
 
-		[countAsserts(result) for result in assertedResultsWithNone[0] if result]
+		counted = [countAsserts(result) for result in assertedResultsWithNone[0] if result]
 
+		passed = counted.count(1)
+		failed = counted.count(-1)
 			
 		# count ASSERTRESULT_VALUE_PASS or ASSERTRESULT_VALUE_FAIL
-		message = "TOTAL:" + str(self.passed + self.failed) + " passed:" + str(self.passed) + " failed:" + str(self.failed)
+		message = "TOTAL:" + str(passed + failed) + " passed:" + str(passed) + " failed:" + str(failed)
 		buf = self.encoder.text(message, mask=0)
 		client.send(buf);
 
@@ -574,7 +573,7 @@ class SublimeSocketAPI:
 							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
 								assertionIdentity, 
 								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
-
+							self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 							return resultMessage
 			
 			# fail
@@ -604,6 +603,7 @@ class SublimeSocketAPI:
 			"assertion aborted in assertResult API.")
 		
 		self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+		
 		return resultMessage
 
 

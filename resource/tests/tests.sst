@@ -55,50 +55,57 @@ defineFilter:
 
 
 // // no linefeed
-// ->defineFilter:
-// {
-//     "name": "13/12/04 23:58:49",
-//     "patterns": [
-//         {
-//             "(.*)dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "should be 1/2:groups[0] in filterSource[]/."
-//                         }
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             "^dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "dummy"
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ],
-//     "dotall":true
-// }
-// ->filtering:
-// {
-//     "name": "13/12/04 23:58:49",
-//     "source": "1\\n2 dummyline",
-//     "debug":false
-// }
-// ->assertResult:
-// {
-// 	"id":"not contains value",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
-
+->defineFilter:
+{
+    "name": "13/12/04 23:58:49",
+    "patterns": [
+        {
+            "(.*)dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "should be 1/2:groups[0] in filterSource[]/."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "^dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "dummy"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "dotall":true
+}
+->filtering:
+{
+    "name": "13/12/04 23:58:49",
+    "source": "1\\n2 dummyline",
+    "debug":false
+}
+->assertResult:
+{
+	"id":"not contains value",
+    "contains": {
+        "filtering": "13/12/04 18:16:49"
+    },
+    "message": "not match."
+}
+->assertResult:
+{
+    "id":"not contains value2",
+    "contains": {
+        "filtering": "13/12/04 18:16:49"
+    },
+    "message": "not match."
+}
 // ->assertResult:
 // {
 // 	"id":"not contains value2",
