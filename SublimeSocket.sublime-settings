@@ -4,7 +4,7 @@
 	"host" : "127.0.0.1",
 	"port" : 8823,
 
-	"testHtml" : "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/resource/tests/tests.html",
+	"testHtml" : "tests.html",
 	"testSuite": "tests.sst",
 
 	"preference browser" : "Safari.app",

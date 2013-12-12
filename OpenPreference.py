@@ -51,7 +51,7 @@ class Openpreference(sublime_plugin.TextCommand):
     for key in replaceableDict:
         if key in SublimeWSSettings.HTML_REPLACEABLE_KEYS:
             target = key
-            value = replacableDict[key]
+            value = replaceableDict[key]
             html = html.replace(target, str(value))
 
     # replace version
@@ -79,12 +79,14 @@ class Openpreference(sublime_plugin.TextCommand):
     testHTMLPath = sublime.load_settings("SublimeSocket.sublime-settings").get('testHtml')
     testSuitePath = sublime.load_settings("SublimeSocket.sublime-settings").get('testSuite')
 
+    # get current Plugin's resource/tests path.
+    testBasePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+"resource/tests"
 
     self.generateHTML(
         {
             SublimeWSSettings.SS_HOST_REPLACE:host, 
             SublimeWSSettings.SS_PORT_REPLACE:port,
-            SublimeWSSettings.SS_TEST_HTML_SOURCE_FILENAME_REPLACE:testHTMLPath,
+            SublimeWSSettings.SS_TESTSUITE_PATH_REPLACE:testBasePath,
             SublimeWSSettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
         },
         "resource/tests/tests.html", 
