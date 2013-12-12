@@ -23,10 +23,16 @@ class Openpreference(sublime_plugin.TextCommand):
     host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
     port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
     
-    self.generateHTML(host, port, "resource/source.html", "tmp/preference.html")
+    self.generateHTML(
+        {
+            SublimeSocketAPISettings.SS_HOST_REPLACE:host,
+            SublimeSocketAPISettings.SS_PORT_REPLACE:port
+        }, 
+        "resource/source.html", 
+        "tmp/preference.html")
     
   @classmethod
-  def generateHTML(self, host, port, sourcePath, outputPath):
+  def generateHTML(self, replaceableDict, sourcePath, outputPath):
     # create path of Preference.html
     currentPackagePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"
     originalHtmlPath = sourcePath
@@ -42,8 +48,11 @@ class Openpreference(sublime_plugin.TextCommand):
         html = htmlFile.read()
         
     # replace host:port
-    html = html.replace(SublimeWSSettings.SS_HOST_REPLACE, host)
-    html = html.replace(SublimeWSSettings.SS_PORT_REPLACE, str(port))
+    for key in replaceableDict:
+        if key in SublimeWSSettings.HTML_REPLACEABLE_KEYS:
+            target = key
+            value = replacableDict[key]
+            html = html.replace(target, str(value))
 
     # replace version
     html = html.replace(SublimeWSSettings.SS_VERSION_REPLACE, SublimeSocketAPISettings.API_VERSION)
@@ -67,7 +76,19 @@ class Openpreference(sublime_plugin.TextCommand):
     host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
     port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
     
-    self.generateHTML(host, port, "resource/tests/tests.html", "tmp/tests.html")
+    testHTMLPath = sublime.load_settings("SublimeSocket.sublime-settings").get('testHtml')
+    testSuitePath = sublime.load_settings("SublimeSocket.sublime-settings").get('testSuite')
+
+
+    self.generateHTML(
+        {
+            SublimeWSSettings.SS_HOST_REPLACE:host, 
+            SublimeWSSettings.SS_PORT_REPLACE:port,
+            SublimeWSSettings.SS_TEST_HTML_SOURCE_FILENAME_REPLACE:testHTMLPath,
+            SublimeWSSettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
+        },
+        "resource/tests/tests.html", 
+        "tmp/tests.html")
 
 
 class BuildThread(threading.Thread):
