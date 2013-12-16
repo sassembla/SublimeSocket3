@@ -581,9 +581,21 @@ class SublimeSocketAPI:
 							assertionIdentity, 
 							message)
 
-			print("fail, results", results)
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
+
+
+		# not contains
+		if SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS in params:
+			# fail
+			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+							assertionIdentity, 
+							message)
+
+			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+			return resultMessage
+
+
 
 		# expect
 		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
@@ -738,7 +750,7 @@ class SublimeSocketAPI:
 		currentResults = []
 		for pattern in filterPatternsArray:
 			# regx key filterSource
-			
+			print("pattern", pattern)
 			# -----CompilerOutput:-stdout--exitcode: 1--compilationhadfailure: True--outfile: Temp/Assembly-CSharp.dll
 			# Compilation failed: 1 error(s), 0 warnings
 			# Assets/NewBehaviourScript.cs(6,12): error CS8025: Parsing error
@@ -747,8 +759,9 @@ class SublimeSocketAPI:
 			
 			for key_executableDictPair in pattern.items():
 				(key, executablesDict) = key_executableDictPair
-			
-			src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""
+
+			# src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""			
+			# src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""
 			
 			debug = False
 			if type(params) == dict:

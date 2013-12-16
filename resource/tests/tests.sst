@@ -54,7 +54,7 @@ defineFilter:
 }
 
 
-// // no linefeed
+// no linefeed
 ->defineFilter:
 {
     "name": "13/12/04 23:58:49",
@@ -82,71 +82,26 @@ defineFilter:
             }
         }
     ],
-    "dotall":true
+    "dotall":false
 }
 ->filtering:
 {
     "name": "13/12/04 23:58:49",
     "source": "1\\n2 dummyline",
-    "debug":false
+    "debug":true
 }
 ->assertResult:
 {
 	"id":"not contains value",
-    "contains": {
-        "filtering": "13/12/04 18:16:49"
+    "notcontains": {
+        "runFiltering": [
+            {
+                "13/12/04 23:58:49": {
+                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+                }
+            }
+        ]
     },
-    "message": "not match."
+    "message": "match, should not match!"
 }
-->assertResult:
-{
-    "id":"not contains value2",
-    "contains": {
-        "filtering": "13/12/04 18:16:49"
-    },
-    "message": "not match."
-}
-// ->assertResult:
-// {
-// 	"id":"not contains value2",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
 
-// ->assertResult:
-// {
-// 	"id":"not contains value3",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
-
-// ->assertResult:
-// {
-// 	"id":"not contains value4",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
-
-// ->assertResult:
-// {
-// 	"id":"not contains value5",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
-
-// ->assertResult:
-// {
-// 	"id":"not contains value6",
-//     "contains": {
-//         "filtering": "13/12/04 18:16:49"
-//     },
-//     "message": "not match."
-// }
