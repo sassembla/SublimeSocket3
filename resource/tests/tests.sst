@@ -5,7 +5,7 @@
 // with linefeed
 defineFilter:
 {
-    "name": "13/12/04 18:16:49",
+    "name": "filter_13/12/04 18:16:49",
     "patterns": [
         {
             "(.*)dummyline": {
@@ -34,7 +34,7 @@ defineFilter:
 }
 ->filtering:
 {
-    "name": "13/12/04 18:16:49",
+    "name": "filter_13/12/04 18:16:49",
     "source": "1\\n2 dummyline",
     "debug":false
 }
@@ -44,7 +44,7 @@ defineFilter:
     "contains": {
         "runFiltering": [
             {
-                "13/12/04 18:16:49": {
+                "filter_13/12/04 18:16:49": {
                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
                 }
             }
@@ -57,7 +57,7 @@ defineFilter:
 // no linefeed
 ->defineFilter:
 {
-    "name": "13/12/04 23:58:49",
+    "name": "filter_13/12/04 23:58:49",
     "patterns": [
         {
             "(.*)dummyline": {
@@ -86,7 +86,7 @@ defineFilter:
 }
 ->filtering:
 {
-    "name": "13/12/04 23:58:49",
+    "name": "filter_13/12/04 23:58:49",
     "source": "1\\n2 dummyline",
     "debug":true
 }

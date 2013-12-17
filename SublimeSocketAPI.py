@@ -760,9 +760,6 @@ class SublimeSocketAPI:
 			for key_executableDictPair in pattern.items():
 				(key, executablesDict) = key_executableDictPair
 
-			# src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""			
-			# src = """re.search(r"(""" + key + """)", """ + "\"" + filterSource + "\"" + """, re.DOTALL)"""
-			
 			debug = False
 			if type(params) == dict:
 				if SublimeSocketAPISettings.FILTER_DEBUG in params:
@@ -771,8 +768,12 @@ class SublimeSocketAPI:
 			if debug:
 				print("filterSource", filterSource)
 
+			if False:
+				searchResult = re.finditer(re.compile(r'%s' % key, re.M), filterSource)
+			else:
+				searchResult = re.finditer(re.compile(r'%s' % key, re.M | re.DOTALL), filterSource)
 
-			for searched in re.finditer(re.compile(r'%s' % key, re.M), filterSource):
+			for searched in searchResult:
 				
 				if searched:
 					if debug:

@@ -25,8 +25,8 @@ class Openpreference(sublime_plugin.TextCommand):
     
     self.generateHTML(
         {
-            SublimeSocketAPISettings.SS_HOST_REPLACE:host,
-            SublimeSocketAPISettings.SS_PORT_REPLACE:port
+            SublimeWSSettings.SS_HOST_REPLACE:host,
+            SublimeWSSettings.SS_PORT_REPLACE:port
         }, 
         "resource/source.html", 
         "tmp/preference.html")

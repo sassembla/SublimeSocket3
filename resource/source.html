@@ -131,18 +131,6 @@ ss@改行入りの文字列のフィルタチェック、古い/defineFilter:
                     }
                 ]
             }
-        },
-        <!-- ヒットしないフィルタ -->
-        {
-            "^dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "dummy"
-                        }
-                    }
-                ]
-            }
         }
     ],
     "dotall":true
@@ -154,7 +142,7 @@ ss@改行入りの文字列のフィルタチェック、古い/defineFilter:
     "debug":false
 }
 ->assertResult:
-{
+{   "id":"testing..",
     "contains": {
         "filtering": "13/12/04 18:16:49"
     },
