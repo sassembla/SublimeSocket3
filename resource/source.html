@@ -117,9 +117,9 @@ ss@テストランナー/runTests:
 }
           </option>
           <option>
-ss@改行入りの文字列のフィルタチェック、古い/defineFilter:
+ss@改行入りの文字列のフィルタチェック/defineFilter:
 {
-    "name": "13/12/04 18:16:49",
+    "name": "filter_13/12/04 18:16:49",
     "patterns": [
         {
             "(.*)dummyline": {
@@ -131,22 +131,41 @@ ss@改行入りの文字列のフィルタチェック、古い/defineFilter:
                     }
                 ]
             }
+        },
+        {
+            "^dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "dummy"
+                        }
+                    }
+                ]
+            }
         }
     ],
     "dotall":true
 }
 ->filtering:
 {
-    "name": "13/12/04 18:16:49",
-    "source": "1\\n2 dummyline",
+    "name": "filter_13/12/04 18:16:49",
+    "source": "1
+2 dummyline",
     "debug":false
 }
 ->assertResult:
-{   "id":"testing..",
+{
+    "id": "contains value",
     "contains": {
-        "filtering": "13/12/04 18:16:49"
+        "runFiltering": [
+            {
+                "filter_13/12/04 18:16:49": {
+                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+                }
+            }
+        ]
     },
-    "message": "not match."
+    "message": "notmatch."
 }
           </option>
             <option>

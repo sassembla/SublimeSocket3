@@ -737,11 +737,11 @@ class SublimeSocketAPI:
 
 		# check filterName exists or not
 		if not self.server.isFilterDefined(filterName):
-			print("filterName:"+str(filterName)+" is not yet defined.")
+			print("filterName:"+str(filterName), "is not yet defined.")
 			return
 
 		filterSource = params[SublimeSocketAPISettings.FILTER_SOURCE]
-		# print "filterName", filterName, "	/filterSource",filterSource
+		print("filterName", filterName, "/filterSource",filterSource)
 
 		# get filter key-values array
 		filterPatternsArray = self.server.getV(SublimeSocketAPISettings.DICT_FILTERS)[filterName]
@@ -768,7 +768,7 @@ class SublimeSocketAPI:
 			if debug:
 				print("filterSource", filterSource)
 
-			if False:
+			if True:
 				searchResult = re.finditer(re.compile(r'%s' % key, re.M), filterSource)
 			else:
 				searchResult = re.finditer(re.compile(r'%s' % key, re.M | re.DOTALL), filterSource)
