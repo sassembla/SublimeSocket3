@@ -67,6 +67,3 @@ defineFilter:
     },
     "interval": 100
 }
-
-->eval:
-["sublime.message_dialog('Unity filter setting over.')"]

@@ -20,7 +20,7 @@ API_PARAM_CONCAT	= "|"
 API_PARAM_DELIM		= ","
 
 
-API_VERSION = "1.3.1"
+API_VERSION = "1.4.0"
 SOCKET_VERSION = 3	# for Sublime Text 3
 
 
@@ -88,6 +88,10 @@ IDENTITY_ID				= "id"
 
 API_TEARDOWN			=	"tearDown"
 
+API_CREATEBUFFER	= "createBuffer"
+CREATEBUFFER_CONTENTS = "contents"
+
+
 API_SETREACTOR		= "setReactor"
 REACTOR_TARGET		= "target"
 REACTOR_EVENT			= "event"
@@ -129,6 +133,7 @@ FILTER_NAME				= "name"
 FILTER_SOURCE			= "source"
 FILTER_SELECTORS	= "selectors"
 FILTER_COMMENT		= "comment"
+FILTER_DOTALL		= "dotall"
 FILTER_DEBUG			= "debug"
 
 API_CONTAINSREGIONS	= "containsRegions"
@@ -215,10 +220,6 @@ API_OPENPAGE			= "openPage"
 OPENPAGE_IDENTITY = "identity"
 
 API_SETWINDOWBASEPATH = "setWindowBasePath"
-
-API_TIMEREVENT		= "timerEvent"
-
-API_EVAL					= "eval"
 
 
 #Dictionaries for collection of "Views", "filters", "events"

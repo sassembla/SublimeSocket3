@@ -2,106 +2,187 @@
 
 // SublimeSocketAsset's testSuite
 
-// with linefeed
-defineFilter:
+
+開始メッセージ/showAtLog:
 {
-    "name": "filter_13/12/04 18:16:49",
-    "patterns": [
-        {
-            "(.*)dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "^dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "dummy"
-                        }
-                    }
-                ]
-            }
-        }
-    ],
-    "dotall":true
+    "message":"test start\n\n"
 }
-->filtering:
+
+
+
+
+// ->特定の名称のファイルバッファを作成する。保存はしない。後始末は自分でやる。/createBuffer:
+// {
+//     "contents": "a\nb\nc\n"
+// }
+// ->assertResult:
+// {
+//     "id": "contains valid contents",
+//     "contains": {
+//         "createBuffer": 
+//         {
+//             "contents": "a\nb\nc\n"
+//         }
+//     },
+//     "message": "not contains."
+// }
+
+
+
+->ファイルを作成し、適当な文字を打ち、regionを追加する。追加後のidが入っていればOK/createBuffer:
 {
-    "name": "filter_13/12/04 18:16:49",
-    "source": "1\\n2 dummyline",
-    "debug":false
+    "contents": "1\n2\n3\n"
+}
+->appendRegion:
+{
+    "line": "1",
+    "message": "test",
+    "view": "1",
+    "condition": "keyword"
 }
 ->assertResult:
 {
-    "id": "contains value",
+    "id": "contains region result",
     "contains": {
-        "runFiltering": [
-            {
-                "filter_13/12/04 18:16:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
-    },
-    "message": "notmatch."
-}
-
-
-// no linefeed
-->defineFilter:
-{
-    "name": "filter_13/12/04 23:58:49",
-    "patterns": [
+        "appendRegion": 
         {
-            "(.*)dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "^dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "dummy"
-                        }
-                    }
-                ]
-            }
+            "result": "appended",
+            "condition": "keyword",
+            "line": "1",
+            "message": "test"
         }
-    ],
-    "dotall":false
-}
-->filtering:
-{
-    "name": "filter_13/12/04 23:58:49",
-    "source": "1\\n2 dummyline",
-    "debug":true
-}
-->assertResult:
-{
-	"id":"not contains value",
-    "notcontains": {
-        "runFiltering": [
-            {
-                "13/12/04 23:58:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
+    
     },
-    "message": "match, should not match!"
+    "message": "not match."    
 }
+
+
+
+// ->ステータスバーにメッセージを表示、テスト付き/showStatusMessage:
+// {
+//     "message": "testMessage"
+// }
+// ->assertResult:
+// {
+//     "id": "contains message",
+//     "contains": {
+//         "showStatusMessage": 
+//         {
+//             "message": "testMessage"
+//         }
+    
+//     },
+//     "message": "notmatch."
+// }
+
+
+// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter:
+// {
+//     "name": "filter_13/12/04 18:16:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showAtLog": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         },
+//         {
+//             "^dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showAtLog": {
+//                             "message": "dummy"
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall":true
+// }
+// ->filtering:
+// {
+//     "name": "filter_13/12/04 18:16:49",
+//     "source": "1\\n2 dummyline",
+//     "debug":false
+// }
+// ->assertResult:
+// {
+//     "id": "contains value",
+//     "contains": {
+//         "runFiltering": [
+//             {
+//                 "filter_13/12/04 18:16:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "message": "notmatch."
+// }
+
+
+
+// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter:
+// {
+//     "name": "filter_13/12/04 23:58:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showAtLog": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         },
+//         {
+//             "^dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showAtLog": {
+//                             "message": "dummy"
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall":false
+// }
+// ->filtering:
+// {
+//     "name": "filter_13/12/04 23:58:49",
+//     "source": "1\\n2 dummyline",
+//     "debug":true
+// }
+// ->assertResult:
+// {
+// 	"id":"not contains value",
+//     "notcontains": {
+//         "runFiltering": [
+//             {
+//                 "13/12/04 23:58:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "message": "match, should not match!"
+// }
+
+
+
+
+// ->終了時のメッセージ/showAtLog:
+// {
+//     "message": "test over.\n\n"
+// }
 

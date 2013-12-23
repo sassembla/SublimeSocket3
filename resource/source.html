@@ -914,7 +914,7 @@ ss@Run setting on folder./runSetting:
             </option>
 
             <option>
-ss@Define filter only./defineFilter:
+ss@フィルタの定義を行う/defineFilter:
 {
     "name": "s",
     "patterns": [
@@ -922,19 +922,19 @@ ss@Define filter only./defineFilter:
             "-----CompilerOutput:-stdout--exitcode: (.+?)--.": {
                 "selectors": [
                     {
-                        "eval": [
-                            "sublime.message_dialog('onlySetFilter groups[0]')"
-                        ]
+                        "showAtLog": {
+                            "message": "groups[0]"
+                        }
                     }
                 ]
             }
         }
     ]
-}   
+}  
             </option>
 
             <option>
-ss@Set filter for specific case, then show dialog by run case with filter/defineFilter:
+ss@フィルタ定義と実行/defineFilter:
 {
     "name": "s",
     "patterns": [
@@ -942,12 +942,9 @@ ss@Set filter for specific case, then show dialog by run case with filter/define
             "-----CompilerOutput:-stdout--exitcode: (.+?)--.": {
                 "selectors": [
                     {
-                        "eval": [
-                            "sublime.message_dialog('singleParam filterSource[]')",
-                            "sublime.message_dialog('singleParamgroups[0]')",
-                            "sublime.message_dialog('2param groups[0], filterSource[]')",
-                            "sublime.message_dialog('multiparam groups[0], filterSource[], groups[0], filterSource[]')"
-                        ]
+                        "showAtLog": {
+                            "message": "filterSource[], groups[0]"
+                        }
                     }
                 ]
             }
@@ -1023,23 +1020,10 @@ ss@When modified, broadCastMessage./setReactor:
     "interval": 100
 }
             </option>
-
-            <option>
-ss@Show dialog on SublimeText./eval:
-[
-    "sublime.message_dialog('show dialog from WebSocket Client')"
-]
-            </option>
-            
-            <option>
-ss@Add region to CurrentFile's line 20./eval:
-[
-    "self.getLineCount_And_SetToArray(active_view, 20, lines)",
-    "regions.append(active_view.line(lines[0]))",
-    "active_view.add_regions('hereComes', regions, 'comment', 'dot', sublime.DRAW_OUTLINED)"
-]
-            </option>
-
+ss@ログ出力HelloWorld/showAtLog:
+{
+    "message": "hello world!"
+}
           </select>
         </div>
         
