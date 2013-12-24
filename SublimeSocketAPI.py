@@ -153,14 +153,16 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
 				filePath = params[SublimeSocketAPISettings.RUNSETTING_FILEPATH]
-				result = self.runSetting(filePath, client)
+
+				result = self.runSetting(filePath, client, results)
 				if client:
 					buf = self.encoder.text(result, mask=0)
 					client.send(buf)
+
 				break
 
 			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
-				self.server.updateClientId(client, params)
+				self.inputIdentity(client, params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
@@ -203,7 +205,11 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_SETREACTOR):
 				# set reactor
-				self.setReactor(params, client)
+				self.setReactor(params, client, results)
+				break
+
+			if case(SublimeSocketAPISettings.API_RESETREACTORS):
+				self.resetReactors(params, client, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETFOUNDATIONREACTOR):
@@ -280,7 +286,7 @@ class SublimeSocketAPI:
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
-				self.versionVerify(params, client)
+				self.versionVerify(params, client, results)
 				break
 
 			if case():
@@ -293,7 +299,7 @@ class SublimeSocketAPI:
 		print("runOnInterval", key)
 
 	## run specific setting.txt file as API
-	def runSetting(self, filePath, client):
+	def runSetting(self, filePath, client, results):
 		
 		# check contains PREFIX or not
 		if filePath.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
@@ -321,10 +327,11 @@ class SublimeSocketAPI:
 		commands = removeCRLF_setting
 		# print "result", result
 
-		# parse
-		print("runSettingでinnerParseしてる")
-		self.innerParse(commands, client)
+		# parse with specific result
+		currentResults = {}
+		self.innerParse(commands, client, currentResults)
 
+		self.setResultsParams(results, self.runSetting, {"result":"done"})
 		return "runSettings:"+str(removeCRLF_setting)
 
 	## run shellScript
@@ -699,6 +706,10 @@ class SublimeSocketAPI:
 		currentResults = [assertKV(assertionDict[key][0], assertionDict[key][1], self.server.getV(assertionDict[key][0][0]), 0) for key in assertionDict.keys()]
 		return str(currentResults)
 
+	## input identity to client.
+	def inputIdentity(self, client, params, results):
+		identity = self.server.updateClientId(client, params)
+		self.setResultsParams(results, self.inputIdentity, {"inputIdentity":identity})
 
 	## create buffer then set contents if exist.
 	def createBuffer(self, params, results):
@@ -723,22 +734,14 @@ class SublimeSocketAPI:
 			name = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
 
 
-		isOpened = sublime.active_window().open_file(name)
-		print(isOpened, "どっちにしてもインスタンスが作られるから、scratchかどうか、っていうのに任せた方がよさげ。", isOpened.is_scratch())
+		theOpenedViewInstance = sublime.active_window().open_file(name)
 
-		result = "failed to open file " + name
-
-		if isOpened.is_scratch():
-			message = "file " + original_name + " is opened not scratch."
-			print(message)
-		
-			result = message
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_LOADING, {SublimeSocketAPISettings.VIEW_SELF:isOpened})
-		
-		else:
-			message = "failed to open file " + original_name
-			print(message)
-
+		# never failure. open file although not exist.
+		message = "file " + original_name + " is opened."
+		print(message)
+	
+		result = message
+		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_LOADING, {SublimeSocketAPISettings.VIEW_SELF:theOpenedViewInstance})
 		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
 	
 
@@ -923,9 +926,18 @@ class SublimeSocketAPI:
 
 
 	## set reactor for reactive-event
-	def setReactor(self, params, client):
-		self.server.setOrAddReactor(params, client)
+	def setReactor(self, params, client, results):
+		reactors = self.server.setOrAddReactor(params)
 		
+		self.setResultsParams(results, self.setReactor, {"reactors":reactors})
+		
+	## erase all reactors
+	def resetReactors(self, params, client, results):
+		deletedReactors = self.server.removeAllReactors()
+
+		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
+
+
 	## set FOUNDATION reactor for "foundation" categoly events.
 	def setFoundationReactor(self, params, client):
 		params[SublimeSocketAPISettings.REACTOR_TARGET] = SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT
@@ -1238,7 +1250,7 @@ class SublimeSocketAPI:
 		self.windowBasePath = sublime.active_window().active_view().file_name()
 		
 	## verify SublimeSocket API-version and SublimeSocket version
-	def versionVerify(self, params, client):
+	def versionVerify(self, params, client, results):
 		assert client, "versionVerify require 'client' object."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_SOCKETVERSION in params, "versionVerify require 'socketVersion' param."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_APIVERSION in params, "versionVerify require 'apiVersion' param."
@@ -1279,61 +1291,83 @@ class SublimeSocketAPI:
 		currentMinor	= int(currentVersionArray[1])
 		# currentPVer		= int(currentVersionArray[2])
 
-		# major chedk
+		code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_DIFFERENT_SUBLIMESOCKET
+
+		isDryRun = False
+		if SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN in params:
+			isDryRun = params[SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN]
+
+		# major check
 		if targetMajor < currentMajor:
-			self.sendVerifiedResultMessage(-2, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE
+			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
 
 		elif targetMajor == currentMajor:
 			if targetMinor < currentMinor:
-				self.sendVerifiedResultMessage(2, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+
 			elif targetMinor == currentMinor:
-				self.sendVerifiedResultMessage(1, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+
 			else:
-				self.sendVerifiedResultMessage(-1, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
 				
 		else:
-			self.sendVerifiedResultMessage(-1, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
+			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+
+		self.setResultsParams(results, self.versionVerify, {"result":code})
+
 	## send result to client then exit or continue WebSocket connection.
-	def sendVerifiedResultMessage(self, resultCode, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, client):
+	def sendVerifiedResultMessage(self, resultCode, isDryRun, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, client):
 		# python-switch
 		for case in PythonSwitch(resultCode):
-			if case(0):
+			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_DIFFERENT_SUBLIMESOCKET):
 				message = "REFUSED/DIFFERENT_SUBLIMESOCKET:	The current running SublimeSocket version = "+str(currentSocketVersion)+", please choose the other version of SublimeSocket. this client requires SublimeSocket "+str(targetSocketVersion)+", see https://github.com/sassembla/SublimeSocket"
 				buf = self.encoder.text(message, mask=0)
 				client.send(buf);
 
-				client.close()
-				self.server.deleteClientId(client.clientId)
+				if not isDryRun:
+					client.close()
+					self.server.deleteClientId(client.clientId)
 			
 				break
-			if case(1):
+			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED):
 				message = "VERIFIED:	The current running SublimeSocket api version = "+currentAPIVersion+", SublimeSocket "+str(currentSocketVersion)
 				buf = self.encoder.text(message, mask=0)
 				client.send(buf)
 				break
-			if case(2):
+			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE):
 				message = "VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", please update this client if possible."
 				buf = self.encoder.text(message, mask=0)
 				client.send(buf);
 				break
 
-			if case(-1):
+			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE):
 				message = "REFUSED/SUBLIMESOCKET_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this is out of date. please update SublimeSocket. this client requires SublimeSocket "+str(targetAPIVersion)+", see https://github.com/sassembla/SublimeSocket"
 				buf = self.encoder.text(message, mask=0)
 				client.send(buf);
 
-				client.close()
-				self.server.deleteClientId(client.clientId)
+				if not isDryRun:
+					client.close()
+					self.server.deleteClientId(client.clientId)
+
 				break
 
-			if case(-2):
+			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE):
 				message = "REFUSED/CLIENT_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", required api version is too old. please update this client."
 				buf = self.encoder.text(message, mask=0)
 				client.send(buf);
 
-				client.close()
-				self.server.deleteClientId(client.clientId)
+				if not isDryRun:
+					client.close()
+					self.server.deleteClientId(client.clientId)
+					
 				break
+
 		print("ss: " + message)
 
 	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition):
@@ -1373,8 +1407,7 @@ class SublimeSocketAPI:
 	## erase all regions of view/condition
 	def eraseAllRegion(self, results):
 		deletes = self.server.deleteAllRegionsInAllView()
-		
-
+		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 
 	## change lineCount to wordCount that is, includes the target-line index at SublimeText.

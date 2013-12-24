@@ -1,26 +1,211 @@
-// can't use jp,,,,fmmmm
-
 // SublimeSocketAsset's testSuite
 
 
-開始メッセージ/showAtLog:
-{
-    "message":"test start\n\n"
+開始メッセージ/showAtLog: {
+    "message": "test start\n\n"
 }
 
 
 
+// ->reactorをリセットする/resetReactors:{
 
-// ->特定の名称のファイルバッファを作成する。保存はしない。後始末は自分でやる。/createBuffer:
-// {
-//     "contents": "a\nb\nc\n"
+// }->assertResult:{
+//     "id": "reset all reactors",
+//     "contains": {
+//         "resetReactors": {
+//             "deletedReactors": {}
+//         }
+//     },
+//     "message": "not match"
+// }->resetReactors:{
+    
 // }
-// ->assertResult:
-// {
+
+
+
+// ->reactorをセットする/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showAtLog": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "message": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+
+// ->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showAtLog": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "message": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+// ->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget2",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showAtLog": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     },
+//                     "testTarget2": {
+//                         "selectors": [
+//                             {
+//                                 "showAtLog": {
+//                                     "message": "eventEmit over.2"
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "message": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+
+// ->Clientのidentityをセットする/inputIdentity: {
+//     "id": "test"
+// }->assertResult: {
+//     "id": "inputIdentity done as test",
+//     "contains": {
+//         "inputIdentity": {
+//             "inputIdentity": "test"
+//         }
+//     },
+//     "message": "not match"
+// }
+
+
+// ->設定の実行が実行されきったかどうか/runSetting: {
+//     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
+// }->assertResult: {
+//     "id": "setting done",
+//     "contains": {
+//         "runSetting": {
+//             "result": "done"
+//         }
+//     },
+//     "message": "not match"
+// }
+
+
+// ->特定の名称のファイルのバッファを作成、内容を入力する。閉じられないので、後始末は自分でやる。/createBuffer: {
+//     "contents": "a\nb\nc\n"
+// }->assertResult: {
 //     "id": "contains valid contents",
 //     "contains": {
-//         "createBuffer": 
-//         {
+//         "createBuffer": {
 //             "contents": "a\nb\nc\n"
 //         }
 //     },
@@ -29,56 +214,47 @@
 
 
 
-->存在するファイルを開く/openFile:
-{
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}
-->assertResult:
-{
-    "id": "open exist file",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-        }
-    },
-    "message": "not contains."
-}
-->存在しないファイルを開き、scratchが作成される/openFile:
-{
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
-}
-->assertResult:
-{
-    "id": "open exist file",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
-        }
-    },
-    "message": "not contains."
-}
-
-
-
-// ->特定のファイルを開き、regionを追加する。追加後のidが入っていればOK/openFile:
-// {
+// ->存在するファイルを開く/openFile: {
 //     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->assertResult: {
+//     "id": "open exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         }
+//     },
+//     "message": "not contains."
 // }
-// ->appendRegion:
-// {
+
+
+
+// ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// }->assertResult: {
+//     "id": "open not exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+//         }
+//     },
+//     "message": "not contains."
+// }
+
+
+
+// ->適当な名前のファイルを開き、regionを追加する。追加後のidが入っていればOK/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
 //     "line": "1",
 //     "message": "test",
-//     "view": "sample.txt",
+//     "view": "notexistfile.txt",
 //     "condition": "keyword"
-// }
-// ->assertResult:
-// {
+// }->assertResult: {
 //     "id": "contains region result",
 //     "contains": {
-//         "appendRegion": 
-//         {
+//         "appendRegion": {
 //             "result": "appended",
 //             "condition": "keyword",
 //             "line": "1",
@@ -90,26 +266,119 @@
 
 
 
-// ->ステータスバーにメッセージを表示、テスト付き/showStatusMessage:
-// {
-//     "message": "testMessage"
+// ->eraseのテスト。適当な名前のファイルを開き、regionを追加する。消した個数が合っていればOK/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "view": "notexistfile.txt",
+//     "condition": "keyword"
+// }->eraseAllRegion: {
+    
+// }->assertResult: {
+//     "id": "eraseAllRegin, all regions are become empty",
+//     "contains": {
+//         "eraseAllRegion": {
+//             "erasedIdentities": [
+//                 "ss_(0, 0)"
+//             ]
+//         }
+//     },
+//     "message": "not all is empty."
 // }
-// ->assertResult:
+
+
+
+// ->バージョンの精査、apiVersionmajorが一致、minorが低いのでクライアントのUpdateを勧められる+突破/versionVerify: {
+//     "socketVersion": 3,
+//     "apiVersion": "1.-1.0"
+// }->assertResult: {
+//     "id": "situation-please update possible",
+//     "contains": {
+//         "versionVerify": {
+//             "result": 2
+//         }
+//     },
+//     "message": "not match."
+// }
+
+
+// ->バージョンの精査、apiVersion majorが一致、minorが一致、verifyの突破/versionVerify:
 // {
+//     "socketVersion": 3,
+//     "apiVersion": "1.4.0"
+// }->assertResult: {
+//     "id": "situation-latest version",
+//     "contains": {
+//         "versionVerify": {
+//             "result": 1
+//         }
+//     },
+//     "message": "not match."
+// }
+
+
+// ->バージョンの精査、apiVersion majorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify:
+// {
+//     "socketVersion": 3,
+//     "apiVersion": "1.100.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update ss",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -1
+//         }
+//     },
+//     "message": "not match."
+// }
+
+// ->バージョンの精査、apiVersion majorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify:
+// {
+//     "socketVersion": 3,
+//     "apiVersion": "0.0.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update client",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -2
+//         }
+//     },
+//     "message": "not match."
+// }
+
+// ->バージョンの精査、apiVersion majorが高いので、SSをupdateするアドレスを渡して切断/versionVerify:{
+//    "socketVersion": 3,
+//     "apiVersion": "2.0.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update ss",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -1
+//         }
+//     },
+//     "message": "not match."
+// }
+
+
+// ->ステータスバーにメッセージを表示、テスト付き/showStatusMessage: {
+//     "message": "testMessage"
+// }->assertResult: {
 //     "id": "contains message",
 //     "contains": {
-//         "showStatusMessage": 
-//         {
+//         "showStatusMessage": {
 //             "message": "testMessage"
 //         }
-    
 //     },
 //     "message": "notmatch."
 // }
 
 
-// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter:
-// {
+
+
+// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
 //     "name": "filter_13/12/04 18:16:49",
 //     "patterns": [
 //         {
@@ -135,16 +404,12 @@
 //             }
 //         }
 //     ],
-//     "dotall":true
-// }
-// ->filtering:
-// {
+//     "dotall": true
+// }->filtering: {
 //     "name": "filter_13/12/04 18:16:49",
 //     "source": "1\\n2 dummyline",
-//     "debug":false
-// }
-// ->assertResult:
-// {
+//     "debug": false
+// }->assertResult: {
 //     "id": "contains value",
 //     "contains": {
 //         "runFiltering": [
@@ -159,9 +424,7 @@
 // }
 
 
-
-// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter:
-// {
+// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
 //     "name": "filter_13/12/04 23:58:49",
 //     "patterns": [
 //         {
@@ -187,17 +450,13 @@
 //             }
 //         }
 //     ],
-//     "dotall":false
-// }
-// ->filtering:
-// {
+//     "dotall": false
+// }->filtering: {
 //     "name": "filter_13/12/04 23:58:49",
 //     "source": "1\\n2 dummyline",
-//     "debug":true
-// }
-// ->assertResult:
-// {
-// 	"id":"not contains value",
+//     "debug": true
+// }->assertResult: {
+//     "id": "the filter not contains value",
 //     "notcontains": {
 //         "runFiltering": [
 //             {
@@ -213,8 +472,7 @@
 
 
 
-// ->終了時のメッセージ/showAtLog:
-// {
+
+// ->終了時のメッセージ/showAtLog: {
 //     "message": "test over.\n\n"
 // }
-

@@ -116,7 +116,9 @@ class SublimeWSServer:
 
 		# update
 		client.clientId = newIdentity
-		self.clients[newIdentity] = client	
+		self.clients[newIdentity] = client
+
+		return newIdentity
 
 	# remove from Client dict
 	def deleteClientId(self, clientId):
@@ -211,7 +213,7 @@ class SublimeWSServer:
 				if regionsDict:
 					for regionIdentity in regionsDict.keys():
 						viewInstance.erase_regions(regionIdentity)
-						
+						print("regionIdentity", regionIdentity)
 						deletes.append(regionIdentity)
 
 						viewDictValue[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS][regionIdentity] = 1
@@ -230,7 +232,7 @@ class SublimeWSServer:
 		return deletes
 
 	## generate thread per selector. or add
-	def setOrAddReactor(self, params, client):
+	def setOrAddReactor(self, params):
 		target = params[SublimeSocketAPISettings.REACTOR_TARGET]
 		event = params[SublimeSocketAPISettings.REACTOR_EVENT]
 		selectorsArray = params[SublimeSocketAPISettings.REACTOR_SELECTORS]
@@ -260,18 +262,30 @@ class SublimeWSServer:
 			reactDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO]
 
 		# already set or not-> spawn dictionary for event.
-		if event in reactorsDict:
-			pass
-		else:
+		if not event in reactorsDict:			
 			reactorsDict[event] = {}
+
+		if not target in reactorsDict[event]:
+			# store reactor			
+			reactorsDict[event][target] = reactDict
+			self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
+			
+			if 0 < interval:
+				# spawn event-loop for event execution
+				self.eventIntervals(target, event, selectorsArray, interval)
+
+		return reactorsDict
 		
-		# store reactor			
-		reactorsDict[event][target] = reactDict
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
-		
-		if 0 < interval:
-			# spawn event-loop for event execution
-			self.eventIntervals(target, event, selectorsArray, interval)
+
+	def removeAllReactors(self):
+		reactorsDict = {}
+		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORS):
+			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
+
+		deletedReactorsDict = reactorsDict
+		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, {})
+
+		return reactorsDict
 
 
 	## interval execution for event
