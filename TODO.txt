@@ -7,7 +7,7 @@ ST2/3　Both target mode launch
 
 Write All API Tests
 	やる。こっち先で、あとでPython2対応。
-	
+	複合系のAPIはまとめてしまうのがいいような気がする。
 
 
 1.4.x

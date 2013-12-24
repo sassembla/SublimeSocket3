@@ -222,11 +222,11 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_BROADCASTMESSAGE):
-				self.broadcastMessage(params)
+				self.broadcastMessage(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_MONOCASTMESSAGE):
-				self.monocastMessage(params)
+				self.monocastMessage(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWATLOG):
@@ -405,7 +405,7 @@ class SublimeSocketAPI:
 
 	## emit message to clients.
 	# broadcast messages if no-"target" key.
-	def broadcastMessage(self, params):
+	def broadcastMessage(self, params, results):
 		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "broadcastMessage require 'message' param"
 		
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
@@ -427,11 +427,18 @@ class SublimeSocketAPI:
 		buf = self.encoder.text(str(message), mask=0)
 		
 		clients = self.server.clients.values()
+
+		clientNames = list(self.server.clients.keys())
+		print("clientNames", clientNames)
+		
 		for client in clients:
 			client.send(buf)
 
+		self.setResultsParams(results, self.broadcastMessage, {"sendedTo":clientNames})
+	
+
 	## send message to the specific client.
-	def monocastMessage(self, params):
+	def monocastMessage(self, params, results):
 		if SublimeSocketAPISettings.OUTPUT_FORMAT in params:
 			format = params[SublimeSocketAPISettings.OUTPUT_FORMAT]
 			for key in params:
@@ -442,7 +449,7 @@ class SublimeSocketAPI:
 
 			params[SublimeSocketAPISettings.OUTPUT_MESSAGE] = format
 			del params[SublimeSocketAPISettings.OUTPUT_FORMAT]
-			self.monocastMessage(params)
+			self.monocastMessage(params, results)
 			return
 
 		assert SublimeSocketAPISettings.OUTPUT_TARGET in params, "monocastMessage require 'target' param"
@@ -450,31 +457,17 @@ class SublimeSocketAPI:
 		
 		target = params[SublimeSocketAPISettings.OUTPUT_TARGET]
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
-
-		# header and footer with delimiter
-		delim = ""
-		if SublimeSocketAPISettings.OUTPUT_DELIMITER in params:
-			delim = params[SublimeSocketAPISettings.OUTPUT_DELIMITER]
-
-		if SublimeSocketAPISettings.OUTPUT_HEADER in params:
-			message = params[SublimeSocketAPISettings.OUTPUT_HEADER] + delim + message
-
-		if SublimeSocketAPISettings.OUTPUT_FOOTER in params:
-			message = message + delim + params[SublimeSocketAPISettings.OUTPUT_FOOTER]
-
-
-		# if sender specified, add "sender:" ahead of message.
-		if SublimeSocketAPISettings.OUTPUT_SENDER in params:
-			message = params[SublimeSocketAPISettings.OUTPUT_SENDER] + ":" + message
-		
 		
 		if target in self.server.clients:
 			client = self.server.clients[target]
 			buf = self.encoder.text(str(message), mask=0)
 			client.send(buf)
+			self.setResultsParams(results, self.monocastMessage, {SublimeSocketAPISettings.OUTPUT_TARGET:target, SublimeSocketAPISettings.OUTPUT_MESSAGE:message})
 
 		else:
 			print("monocastMessage failed. target:", target, "is not exist in clients:", self.server.clients)
+			self.setResultsParams(results, self.monocastMessage, {SublimeSocketAPISettings.OUTPUT_TARGET:"", SublimeSocketAPISettings.OUTPUT_MESSAGE:message})
+	
 
 
 	## send message to the other via SS.
