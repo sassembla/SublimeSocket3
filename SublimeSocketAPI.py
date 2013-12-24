@@ -561,10 +561,10 @@ class SublimeSocketAPI:
 
 
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
-		assert SublimeSocketAPISettings.ASSERTRESULT_MESSAGE in params, "assertResult require 'message' param"
+		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
 		
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
-		message = params[SublimeSocketAPISettings.ASSERTRESULT_MESSAGE]
+		message = params[SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION]
 		
 		def assertionMessage(assertType, identity, message):
 			return assertType + " " + identity + " : " + message
