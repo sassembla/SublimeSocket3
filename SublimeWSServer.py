@@ -506,7 +506,6 @@ class SublimeWSServer:
 				pass
 
 			else:
-				# print "open then add!!", eventParam
 				viewDict = {}
 				
 				# update or append if exist.

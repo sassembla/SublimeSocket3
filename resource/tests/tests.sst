@@ -29,32 +29,64 @@
 
 
 
-->ファイルを作成し、適当な文字を打ち、regionを追加する。追加後のidが入っていればOK/createBuffer:
+->存在するファイルを開く/openFile:
 {
-    "contents": "1\n2\n3\n"
-}
-->appendRegion:
-{
-    "line": "1",
-    "message": "test",
-    "view": "1",
-    "condition": "keyword"
+    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
 }
 ->assertResult:
 {
-    "id": "contains region result",
+    "id": "open exist file",
     "contains": {
-        "appendRegion": 
-        {
-            "result": "appended",
-            "condition": "keyword",
-            "line": "1",
-            "message": "test"
+        "openFile": {
+            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
+            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
         }
-    
     },
-    "message": "not match."    
+    "message": "not contains."
 }
+->存在しないファイルを開き、scratchが作成される/openFile:
+{
+    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+}
+->assertResult:
+{
+    "id": "open exist file",
+    "contains": {
+        "openFile": {
+            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
+            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+        }
+    },
+    "message": "not contains."
+}
+
+
+
+// ->特定のファイルを開き、regionを追加する。追加後のidが入っていればOK/openFile:
+// {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }
+// ->appendRegion:
+// {
+//     "line": "1",
+//     "message": "test",
+//     "view": "sample.txt",
+//     "condition": "keyword"
+// }
+// ->assertResult:
+// {
+//     "id": "contains region result",
+//     "contains": {
+//         "appendRegion": 
+//         {
+//             "result": "appended",
+//             "condition": "keyword",
+//             "line": "1",
+//             "message": "test"
+//         }
+//     },
+//     "message": "not match."
+// }
 
 
 

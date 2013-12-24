@@ -26,6 +26,7 @@ SOCKET_VERSION = 3	# for Sublime Text 3
 
 # SublimeSocket internal event definition
 SS_EVENT_COLLECT	= "ss_collect"
+SS_EVENT_LOADING	= "ss_loading"
 
 SS_FOUNDATION_NOVIEWFOUND	= "ss_f_noViewFound"
 NOVIEWFOUND_TARGET		= "target"
@@ -91,6 +92,8 @@ API_TEARDOWN			=	"tearDown"
 API_CREATEBUFFER	= "createBuffer"
 CREATEBUFFER_CONTENTS = "contents"
 
+API_OPENFILE		= "openFile"
+OPENFILE_NAME		= "name"
 
 API_SETREACTOR		= "setReactor"
 REACTOR_TARGET		= "target"
@@ -232,7 +235,7 @@ VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
 VIEW_SELF					= "view"
 
-VIEW_EVENTS_RENEW	= ["on_new", "on_clone", "on_load", "on_modified", SS_EVENT_COLLECT] #list of acceptable-view renew event names.
+VIEW_EVENTS_RENEW	= ["on_new", "on_clone", "on_load", "on_modified", SS_EVENT_COLLECT, SS_EVENT_LOADING] #list of acceptable-view renew event names.
 VIEW_EVENTS_DEL		= ["on_close"] #list of acceptable-view del event names.
 
 DICT_FILTERS			= "DICT_FILTERS"

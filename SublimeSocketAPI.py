@@ -171,6 +171,10 @@ class SublimeSocketAPI:
 				self.createBuffer(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_OPENFILE):
+				self.openFile(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_CONTAINSREGIONS):
 				self.containsRegions(params)
 				break
@@ -707,7 +711,36 @@ class SublimeSocketAPI:
 			generatedBuffer.run_command('insert_message', {'string': contents})
 
 		self.setResultsParams(results, self.createBuffer, {SublimeSocketAPISettings.CREATEBUFFER_CONTENTS:contents})
+	
+	## open files
+	def openFile(self, params, results):
+		assert SublimeSocketAPISettings.OPENFILE_NAME in params, "openFile require 'name' key."
+		original_name = params[SublimeSocketAPISettings.OPENFILE_NAME]
+		name = original_name
+
+		if name.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
+			filePathArray = name.split(":")
+			name = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
+
+
+		isOpened = sublime.active_window().open_file(name)
+		print(isOpened, "どっちにしてもインスタンスが作られるから、scratchかどうか、っていうのに任せた方がよさげ。", isOpened.is_scratch())
+
+		result = "failed to open file " + name
+
+		if isOpened.is_scratch():
+			message = "file " + original_name + " is opened not scratch."
+			print(message)
 		
+			result = message
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_LOADING, {SublimeSocketAPISettings.VIEW_SELF:isOpened})
+		
+		else:
+			message = "failed to open file " + original_name
+			print(message)
+
+		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
+	
 
 	## is contains regions or not.
 	def containsRegions(self, params):
@@ -905,12 +938,13 @@ class SublimeSocketAPI:
 			viewSourceStr = path
 
 			# remove empty and 1 length string pattern.
-			if not viewSourceStr or len(viewSourceStr) is 1:
+			if not viewSourceStr or len(viewSourceStr) is 0:
 				return None
 
-				
+			
 			viewDict = self.server.viewDict()
 			viewKeys = viewDict.keys()
+			print("internal_detectViewInstance viewKeys", viewKeys)
 
 			viewSourceStr = viewSourceStr.replace("\\", "&")
 			viewSourceStr = viewSourceStr.replace("/", "&")
