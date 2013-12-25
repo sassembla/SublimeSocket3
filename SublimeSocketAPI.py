@@ -195,7 +195,7 @@ class SublimeSocketAPI:
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
 				# define filter
-				self.defineFilter(params)
+				self.defineFilter(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
@@ -532,6 +532,7 @@ class SublimeSocketAPI:
 	## assertions
 	def assertResult(self, params, results):
 		resultBodies = self.resultBody(results)
+		print("resultBodies", resultBodies)
 
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
@@ -564,8 +565,6 @@ class SublimeSocketAPI:
 			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 							assertionIdentity, 
 							message)
-
-			print("assertValue", assertValue, "vs assertTarget", assertTarget)
 
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
@@ -741,7 +740,7 @@ class SublimeSocketAPI:
 		self.server.containsRegions(params)
 		
 	## Define the filter and check filterPatterns
-	def defineFilter(self, params):
+	def defineFilter(self, params, results):
 		# check filter name
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
@@ -765,8 +764,10 @@ class SublimeSocketAPI:
 		# key = filterName, value = the match patterns of filter.
 		filterNameAndPatternsArray[filterName] = patterns
 
-		# store
+		# store anyway.
 		self.server.setKV(SublimeSocketAPISettings.DICT_FILTERS, filterNameAndPatternsArray)
+
+		self.setResultsParams(results, self.defineFilter, {"defined":params})
 		
 
 	## filtering. matching -> run API

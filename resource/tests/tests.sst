@@ -5,6 +5,117 @@
     "message": "test start\n\n"
 }
 
+->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
+    "name": "testFilter",
+    "patterns": [
+        {
+            "testPattern": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "hello!"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "should have filter-info",
+    "contains": {
+        "defineFilter": {
+            "defined": {
+                "name": "testFilter",
+                "patterns": [
+                    {
+                        "testPattern": {
+                            "selectors": [
+                                {
+                                    "showStatusMessage": {
+                                        "message": "hello!"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "description": "not match."
+}
+
+
+
+// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
+//     "name": "filter_13/12/04 18:16:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall": true
+// }->filtering: {
+//     "name": "filter_13/12/04 18:16:49",
+//     "source": "1\\n2 dummyline",
+//     "debug": false
+// }->assertResult: {
+//     "id": "filter hit values",
+//     "contains": {
+//         "runFiltering": [
+//             {
+//                 "filter_13/12/04 18:16:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "description": "not match."
+// }
+
+
+// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall": false
+// }->filtering: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "source": "1\\n2 dummyline",
+//     "debug": true
+// }->assertResult: {
+//     "id": "filter not hit values",
+//     "notcontains": {
+//         "runFiltering": [
+//             {
+//                 "13/12/04 23:58:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "description": "but match, should not match"
+// }
+
 
 
 ->メッセージを特定クライアントに配信する。/inputIdentity: {
@@ -433,75 +544,6 @@
 
 
 
-
-// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
-//     "name": "filter_13/12/04 18:16:49",
-//     "patterns": [
-//         {
-//             "(.*)dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showStatusMessage": {
-//                             "message": "should be 1/2:groups[0] in filterSource[]/."
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ],
-//     "dotall": true
-// }->filtering: {
-//     "name": "filter_13/12/04 18:16:49",
-//     "source": "1\\n2 dummyline",
-//     "debug": false
-// }->assertResult: {
-//     "id": "filter hit values",
-//     "contains": {
-//         "runFiltering": [
-//             {
-//                 "filter_13/12/04 18:16:49": {
-//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-//                 }
-//             }
-//         ]
-//     },
-//     "description": "not match."
-// }
-
-
-// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
-//     "name": "filter_13/12/04 23:58:49",
-//     "patterns": [
-//         {
-//             "(.*)dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showStatusMessage": {
-//                             "message": "should be 1/2:groups[0] in filterSource[]/."
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ],
-//     "dotall": false
-// }->filtering: {
-//     "name": "filter_13/12/04 23:58:49",
-//     "source": "1\\n2 dummyline",
-//     "debug": true
-// }->assertResult: {
-//     "id": "filter not hit values",
-//     "notcontains": {
-//         "runFiltering": [
-//             {
-//                 "13/12/04 23:58:49": {
-//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-//                 }
-//             }
-//         ]
-//     },
-//     "description": "but match, should not match"
-// }
 
 
 
