@@ -447,17 +447,6 @@
 //                     }
 //                 ]
 //             }
-//         },
-//         {
-//             "^dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "dummy"
-//                         }
-//                     }
-//                 ]
-//             }
 //         }
 //     ],
 //     "dotall": true
@@ -466,7 +455,7 @@
 //     "source": "1\\n2 dummyline",
 //     "debug": false
 // }->assertResult: {
-//     "id": "contains value",
+//     "id": "filter hit values",
 //     "contains": {
 //         "runFiltering": [
 //             {
@@ -476,54 +465,45 @@
 //             }
 //         ]
 //     },
-//     "description": "notmatch."
+//     "description": "not match."
 // }
 
 
-// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
-//     "name": "filter_13/12/04 23:58:49",
-//     "patterns": [
-//         {
-//             "(.*)dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "should be 1/2:groups[0] in filterSource[]/."
-//                         }
-//                     }
-//                 ]
-//             }
-//         },
-//         {
-//             "^dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "dummy"
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ],
-//     "dotall": false
-// }->filtering: {
-//     "name": "filter_13/12/04 23:58:49",
-//     "source": "1\\n2 dummyline",
-//     "debug": true
-// }->assertResult: {
-//     "id": "the filter not contains value",
-//     "notcontains": {
-//         "runFiltering": [
-//             {
-//                 "13/12/04 23:58:49": {
-//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-//                 }
-//             }
-//         ]
-//     },
-//     "description": "match, should not match!"
-// }
+->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
+    "name": "filter_13/12/04 23:58:49",
+    "patterns": [
+        {
+            "(.*)dummyline": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "should be 1/2:groups[0] in filterSource[]/."
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "dotall": false
+}->filtering: {
+    "name": "filter_13/12/04 23:58:49",
+    "source": "1\\n2 dummyline",
+    "debug": true
+}->assertResult: {
+    "id": "filter not hit values",
+    "notcontains": {
+        "runFiltering": [
+            {
+                "13/12/04 23:58:49": {
+                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+                }
+            }
+        ]
+    },
+    "description": "but match, should not match"
+}
+
+// resultBodies {('runFiltering', '0821f596-53b5-4e40-beae-0db282dbaa3a'): [{'filter_13/12/04 23:58:49': {'message': 'should be 1/2:1\n2  in 1\n2 dummyline/.'}}]}
 
 
 
