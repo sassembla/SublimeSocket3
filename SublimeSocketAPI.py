@@ -532,8 +532,6 @@ class SublimeSocketAPI:
 	## assertions
 	def assertResult(self, params, results):
 		resultBodies = self.resultBody(results)
-		print("resultBodies", resultBodies)
-
 
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
