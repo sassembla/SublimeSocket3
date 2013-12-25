@@ -409,21 +409,7 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "broadcastMessage require 'message' param"
 		
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
-		# header and footer with delimiter
-		delim = ""
-		if SublimeSocketAPISettings.OUTPUT_DELIMITER in params:
-			delim = params[SublimeSocketAPISettings.OUTPUT_DELIMITER]
 
-		if SublimeSocketAPISettings.OUTPUT_HEADER in params:
-			message = params[SublimeSocketAPISettings.OUTPUT_HEADER] + delim + message
-
-		if SublimeSocketAPISettings.OUTPUT_FOOTER in params:
-			message = message + delim + params[SublimeSocketAPISettings.OUTPUT_FOOTER]
-		
-		# if sender specified, add "sender:" ahead of message.
-		if SublimeSocketAPISettings.OUTPUT_SENDER in params:
-			message = params[SublimeSocketAPISettings.OUTPUT_SENDER] + ":" + message
-		
 		buf = self.encoder.text(str(message), mask=0)
 		
 		clients = self.server.clients.values()
@@ -545,10 +531,6 @@ class SublimeSocketAPI:
 		
 	## assertions
 	def assertResult(self, params, results):
-		print("assertResult start", results, "params", params)
-
-		# assertResult start {'inner:a1c0066e-39ae-4fd1-b532-3c6589189c47': {('runFiltering', '3bb9aac6-fd1a-41c1-9046-c6288ed4f08c'): [{'13/12/04 18:16:49': {'message': 'should be 1/2:1\n2  in 1\n2 dummyline/.'}}]}} params {'id': 'contains value', 'message': 'notmatch.', 'contains': {'runFiltering': {'13/12/0418: 16: 49': {'message': 'shouldbe1/2: 1\n2in1\n2dummyline/.'}}}}
-
 		resultBodies = self.resultBody(results)
 		print("resultBodies", resultBodies)
 
@@ -585,14 +567,32 @@ class SublimeSocketAPI:
 							assertionIdentity, 
 							message)
 
+			print("assertValue", assertValue, "vs assertTarget", assertTarget)
+
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
 
 
 		# not contains
 		if SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS in params:
-			# fail
-			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS]
+			
+			# match
+			for key in currentDict:
+				for resultKey in resultBodies:
+					if resultKey[0] == key:
+						assertValue = currentDict[key]
+						assertTarget = resultBodies[resultKey]
+
+						if assertValue == assertTarget:
+							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+								assertionIdentity, 
+								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
+							self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+							return resultMessage
+
+			# pass
+			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
 							assertionIdentity, 
 							message)
 

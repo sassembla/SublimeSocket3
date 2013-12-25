@@ -1,268 +1,266 @@
 // SublimeSocketAsset's testSuite
 
 
-開始メッセージ/showAtLog: {
+開始メッセージ/showStatusMessage: {
     "message": "test start\n\n"
 }
 
 
 
-// ->メッセージを特定クライアントに配信する。/inputIdentity: {
-//     "id": "testMonocastMessage"
-// }->monocastMessage: {
-//     "target": "testMonocastMessage",
-//     "message": "monocasting"
-// }->assertResult: {
-//     "id": "monocast message for specific client",
-//     "contains": {
-//         "monocastMessage": {
-//             "target": "testMonocastMessage",
-//             "message": "monocasting"
-//         }
-//     },
-//     "description": "faild to monocast."
-// }
+->メッセージを特定クライアントに配信する。/inputIdentity: {
+    "id": "testMonocastMessage"
+}->monocastMessage: {
+    "target": "testMonocastMessage",
+    "message": "monocasting"
+}->assertResult: {
+    "id": "monocast message for specific client",
+    "contains": {
+        "monocastMessage": {
+            "target": "testMonocastMessage",
+            "message": "monocasting"
+        }
+    },
+    "description": "faild to monocast."
+}
 
 
-// ->フォーマットを使用したmonocast/inputIdentity: {
-//     "id": "testMonocastMessageWithFormat"
-// }->monocastMessage: {
-//     "target": "testMonocastMessageWithFormat",
-//     "message": "monocasting",
-//     "format": "0:a1 b1 c1 d1",
-//     "0": "header",
-//     "a1": "the",
-//     "b1": "test",
-//     "c1": "is",
-//     "d1": "over"
-// }->assertResult: {
-//     "id": "monocast message with format",
-//     "contains": {
-//         "monocastMessage": {
-//             "target": "testMonocastMessageWithFormat",
-//             "message": "header:the test is over"
-//         }
-//     },
-//     "description": "faild to monocast with format."
-// }
+->フォーマットを使用したmonocast/inputIdentity: {
+    "id": "testMonocastMessageWithFormat"
+}->monocastMessage: {
+    "target": "testMonocastMessageWithFormat",
+    "message": "monocasting",
+    "format": "0:a1 b1 c1 d1",
+    "0": "header",
+    "a1": "the",
+    "b1": "test",
+    "c1": "is",
+    "d1": "over"
+}->assertResult: {
+    "id": "monocast message with format",
+    "contains": {
+        "monocastMessage": {
+            "target": "testMonocastMessageWithFormat",
+            "message": "header:the test is over"
+        }
+    },
+    "description": "faild to monocast with format."
+}
 
 
-// ->メッセージを全クライアントに配信する/inputIdentity: {
-//     "id": "testBroadcastMessage"
-// }->broadcastMessage: {
-//     "message": "broadcasting"
-// }->assertResult: {
-//     "id": "broadcast message for every client",
-//     "contains": {
-//         "broadcastMessage": {
-//             "sendedTo": [
-//                 "testBroadcastMessage"
-//             ]
-//         }
-//     },
-//     "description": "faild to broadcast."
-// }
+->メッセージを全クライアントに配信する/inputIdentity: {
+    "id": "testBroadcastMessage"
+}->broadcastMessage: {
+    "message": "broadcasting"
+}->assertResult: {
+    "id": "broadcast message for every client",
+    "contains": {
+        "broadcastMessage": {
+            "sendedTo": [
+                "testBroadcastMessage"
+            ]
+        }
+    },
+    "description": "faild to broadcast."
+}
 
-// ->reactorをリセットする/resetReactors:{
+->reactorをリセットする/resetReactors:{
 
-// }->assertResult:{
-//     "id": "reset all reactors",
-//     "contains": {
-//         "resetReactors": {
-//             "deletedReactors": {}
-//         }
-//     },
-//     "description": "not match"
-// }->resetReactors:{
+}->assertResult:{
+    "id": "reset all reactors",
+    "contains": {
+        "resetReactors": {
+            "deletedReactors": {}
+        }
+    },
+    "description": "not match"
+}
+
+
+
+->reactorをセットする/resetReactors:{
+
+}->setReactor: {
+    "target": "testTarget",
+    "event": "testEvent",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over."
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "reactor is set",
+    "contains": {
+        "setReactor": {
+            "reactors": {
+                "testEvent": {
+                    "testTarget": {
+                        "selectors": [
+                            {
+                                "showStatusMessage": {
+                                    "message": "eventEmit over."
+                                }
+                            }
+                        ],
+                        "interval": 100
+                    }
+                }
+            }
+        }
+    },
+    "description": "not match"
+}->resetReactors:{
     
-// }
+}
 
 
 
-// ->reactorをセットする/resetReactors:{
+->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
 
-// }->setReactor: {
-//     "target": "testTarget",
-//     "event": "testEvent",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "eventEmit over."
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "reactor is set",
-//     "contains": {
-//         "setReactor": {
-//             "reactors": {
-//                 "testEvent": {
-//                     "testTarget": {
-//                         "selectors": [
-//                             {
-//                                 "showAtLog": {
-//                                     "message": "eventEmit over."
-//                                 }
-//                             }
-//                         ],
-//                         "interval": 100
-//                     }
-//                 }
-//             }
-//         }
-//     },
-//     "description": "not match"
-// }->resetReactors:{
+}->setReactor: {
+    "target": "testTarget",
+    "event": "testEvent",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over."
+            }
+        }
+    ]
+}->setReactor: {
+    "target": "testTarget",
+    "event": "testEvent",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over.2"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "reactor is set",
+    "contains": {
+        "setReactor": {
+            "reactors": {
+                "testEvent": {
+                    "testTarget": {
+                        "selectors": [
+                            {
+                                "showStatusMessage": {
+                                    "message": "eventEmit over."
+                                }
+                            }
+                        ],
+                        "interval": 100
+                    }
+                }
+            }
+        }
+    },
+    "description": "not match"
+}->resetReactors:{
     
-// }
+}
 
 
+->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
 
-// ->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
-
-// }->setReactor: {
-//     "target": "testTarget",
-//     "event": "testEvent",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "eventEmit over."
-//             }
-//         }
-//     ]
-// }->setReactor: {
-//     "target": "testTarget",
-//     "event": "testEvent",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "eventEmit over.2"
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "reactor is set",
-//     "contains": {
-//         "setReactor": {
-//             "reactors": {
-//                 "testEvent": {
-//                     "testTarget": {
-//                         "selectors": [
-//                             {
-//                                 "showAtLog": {
-//                                     "message": "eventEmit over."
-//                                 }
-//                             }
-//                         ],
-//                         "interval": 100
-//                     }
-//                 }
-//             }
-//         }
-//     },
-//     "description": "not match"
-// }->resetReactors:{
+}->setReactor: {
+    "target": "testTarget",
+    "event": "testEvent",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over."
+            }
+        }
+    ]
+}->setReactor: {
+    "target": "testTarget2",
+    "event": "testEvent",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over.2"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "reactor is set",
+    "contains": {
+        "setReactor": {
+            "reactors": {
+                "testEvent": {
+                    "testTarget": {
+                        "selectors": [
+                            {
+                                "showStatusMessage": {
+                                    "message": "eventEmit over."
+                                }
+                            }
+                        ],
+                        "interval": 100
+                    },
+                    "testTarget2": {
+                        "selectors": [
+                            {
+                                "showStatusMessage": {
+                                    "message": "eventEmit over.2"
+                                }
+                            }
+                        ],
+                        "interval": 100
+                    }
+                }
+            }
+        }
+    },
+    "description": "not match"
+}->resetReactors:{
     
-// }
-
-
-// ->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
-
-// }->setReactor: {
-//     "target": "testTarget",
-//     "event": "testEvent",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "eventEmit over."
-//             }
-//         }
-//     ]
-// }->setReactor: {
-//     "target": "testTarget2",
-//     "event": "testEvent",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "eventEmit over.2"
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "reactor is set",
-//     "contains": {
-//         "setReactor": {
-//             "reactors": {
-//                 "testEvent": {
-//                     "testTarget": {
-//                         "selectors": [
-//                             {
-//                                 "showAtLog": {
-//                                     "message": "eventEmit over."
-//                                 }
-//                             }
-//                         ],
-//                         "interval": 100
-//                     },
-//                     "testTarget2": {
-//                         "selectors": [
-//                             {
-//                                 "showAtLog": {
-//                                     "message": "eventEmit over.2"
-//                                 }
-//                             }
-//                         ],
-//                         "interval": 100
-//                     }
-//                 }
-//             }
-//         }
-//     },
-//     "description": "not match"
-// }->resetReactors:{
-    
-// }
+}
 
 
 
-// ->Clientのidentityをセットする/inputIdentity: {
-//     "id": "test"
-// }->assertResult: {
-//     "id": "inputIdentity done as test",
-//     "contains": {
-//         "inputIdentity": {
-//             "inputIdentity": "test"
-//         }
-//     },
-//     "description": "not match"
-// }
+->Clientのidentityをセットする/inputIdentity: {
+    "id": "test"
+}->assertResult: {
+    "id": "inputIdentity done as test",
+    "contains": {
+        "inputIdentity": {
+            "inputIdentity": "test"
+        }
+    },
+    "description": "not match"
+}
 
 
-// ->設定の実行が実行されきったかどうか/runSetting: {
-//     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
-// }->assertResult: {
-//     "id": "setting done",
-//     "contains": {
-//         "runSetting": {
-//             "result": "done"
-//         }
-//     },
-//     "description": "not match"
-// }
+->設定の実行が実行されきったかどうか/runSetting: {
+    "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
+}->assertResult: {
+    "id": "setting done",
+    "contains": {
+        "runSetting": {
+            "result": "done"
+        }
+    },
+    "description": "not match"
+}
 
 
 // ->特定の名称のファイルのバッファを作成、内容を入力する。閉じられないので、後始末は自分でやる。/createBuffer: {
-//     "contents": "a\nb\nc\n"
+    
 // }->assertResult: {
 //     "id": "contains valid contents",
 //     "contains": {
 //         "createBuffer": {
-//             "contents": "a\nb\nc\n"
+//             "contents": "empty"
 //         }
 //     },
 //     "description": "not contains."
@@ -441,7 +439,7 @@
 //             "(.*)dummyline": {
 //                 "selectors": [
 //                     {
-//                         "showAtLog": {
+//                         "showStatusMessage": {
 //                             "message": "should be 1/2:groups[0] in filterSource[]/."
 //                         }
 //                     }
@@ -469,46 +467,42 @@
 // }
 
 
-->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
-    "name": "filter_13/12/04 23:58:49",
-    "patterns": [
-        {
-            "(.*)dummyline": {
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
-                        }
-                    }
-                ]
-            }
-        }
-    ],
-    "dotall": false
-}->filtering: {
-    "name": "filter_13/12/04 23:58:49",
-    "source": "1\\n2 dummyline",
-    "debug": true
-}->assertResult: {
-    "id": "filter not hit values",
-    "notcontains": {
-        "runFiltering": [
-            {
-                "13/12/04 23:58:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
-    },
-    "description": "but match, should not match"
-}
-
-// resultBodies {('runFiltering', '0821f596-53b5-4e40-beae-0db282dbaa3a'): [{'filter_13/12/04 23:58:49': {'message': 'should be 1/2:1\n2  in 1\n2 dummyline/.'}}]}
+// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall": false
+// }->filtering: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "source": "1\\n2 dummyline",
+//     "debug": true
+// }->assertResult: {
+//     "id": "filter not hit values",
+//     "notcontains": {
+//         "runFiltering": [
+//             {
+//                 "13/12/04 23:58:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "description": "but match, should not match"
+// }
 
 
 
-
-
-// ->終了時のメッセージ/showAtLog: {
+// ->終了時のメッセージ/showStatusMessage: {
 //     "message": "test over.\n\n"
 // }
