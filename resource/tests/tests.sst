@@ -5,49 +5,75 @@
     "message": "test start\n\n"
 }
 
-->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
-    "name": "testFilter",
-    "patterns": [
-        {
-            "testPattern": {
-                "selectors": [
-                    {
-                        "showStatusMessage": {
-                            "message": "hello!"
-                        }
-                    }
-                ]
-            }
-        }
-    ]
+
+->ステータスバーにメッセージを表示/showStatusMessage: {
+    "message": "testStatusMessage"
 }->assertResult: {
-    "id": "should have filter-info",
+    "id": "",
     "contains": {
-        "defineFilter": {
-            "defined": {
-                "name": "testFilter",
-                "patterns": [
-                    {
-                        "testPattern": {
-                            "selectors": [
-                                {
-                                    "showStatusMessage": {
-                                        "message": "hello!"
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
+        "showStatusMessage": {
+            "output": "testStatusMessage"
         }
     },
     "description": "not match."
 }
 
 
+// ->ログ出力のテスト/showAtLog: {
+//     "message": "testLogMessage"
+// }->assertResult: {
+//     "id": "log output test",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "testLogMessage"
+//         }
+//     },
+//     "description": "not match."
+// }
 
-// ->フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
+
+// ->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
+//     "name": "testFilter",
+//     "patterns": [
+//         {
+//             "testPattern": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "hello!"
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "should have filter-info",
+//     "contains": {
+//         "defineFilter": {
+//             "defined": {
+//                 "name": "testFilter",
+//                 "patterns": [
+//                     {
+//                         "testPattern": {
+//                             "selectors": [
+//                                 {
+//                                     "showStatusMessage": {
+//                                         "message": "hello!"
+//                                     }
+//                                 }
+//                             ]
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+// ->filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
 //     "name": "filter_13/12/04 18:16:49",
 //     "patterns": [
 //         {
@@ -82,7 +108,7 @@
 // }
 
 
-// ->フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
+// ->filteringのテスト。フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
 //     "name": "filter_13/12/04 23:58:49",
 //     "patterns": [
 //         {

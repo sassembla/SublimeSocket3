@@ -230,7 +230,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWATLOG):
-				self.showAtLog(params)
+				self.showAtLog(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
@@ -457,12 +457,13 @@ class SublimeSocketAPI:
 
 
 	## send message to the other via SS.
-	def showAtLog(self, params):
+	def showAtLog(self, params, results):
 
 		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param"
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 		print(SublimeSocketAPISettings.LOG_prefix, message)
 
+		self.setResultsParams(results, self.showAtLog, {"output":message})
 
 	## run testus
 	def runTests(self, params, client, results):
