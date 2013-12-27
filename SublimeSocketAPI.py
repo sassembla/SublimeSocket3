@@ -981,7 +981,7 @@ class SublimeSocketAPI:
 		message = params[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE]
 		sublime.status_message(message)
 
-		self.setResultsParams(results, self.showStatusMessage, {SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE:message})
+		self.setResultsParams(results, self.showStatusMessage, {"output":message})
 
 	## append region on ST
 	def appendRegion(self, params, results):
