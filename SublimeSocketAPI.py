@@ -34,10 +34,6 @@ class SublimeSocketAPI:
 	def initResult(self, resultIdentity):
 		return {resultIdentity:{}}
 
-	def resetResults(self, results):
-		results = {}
-		return results
-
 	def setResultsParams(self, results, apiFunc, value):
 		# only one key.
 		assert len(results) == 1, "in setResultsParams, too much keys found."
@@ -60,7 +56,7 @@ class SublimeSocketAPI:
 
 
 
-	## Parse the API command via WebSocket
+	## Parse the API command
 	def parse(self, data, client=None, results=None):
 		# print("parse sourceData is ", data, "len", len(data))
 		print("parse開始の時点で", results)
@@ -85,7 +81,12 @@ class SublimeSocketAPI:
 					print("JSON parse error", e, "source = ", command_params[1])
 					return
 					
-			self.runAPI(command, params, client, results)
+			parseResult = self.runAPI(command, params, client, results)
+
+			if SublimeSocketAPISettings.PARSERESULT_SWITCH in parseResult:
+				resultKey = list(results)[0]
+				print("resultKey", resultKey)
+				results[resultKey] = {}
 			
 		return results
 
@@ -101,7 +102,7 @@ class SublimeSocketAPI:
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
 	def runAPI(self, command, params=None, client=None, results=None):
-		# print("runAPI command", command)
+		print("runAPI command", command)
 		
 		# erase comment
 		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
@@ -129,8 +130,13 @@ class SublimeSocketAPI:
 				assert key in results, "no-key in results. should use the API that have results."
 
 				params[value] = results[key]
+
   		# python-switch
 		for case in PythonSwitch(command):
+			if case(SublimeSocketAPISettings.API_RESETRESULTS):
+				return SublimeSocketAPISettings.PARSERESULT_SWITCH
+				break
+
 			if case(SublimeSocketAPISettings.API_RUNTESTS):
 				self.runTests(params, client, results)
 				break
@@ -292,6 +298,8 @@ class SublimeSocketAPI:
 			if case():
 				print("unknown command", command, "/")
 				break
+
+		return SublimeSocketAPISettings.PARSERESULT_NONE
 
 
 	## run API with interval.
@@ -488,6 +496,7 @@ class SublimeSocketAPI:
 		# remove spaces
 		removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
 		
+
 		# remove CRLF
 		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
 		
@@ -532,11 +541,23 @@ class SublimeSocketAPI:
 		
 	## assertions
 	def assertResult(self, params, results):
-		resultBodies = self.resultBody(results)
-		print("resultBodies", resultBodies)
-
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
+		
+		identity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
+		
+		# load results for check
+		resultBodies = self.resultBody(results)
+		
+
+		debug = False
+
+		if SublimeSocketAPISettings.ASSERTRESULT_DEBUG in params:
+			debug = params[SublimeSocketAPISettings.ASSERTRESULT_DEBUG]
+		
+		if debug:
+			print("\nassertResult:\nid:", identity, "\n", resultBodies, "\n:assertResult\n")
+
 		
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION]
@@ -554,6 +575,8 @@ class SublimeSocketAPI:
 					if resultKey[0] == key:
 						assertValue = currentDict[key]
 						assertTarget = resultBodies[resultKey]
+						if debug:
+							print("expected:", assertValue, "\n", "actual:", assertTarget, "\n")
 
 						if assertValue == assertTarget:
 							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
@@ -599,10 +622,18 @@ class SublimeSocketAPI:
 
 
 
-		# expect
-		elif SublimeSocketAPISettings.ASSERTRESULT_EXPECTS in params:
-			print("expects hit, start check at", params[SublimeSocketAPISettings.ASSERTRESULT_EXPECTS])
-			print("timeassert not yet implemented")
+
+		# is empty or not
+		elif SublimeSocketAPISettings.ASSERTRESULT_ISEMPTY in params:
+			# match
+			if not resultBodies:
+				resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+								assertionIdentity, 
+								"is empty.")
+				self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+				return resultMessage
+
+			print("over, dead.", resultBodies)
 			
 			# fail
 			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
@@ -622,7 +653,6 @@ class SublimeSocketAPI:
 
 
 	def assertKVS(self, params):
-		print("assertResult", params)
 		currentResults = []
 
 		# key is typed as JSON, 

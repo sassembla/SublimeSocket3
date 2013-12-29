@@ -3,19 +3,28 @@
 
 開始メッセージ/showStatusMessage: {
     "message": "test start\n\n"
+}->resetResults: {
+
+}->assertResult: {
+    "id": "prepare for testing",
+    "isempty": {},
+    "description": "not empty",
+    "debug": true
 }
+
 
 
 ->ステータスバーにメッセージを表示/showStatusMessage: {
     "message": "testStatusMessage"
 }->assertResult: {
-    "id": "",
+    "id": "show statusMessage",
     "contains": {
         "showStatusMessage": {
             "output": "testStatusMessage"
         }
     },
-    "description": "not match."
+    "description": "status message not match.",
+    "debug": true
 }
 
 
