@@ -372,7 +372,8 @@ class SublimeWSServer:
 		selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
 		self.runAllSelector(reactDict, selector, eventParam)
-	def runAllSelector(self, reactorDict, selectorsArray, eventParam):
+
+	def runAllSelector(self, reactorDict, selectorsArray, eventParam, results=None):
 		def runForeachAPI(selector):
 			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
 
@@ -392,14 +393,14 @@ class SublimeWSServer:
 					currentParams[toKey] = eventParam[fromKey]
 
 			print("runAllSelector内でのrunAPI？")
-			self.api.runAPI(command, currentParams)
+			self.api.runAPI(command, currentParams, results)
 
 		[runForeachAPI(selector) for selector in selectorsArray]
 
 
 
 	## emit event if params matches the regions that sink in view
-	def containsRegions(self, params, results=None):
+	def containsRegions(self, params, results):
 		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_VIEWS):
 			viewDict = self.getV(SublimeSocketAPISettings.DICT_VIEWS)
 
@@ -458,7 +459,7 @@ class SublimeWSServer:
 
 							messageDict = {}
 							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
-							print("containsRegionsからのrunAPI", results)
+							print("containsRegionsからのrunAPI")
 							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict)
 							self.api.printout(message)
 							

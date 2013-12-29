@@ -8,24 +8,50 @@
 }->assertResult: {
     "id": "prepare for testing",
     "isempty": {},
-    "description": "not empty",
-    "debug": true
+    "description": "not empty"
 }
 
 
 
-->ステータスバーにメッセージを表示/showStatusMessage: {
-    "message": "testStatusMessage"
-}->assertResult: {
-    "id": "show statusMessage",
-    "contains": {
-        "showStatusMessage": {
-            "output": "testStatusMessage"
-        }
-    },
-    "description": "status message not match.",
-    "debug": true
-}
+// ->Notifyを表示する/notify: {
+//     "title": "test_notify",
+//     "message": "notice!"
+// }->assertResult: {
+//     "id": "show notification",
+//     "contains": {
+//         "notify": {
+//             "title": "test_notify",
+//             "message": "notice!"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->シェルを実行する/runShell: {
+//     "main": "pwd"
+// }->assertResult: {
+//     "id": "ruh shell",
+//     "contains": {
+//         "runShell": {
+//             "runnable": "pwd"
+//         }
+//     },
+//     "description": "not match.",
+//     "debug": true
+// }
+
+
+// ->ステータスバーにメッセージを表示/showStatusMessage: {
+//     "message": "testStatusMessage"
+// }->assertResult: {
+//     "id": "show statusMessage",
+//     "contains": {
+//         "showStatusMessage": {
+//             "output": "testStatusMessage"
+//         }
+//     },
+//     "description": "status message not match."
+// }
 
 
 // ->ログ出力のテスト/showAtLog: {
@@ -153,296 +179,255 @@
 
 
 
-->メッセージを特定クライアントに配信する。/inputIdentity: {
-    "id": "testMonocastMessage"
-}->monocastMessage: {
-    "target": "testMonocastMessage",
-    "message": "monocasting"
-}->assertResult: {
-    "id": "monocast message for specific client",
-    "contains": {
-        "monocastMessage": {
-            "target": "testMonocastMessage",
-            "message": "monocasting"
-        }
-    },
-    "description": "faild to monocast."
-}
-
-
-->フォーマットを使用したmonocast/inputIdentity: {
-    "id": "testMonocastMessageWithFormat"
-}->monocastMessage: {
-    "target": "testMonocastMessageWithFormat",
-    "message": "monocasting",
-    "format": "0:a1 b1 c1 d1",
-    "0": "header",
-    "a1": "the",
-    "b1": "test",
-    "c1": "is",
-    "d1": "over"
-}->assertResult: {
-    "id": "monocast message with format",
-    "contains": {
-        "monocastMessage": {
-            "target": "testMonocastMessageWithFormat",
-            "message": "header:the test is over"
-        }
-    },
-    "description": "faild to monocast with format."
-}
-
-
-->メッセージを全クライアントに配信する/inputIdentity: {
-    "id": "testBroadcastMessage"
-}->broadcastMessage: {
-    "message": "broadcasting"
-}->assertResult: {
-    "id": "broadcast message for every client",
-    "contains": {
-        "broadcastMessage": {
-            "sendedTo": [
-                "testBroadcastMessage"
-            ]
-        }
-    },
-    "description": "faild to broadcast."
-}
-
-->reactorをリセットする/resetReactors:{
-
-}->assertResult:{
-    "id": "reset all reactors",
-    "contains": {
-        "resetReactors": {
-            "deletedReactors": {}
-        }
-    },
-    "description": "not match"
-}
-
-
-
-->reactorをセットする/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-
-->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over.2"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->setReactor: {
-    "target": "testTarget2",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over.2"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    },
-                    "testTarget2": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over.2"
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-
-->Clientのidentityをセットする/inputIdentity: {
-    "id": "test"
-}->assertResult: {
-    "id": "inputIdentity done as test",
-    "contains": {
-        "inputIdentity": {
-            "inputIdentity": "test"
-        }
-    },
-    "description": "not match"
-}
-
-
-->設定の実行が実行されきったかどうか/runSetting: {
-    "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
-}->assertResult: {
-    "id": "setting done",
-    "contains": {
-        "runSetting": {
-            "result": "done"
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-
-}
-
-
-// ->特定の名称のファイルのバッファを作成、内容を入力する。閉じられないので、後始末は自分でやる。/createBuffer: {
-    
+// ->メッセージを特定クライアントに配信する。/inputIdentity: {
+//     "id": "testMonocastMessage"
+// }->monocastMessage: {
+//     "target": "testMonocastMessage",
+//     "message": "monocasting"
 // }->assertResult: {
-//     "id": "contains valid contents",
+//     "id": "monocast message for specific client",
 //     "contains": {
-//         "createBuffer": {
-//             "contents": "empty"
+//         "monocastMessage": {
+//             "target": "testMonocastMessage",
+//             "message": "monocasting"
 //         }
 //     },
-//     "description": "not contains."
+//     "description": "faild to monocast."
+// }
+
+
+// ->フォーマットを使用したmonocast/inputIdentity: {
+//     "id": "testMonocastMessageWithFormat"
+// }->monocastMessage: {
+//     "target": "testMonocastMessageWithFormat",
+//     "message": "monocasting",
+//     "format": "0:a1 b1 c1 d1",
+//     "0": "header",
+//     "a1": "the",
+//     "b1": "test",
+//     "c1": "is",
+//     "d1": "over"
+// }->assertResult: {
+//     "id": "monocast message with format",
+//     "contains": {
+//         "monocastMessage": {
+//             "target": "testMonocastMessageWithFormat",
+//             "message": "header:the test is over"
+//         }
+//     },
+//     "description": "faild to monocast with format."
+// }
+
+
+// ->メッセージを全クライアントに配信する/inputIdentity: {
+//     "id": "testBroadcastMessage"
+// }->broadcastMessage: {
+//     "message": "broadcasting"
+// }->assertResult: {
+//     "id": "broadcast message for every client",
+//     "contains": {
+//         "broadcastMessage": {
+//             "sendedTo": [
+//                 "testBroadcastMessage"
+//             ]
+//         }
+//     },
+//     "description": "faild to broadcast."
+// }
+
+// ->reactorをリセットする/resetReactors:{
+
+// }->assertResult:{
+//     "id": "reset all reactors",
+//     "contains": {
+//         "resetReactors": {
+//             "deletedReactors": {}
+//         }
+//     },
+//     "description": "not match"
 // }
 
 
 
-// ->存在するファイルを開く/openFile: {
-//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// ->reactorをセットする/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
 // }->assertResult: {
-//     "id": "open exist file",
+//     "id": "reactor is set",
 //     "contains": {
-//         "openFile": {
-//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
 //         }
 //     },
-//     "description": "not contains."
+//     "description": "not match"
+// }->resetReactors:{
+    
 // }
 
 
 
-// ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
-//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// ->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
 // }->assertResult: {
-//     "id": "open not exist file",
+//     "id": "reactor is set",
 //     "contains": {
-//         "openFile": {
-//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
-//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
 //         }
 //     },
-//     "description": "not contains."
+//     "description": "not match"
+// }->resetReactors:{
+    
 // }
+
+
+// ->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget2",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     },
+//                     "testTarget2": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over.2"
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+
+// ->Clientのidentityをセットする/inputIdentity: {
+//     "id": "test"
+// }->assertResult: {
+//     "id": "inputIdentity done as test",
+//     "contains": {
+//         "inputIdentity": {
+//             "inputIdentity": "test"
+//         }
+//     },
+//     "description": "not match"
+// }
+
+
+// ->設定の実行が実行されきったかどうか/runSetting: {
+//     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
+// }->assertResult: {
+//     "id": "setting done",
+//     "contains": {
+//         "runSetting": {
+//             "result": "done"
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+
+// }
+
+
 
 
 
@@ -565,23 +550,70 @@
 // }
 
 
-// ->ステータスバーにメッセージを表示、テスト付き/showStatusMessage: {
-//     "message": "testMessage"
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 面倒くさい系
+// ->特定の名称のファイルのバッファを作成、内容を入力する。閉じられないので、後始末は自分でやる。/createBuffer: {
+    
 // }->assertResult: {
-//     "id": "contains message",
+//     "id": "contains valid contents",
 //     "contains": {
-//         "showStatusMessage": {
-//             "message": "testMessage"
+//         "createBuffer": {
+//             "contents": "empty"
 //         }
 //     },
-//     "description": "notmatch."
+//     "description": "not contains."
 // }
 
-
-
-
-
-
-// ->終了時のメッセージ/showStatusMessage: {
-//     "message": "test over.\n\n"
+// ->存在するファイルを開く/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->assertResult: {
+//     "id": "open exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         }
+//     },
+//     "description": "not contains."
 // }
+
+// ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// }->assertResult: {
+//     "id": "open not exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+//         }
+//     },
+//     "description": "not contains."
+// }
+
+// ->ダイアログを表示/showDialog:{
+//     "message": "here comes daredevil"
+// }->assertResult: {
+//     "id" :"show dialog contains values.",
+//     "contains": {
+//         "showDialog": {
+//             "output": "here comes daredevil"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+->終了時のメッセージ/showStatusMessage: {
+    "message": "test over.\n\n"
+}

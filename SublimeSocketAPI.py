@@ -35,6 +35,9 @@ class SublimeSocketAPI:
 		return {resultIdentity:{}}
 
 	def setResultsParams(self, results, apiFunc, value):
+		if not results:
+			return results
+			
 		# only one key.
 		assert len(results) == 1, "in setResultsParams, too much keys found."
 		apiFuncIdentity = (apiFunc.__name__, str(uuid.uuid4()))
@@ -149,14 +152,6 @@ class SublimeSocketAPI:
 				client.send(buf)
 				break
 
-			if case(SublimeSocketAPISettings.API_ASSERTKVS):
-				assertedResult = self.assertKVS(params)
-
-				# send for display
-				buf = self.encoder.text(assertedResult, mask=0)
-				client.send(buf)
-				break
-
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
 				filePath = params[SublimeSocketAPISettings.RUNSETTING_FILEPATH]
 
@@ -184,7 +179,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_CONTAINSREGIONS):
-				self.containsRegions(params)
+				self.containsRegions(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
@@ -224,7 +219,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSHELL):
-				self.runShell(params)
+				self.runShell(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_BROADCASTMESSAGE):
@@ -239,6 +234,10 @@ class SublimeSocketAPI:
 				self.showAtLog(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_SHOWDIALOG):
+				self.showDialog(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
 				self.appendRegion(params, results)
 				break
@@ -248,7 +247,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_NOTIFY):
-				self.notify(params)
+				self.notify(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_GETALLFILEPATH):
@@ -272,10 +271,10 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
-				self.runCompletion(params)
+				self.runCompletion(params, results)
 				break
 			if case(SublimeSocketAPISettings.API_OPENPAGE):
-				self.openPage(params)
+				self.openPage(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETWINDOWBASEPATH):
@@ -344,7 +343,7 @@ class SublimeSocketAPI:
 
 	## run shellScript
 	# params is array that will be evaluated as commandline marameters.
-	def runShell(self, params):
+	def runShell(self, params, results=None):
 		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param"
 
 		if SublimeSocketAPISettings.RUNSHELL_DELAY in params:
@@ -410,6 +409,9 @@ class SublimeSocketAPI:
 		
 		if len(runnable):
 			subprocess.call(runnable, shell=True)
+			if results:
+				self.setResultsParams(results, self.runShell, {"runnable":runnable})
+			
 
 	## emit message to clients.
 	# broadcast messages if no-"target" key.
@@ -472,6 +474,16 @@ class SublimeSocketAPI:
 		print(SublimeSocketAPISettings.LOG_prefix, message)
 
 		self.setResultsParams(results, self.showAtLog, {"output":message})
+
+
+	def showDialog(self, params, results):
+		assert SublimeSocketAPISettings.SHOWDIALOG_MESSAGE in params, "showDialog require 'message' param"
+		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
+
+		sublime.message_dialog(message)
+
+		self.setResultsParams(results, self.showDialog, {"output":message})
+
 
 	## run testus
 	def runTests(self, params, client, results):
@@ -632,8 +644,6 @@ class SublimeSocketAPI:
 								"is empty.")
 				self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 				return resultMessage
-
-			print("over, dead.", resultBodies)
 			
 			# fail
 			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
@@ -651,81 +661,6 @@ class SublimeSocketAPI:
 		
 		return resultMessage
 
-
-	def assertKVS(self, params):
-		currentResults = []
-
-		# key is typed as JSON, 
-		# {"a": {"b": {"c": "d"}}}
-		# -> ここから、aのbのcの値がdである、みたいな形を出す。*でワイルドカードを赦す。
-		# paramsのメインキーの数だけ有り得る。forだ。
-		assertionDict = {}
-		for assertIdentityKey, nestedKeysAndTheValue in params.items():
-			print("assertIdentityKey", assertIdentityKey)
-			print("nestedKeysAndTheValue", nestedKeysAndTheValue)
-
-			
-			keysAndValueOneLine = []
-
-			# {key:{"a": {"b": {"c": "theValue"}}}}
-			# -> key:(["a","b","c"],"theValue")
-			def getKeysAndValueOneLine(key, value):
-
-				keysAndValueOneLine.append(key)
-				if type(value) is dict:
-					# 単に再帰
-					for currentKey, currentValue in value.items():
-						return getKeysAndValueOneLine(currentKey, currentValue)
-					
-				elif type(value) is list:
-					pass
-
-				else:
-					keysAndValueOneLine.append(value)
-					
-
-			[getKeysAndValueOneLine(key, coValue) for key, coValue in nestedKeysAndTheValue.items()]
-			assertionDict[assertIdentityKey] = (keysAndValueOneLine[0:-1], keysAndValueOneLine[-1])
-
-
-		def assertKV(keys, target, source, index):
-			# if nextKey == "*":,,,, not yet impemented
-			# 	# wildcard, means get first or False = no key, failure.
-
-
-			nextKey = keys[index+1]
-
-			if type(source) == dict:
-				nextSource = source[nextKey]
-
-			elif type(source) == list:
-				if type(nextKey) == int:
-					nextSource = source[nextKey]
-				else:
-					return (False, "target is list, should be use number for index.")
-			else:
-				return (False, "no key error")
-
-			if type(nextSource) == str:
-				if nextSource == target:
-					message = "matched.", keys, " = ", target
-					return (True, message)
-
-				else:
-					message = "not match,", keys, " expected:", target, ", actual:", nextSource
-					return (False, message)
-
-			elif type(nextSource) == dict:
-				return assertKV(keys, target, nextSource, index+1)
-			elif type(nextSource) == list:
-				return assertKV(keys, target, nextSource, index+1)
-			else:
-				print("not yet implemented,", type(nextSource))
-
-		# assertionDict build comoleted
-
-		currentResults = [assertKV(assertionDict[key][0], assertionDict[key][1], self.server.getV(assertionDict[key][0][0]), 0) for key in assertionDict.keys()]
-		return str(currentResults)
 
 	## input identity to client.
 	def inputIdentity(self, client, params, results):
@@ -767,8 +702,8 @@ class SublimeSocketAPI:
 	
 
 	## is contains regions or not.
-	def containsRegions(self, params):
-		self.server.containsRegions(params)
+	def containsRegions(self, params, results):
+		self.server.containsRegions(params, results)
 		
 	## Define the filter and check filterPatterns
 	def defineFilter(self, params, results):
@@ -1036,7 +971,7 @@ class SublimeSocketAPI:
 
 
 	## emit notification mechanism
-	def notify(self, params):
+	def notify(self, params, results):
 		assert SublimeSocketAPISettings.NOTIFY_TITLE in params, "notify require 'title' param"
 		assert SublimeSocketAPISettings.NOTIFY_MESSAGE in params, "notify require 'message' param"
 
@@ -1060,6 +995,7 @@ class SublimeSocketAPI:
 			}
 			
 			self.runShell(shellParams)
+			self.setResultsParams(results, self.notify, {SublimeSocketAPISettings.NOTIFY_TITLE: title, SublimeSocketAPISettings.NOTIFY_MESSAGE: message})
 
 
 
@@ -1181,7 +1117,7 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.PREPARECOMPLETION_ID in params, "prepareCompletion require 'id' param."
 		self.server.prepareCompletion(params[SublimeSocketAPISettings.PREPARECOMPLETION_ID])
 
-	def runCompletion(self, params):
+	def runCompletion(self, params, results):
 		assert SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params, "runCompletion require 'view' param."
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		assert SublimeSocketAPISettings.RUNCOMPLETION_ID in params, "runCompletion require 'id' param."
@@ -1227,8 +1163,10 @@ class SublimeSocketAPI:
 			self.server.updateCompletion(identity, completionStrs, lockcount)
 			# display completions
 			view.run_command("auto_complete")
+			
+			
 
-	def openPage(self, params):
+	def openPage(self, params, results):
 		assert SublimeSocketAPISettings.OPENPAGE_IDENTITY in params, "openPage require 'identity' param."
 		identity = params[SublimeSocketAPISettings.OPENPAGE_IDENTITY]
 
@@ -1266,7 +1204,7 @@ class SublimeSocketAPI:
 		shellParamDict = {"main":"/usr/bin/open", "-a":targetAppPath, "\"" + preferencePath + "\"":""
 		}
 
-		self.runShell(shellParamDict)
+		self.runShell(shellParamDict, results)
 		pass
 
 	def setWindowBasePath(self):
@@ -1430,6 +1368,7 @@ class SublimeSocketAPI:
 	## erase all regions of view/condition
 	def eraseAllRegion(self, results):
 		deletes = self.server.deleteAllRegionsInAllView()
+		print("results", results)
 		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 

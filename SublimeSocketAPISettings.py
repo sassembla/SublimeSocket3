@@ -93,7 +93,6 @@ ASSERTRESULT_VALUE_FAIL	= "Fail:"
 
 API_RESETRESULTS		= "resetResults"
 
-API_ASSERTKVS		= "assertKVS"
 
 API_RUNSETTING		= "runSetting"
 RUNSETTING_FILEPATH	= "path"
@@ -185,6 +184,9 @@ OUTPUT_MESSAGE			= "message"
 API_SHOWATLOG			= "showAtLog"
 LOG_MESSAGE				= "message"
 LOG_prefix				= "ss:"
+
+API_SHOWDIALOG			= "showDialog"
+SHOWDIALOG_MESSAGE		= "message"
 
 API_APPENDREGION	= "appendRegion"
 APPENDREGION_VIEW	= "view"
