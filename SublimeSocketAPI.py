@@ -57,13 +57,9 @@ class SublimeSocketAPI:
 		return {}
 
 
-
-
 	## Parse the API command
 	def parse(self, data, client=None, results=None):
-		# print("parse sourceData is ", data, "len", len(data))
-		print("parse開始の時点で", results)
-		
+			
 		# SAMPLE: inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...
 		commands = data.split(SublimeSocketAPISettings.API_CONCAT_DELIM)
 
@@ -104,9 +100,7 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, command, params=None, client=None, results=None):
-		print("runAPI command", command)
-		
+	def runAPI(self, command, params=None, client=None, results=None):		
 		# erase comment
 		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
 			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
