@@ -172,6 +172,10 @@ class SublimeSocketAPI:
 				self.openFile(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_CLOSEFILE):
+				self.closeFile(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_CONTAINSREGIONS):
 				self.containsRegions(params, results)
 				break
@@ -666,14 +670,25 @@ class SublimeSocketAPI:
 		generatedBuffer = sublime.active_window().new_file()
 		
 		contents = "empty"
-		
+		resultDict = {}
+
+
+		if SublimeSocketAPISettings.CREATEBUFFER_NAME in params:
+			name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
+			generatedBuffer.set_name(name)
+
+			resultDict[SublimeSocketAPISettings.CREATEBUFFER_NAME] = name
+
 		if SublimeSocketAPISettings.CREATEBUFFER_CONTENTS in params:
 			contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
 			generatedBuffer.run_command('insert_message', {'string': contents})
+			resultDict[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS] = contents
 
-		self.setResultsParams(results, self.createBuffer, {SublimeSocketAPISettings.CREATEBUFFER_CONTENTS:contents})
+
+		self.setResultsParams(results, self.createBuffer, resultDict)
+		
 	
-	## open files
+	## open file
 	def openFile(self, params, results):
 		assert SublimeSocketAPISettings.OPENFILE_NAME in params, "openFile require 'name' key."
 		original_name = params[SublimeSocketAPISettings.OPENFILE_NAME]
@@ -694,6 +709,33 @@ class SublimeSocketAPI:
 		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_LOADING, {SublimeSocketAPISettings.VIEW_SELF:theOpenedViewInstance})
 		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
 	
+	## close file. if specified -> close the file. if not specified -> close current file.
+	def closeFile(self, params, results):
+		if SublimeSocketAPISettings.CLOSEFILE_NAME in params:
+			original_name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
+			name = original_name
+
+			if name.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
+				filePathArray = name.split(":")
+				name = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
+
+				theOpenedViewInstance = sublime.active_window().open_file(name)
+				theOpenedViewInstance.close()
+
+				self.setResultsParams(results, self.closeFile, {"closed":True, "name":original_name})
+
+		else:
+			theCurrentViewInstance = sublime.active_window().active_view()
+			original_name = theCurrentViewInstance.file_name()
+
+			# set name if None. avoid matching JSON's "null" & Python's "None".
+			if not original_name:
+				original_name = "None"
+
+			theCurrentViewInstance.close()
+
+			self.setResultsParams(results, self.closeFile, {"closed":True, "name":original_name})
+			
 
 	## is contains regions or not.
 	def containsRegions(self, params, results):

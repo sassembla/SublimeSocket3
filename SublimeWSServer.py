@@ -15,7 +15,6 @@ import re
 
 from .PythonSwitch import PythonSwitch
 
-SERVER_INTERVAL_SEC = 2000
 
 class SublimeWSServer:
 
@@ -54,8 +53,6 @@ class SublimeWSServer:
 		print('\n', serverStartMessage, "\n")
 		sublime.status_message(serverStartMessage)
 
-		# start serverControlIntervals
-		# self.intervals(), SERVER_INTERVAL_SEC)
 
 		# load settings
 		results = self.api.initResult(str(uuid.uuid4()))
@@ -79,20 +76,6 @@ class SublimeWSServer:
 			threading.Thread(target = client.handle, args = (conn,addr)).start()
 				
 		return 0
-
-
-	## interval
-	def intervals(self):
-		# check KVS for "eventListen", and the other APIs.
-		
-		for key in SublimeSocketAPISettings.INTERVAL_DEPEND_APIS:
-			pass
-			# self.api.runOnInterval(self.getV(key))
-
-		# sublime.status_message("params:\n".join(debugArray)), 0)
-		
-		# loop
-		self.intervals()
 		
 
 	## load settings and run in mainThread

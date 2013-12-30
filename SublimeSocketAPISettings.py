@@ -43,7 +43,6 @@ F_RUNWITHBUFFER_BODY		= "body"
 F_RUNWITHBUFFER_PATH		= "path"
 F_RUNWITHBUFFER_ID			= "id"
 F_RUNWITHBUFFER_ROWCOL		= "rowcol"
-SIZE_OF_BUFFER					= 100000
 
 
 REACTABLE_EVENT_ON_QUERY_COMPLETIONS = "on_query_completions"
@@ -104,10 +103,14 @@ IDENTITY_ID				= "id"
 API_TEARDOWN			=	"tearDown"
 
 API_CREATEBUFFER	= "createBuffer"
+CREATEBUFFER_NAME	= "name"
 CREATEBUFFER_CONTENTS = "contents"
 
 API_OPENFILE		= "openFile"
 OPENFILE_NAME		= "name"
+
+API_CLOSEFILE		= "closeFile"
+CLOSEFILE_NAME		= "name"
 
 API_SETREACTOR		= "setReactor"
 REACTOR_TARGET		= "target"
