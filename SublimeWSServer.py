@@ -354,8 +354,8 @@ class SublimeWSServer:
 		reactDict = reactorsDict[eventName][target]
 		
 		selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-
-		self.api.runAllSelector(reactDict, selector, eventParam)
+		print("runOrSetUserDefinedEventからのrunAllSelector")
+		self.api.runAllSelector(reactDict, selector, eventParam, {})
 
 
 	## emit event if params matches the regions that sink in view
@@ -537,7 +537,8 @@ class SublimeWSServer:
 					return self.temporaryEventDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS][completionsKey]
 		
 
-	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results):
+	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results=None):
+		print("runFoundationEvent, resultの行き先に困っている")
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
 				reactDict = reactorsDict[eventName][SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT]
@@ -550,8 +551,9 @@ class SublimeWSServer:
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER):				
 				for currentDict in reactorsDict[eventName]:
 					# get data from view-buffer
+					
 					bodyView = eventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW]
-
+					
 					currentRegion = sublime.Region(0, bodyView.size())
 
 					body = bodyView.substr(bodyView.word(currentRegion))

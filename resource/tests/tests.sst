@@ -1,67 +1,133 @@
 // SublimeSocketAsset's testSuite
 
 
+
+
+
 開始メッセージ/showStatusMessage: {
     "message": "test start\n\n"
-}->resetResults: {
+}->resetReactors: {
 
-}->assertResult: {
-    "id": "prepare for testing",
-    "isempty": {},
-    "description": "not empty"
+}->resetResults: {
+	
 }
 
 
-->現在のviewに対してselectorを実行する/openFile: {
-	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->runSelectorsOnView: {
+
+->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/openFile: {
+	"name": "runWithBufferTest.txt"
+}->setReactor: {
+    "target": "testTarget",
+    "event": "ss_f_runWithBuffer",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit over."
+            }
+        }
+    ]
+}->runWithBuffer: {
+	
+}->assertResult: {
+	"id": "run with buffer",
+	"contains": {
+		"runWithBuffer": {
+			"name": "None"
+		}
+	},
+	"description": "not match."
+}->closeFile: {
+
+}->resetReactors: {
+
+}->resetResults: {
+	
+}
+
+
+
+->eventEmitのテスト/setReactor: {
+	"target": "event_EmitTestTarget",
+	"event": "event_EmitTestEvent",
 	"selectors": [
 		{
 			"showAtLog": {
-				"message": "here comes!"
+				"message": "testing for eventEmit"
 			}
 		}
 	]
+}->eventEmit: {
+	"target": "event_EmitTestTarget",
+	"event": "event_EmitTestEvent"
 }->assertResult: {
-	"id": "get view from current targetted file",
+	"id": "eventEmit has emitted result",
 	"contains": {
-		"runSelectorsOnView": {
-			"name": "None"
+		"eventEmit": {
+			"target": "event_EmitTestTarget",
+			"event": "event_EmitTestEvent"
 		}
 	},
 	"description": "not match",
 	"debug": true
-}->closeFile: {
+}->resetReactors: {
 
+}->resetResults: {
+	
 }
 
-// ->runWithBufferのテスト。viewとのバインドがある機構だった気がする。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/createBuffer: {
-// 	"name": "runWithBufferTest.txt"
-// }->setReactor: {
-//     "target": "testTarget",
-//     "event": "ss_f_runWithBuffer",
-//     "interval": 100,
-//     "selectors": [
-//         {
-//             "showStatusMessage": {
-//                 "message": "eventEmit over."
-//             }
-//         }
-//     ]
-// }->runWithBuffer: {
-// 	"view": "runWithBufferTest.txt"
-// }->assertResult: {
-// 	"id": "run with buffer",
-// 	"contains": {
-// 		"runWithBuffer": {
-// 			"some": "thing"
-// 		}
-// 	},
-// 	"description": "not match.",
-// 	"debug": true
-// }->closeFile: {
 
-// }
+
+->特定のファイルに対するrunWithBufferのテスト/openFile: {
+	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+}->setReactor: {
+    "target": "testTarget",
+    "event": "ss_f_runWithBuffer",
+    "interval": 100,
+    "selectors": [
+        {
+            "showStatusMessage": {
+                "message": "eventEmit2 over."
+            }
+        }
+    ]
+}->setReactor: {
+	"target": "event_testTarget",
+    "event": "on_close",
+    "replacefromto": {
+    	"message": "view",
+        "view": "view"
+    },
+    "selectors": [
+    	{
+    		"showAtLog": {
+    			"message": "replace"
+    		}
+
+    	},
+        {
+            "runWithBuffer": {
+                "view": "replace"
+            }
+        }
+    ]
+}->closeFile: {
+	
+}->assertResult: {
+	"id": "runWithBuffer with specific file",
+	"contains": {
+		"runWithBuffer": {
+			"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+		}
+	},
+	"description": "not match.",
+	"debug": true
+}->resetReactors: {
+
+}->resetResults: {
+	
+}
+
 
 
 // ->Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {

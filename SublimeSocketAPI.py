@@ -27,20 +27,22 @@ class SublimeSocketAPI:
 		self.server = server
 		self.encoder = SublimeWSEncoder()
 		self.windowBasePath = sublime.active_window().active_view().file_name()
-
-
+		
 
 	## Inner-API for add results to the other results/
 	def initResult(self, resultIdentity):
 		return {resultIdentity:{}}
 
 	def setResultsParams(self, results, apiFunc, value):
+		print("resultはあくまでもテスト用で、値渡しには使用しない。test時以外、セットを無視する機構が必要")
+
 		if not results:
 			return results
-			
-		# only one key.
+
+		# only one key capable.
 		assert len(results) == 1, "in setResultsParams, too much keys found."
 		apiFuncIdentity = (apiFunc.__name__, str(uuid.uuid4()))
+
 		for key in results:
 			results[key][apiFuncIdentity] = value
 			return results
@@ -134,6 +136,8 @@ class SublimeSocketAPI:
 				return SublimeSocketAPISettings.PARSERESULT_SWITCH
 				break
 
+
+
 			if case(SublimeSocketAPISettings.API_RUNTESTS):
 				self.runTests(params, client, results)
 				break
@@ -141,7 +145,7 @@ class SublimeSocketAPI:
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
 				assertedResult = self.assertResult(params, results)
 
-				# send for display
+				# send for display test result
 				buf = self.encoder.text(assertedResult, mask=0)
 				client.send(buf)
 				break
@@ -240,10 +244,6 @@ class SublimeSocketAPI:
 				self.appendRegion(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_RUNSELECORSONVIEW):
-				self.runSelectorsOnView(params, results)
-				break
-
 			if case(SublimeSocketAPISettings.API_RUNWITHBUFFER):
 				self.runWithBuffer(params, results)
 				break
@@ -261,7 +261,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_EVENTEMIT):
-				self.eventEmit(params)
+				self.eventEmit(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_CANCELCOMPLETION):
@@ -318,7 +318,7 @@ class SublimeSocketAPI:
 			currentParams = params.copy()
 
 			# replace parameters if key 'replace' exist
-			if SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in paramDict:
+			if paramDict and SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in paramDict:
 				for fromKey in paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO].keys():
 					toKey = paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO][fromKey]
 					
@@ -684,10 +684,11 @@ class SublimeSocketAPI:
 			"assertion aborted in assertResult API.")
 		
 		self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-		
+
 		return resultMessage
 
 
+	
 	## input identity to client.
 	def inputIdentity(self, client, params, results):
 		identity = self.server.updateClientId(client, params)
@@ -1028,36 +1029,25 @@ class SublimeSocketAPI:
 		result = self.checkIfViewExist_appendRegion_Else_notFound(view, self.internal_detectViewInstance(view), line, message, condition)
 		self.setResultsParams(results, self.appendRegion, {"result":result[0], SublimeSocketAPISettings.APPENDREGION_LINE:result[1], SublimeSocketAPISettings.APPENDREGION_MESSAGE:result[2], SublimeSocketAPISettings.APPENDREGION_CONDITION:result[3]})
 		
-	## get specified view or current view then run selectors
-	def runSelectorsOnView(self, params, results):
-		assert SublimeSocketAPISettings.RUNSELECORSONVIEW_SELECTORS in params, "runSelectorsOnView require 'selectors' param"
-		selectorsArray = params[SublimeSocketAPISettings.RUNSELECORSONVIEW_SELECTORS]
-		
-		name = None
+	
+	## emit ss_f_runWithBuffer event
+	def runWithBuffer(self, params, results):
+		if SublimeSocketAPISettings.RUNWITHBUFFER_VIEW in params:
+			view = params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW]
 
-		if SublimeSocketAPISettings.RUNSELECORSONVIEW_NAME in params:
-			name = params[SublimeSocketAPISettings.RUNSELECORSONVIEW_NAME]
-			paramDict = {SublimeSocketAPISettings.OPENFILE_NAME:name}
-			self.openFile(paramDict, {})
+		else:
+			view = sublime.active_window().active_view()
+			params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW] = view
+
+
+		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
+		name = view.name()
 
 		# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
 		if not name:
 			name = "None"
 
-		# get current view
-		currentView = sublime.active_window().active_view()
-
-
-		print("空のresultを渡しているrunAllSelector2。上層の結果さえとれればOKなので異論は無い。")
-		self.runAllSelector({}, selectorsArray, {}, {})
-
-		self.setResultsParams(results, self.runSelectorsOnView, {"name":name})
-
-
-	## emit ss_f_runWithBuffer event
-	def runWithBuffer(self, params, results):
-		assert SublimeSocketAPISettings.RUNWITHBUFFER_VIEW in params, "runWithBuffer require 'view' param"
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
+		self.setResultsParams(results, self.runWithBuffer, {"name":name})
 
 
 	## emit notification mechanism
@@ -1171,7 +1161,7 @@ class SublimeSocketAPI:
 			self.setResultsParams(results, self.readFileData, {"data":data})
 
 
-	def eventEmit(self, params):
+	def eventEmit(self, params, results):
 		assert SublimeSocketAPISettings.EVENTEMIT_TARGET in params, "eventEmit require 'target' param."
 		assert SublimeSocketAPISettings.EVENTEMIT_EVENT in params, "eventEmit require 'event' param."
 
@@ -1179,6 +1169,8 @@ class SublimeSocketAPI:
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
 		self.server.fireKVStoredItem(eventName, params)
+		self.setResultsParams(results, self.eventEmit, {SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], 
+			SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
 
 	def cancelCompletion(self, params):
