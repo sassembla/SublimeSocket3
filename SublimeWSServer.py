@@ -298,7 +298,8 @@ class SublimeWSServer:
 				del self.temporaryEventDict[event]#
 
 				# run all selector
-				self.runAllSelector(reactorDict, selectorsArray, eventParam)
+				print("空のresult辞書でrunAllSelectorを回している1。setとかがあると失敗する気がするなあ。")
+				self.api.runAllSelector(reactorDict, selectorsArray, eventParam, {})
 
 			# continue
 			threading.Timer(interval/1000, self.eventIntervals, [target, event, selectorsArray, interval]).start()
@@ -354,32 +355,7 @@ class SublimeWSServer:
 		
 		selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
-		self.runAllSelector(reactDict, selector, eventParam)
-
-	def runAllSelector(self, reactorDict, selectorsArray, eventParam, results=None):
-		def runForeachAPI(selector):
-			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
-
-			for commands in selector.keys():
-				command = commands
-				
-			params = selector[command]
-
-			# print "params", params, "command", command
-			currentParams = params.copy()
-			# replace parameters if key 'replace' exist
-			if SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in reactorDict:
-				for fromKey in reactorDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO].keys():
-					toKey = reactorDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO][fromKey]
-					
-					# replace or append
-					currentParams[toKey] = eventParam[fromKey]
-
-			print("runAllSelector内でのrunAPI？")
-			self.api.runAPI(command, currentParams, results)
-
-		[runForeachAPI(selector) for selector in selectorsArray]
-
+		self.api.runAllSelector(reactDict, selector, eventParam)
 
 
 	## emit event if params matches the regions that sink in view
@@ -460,7 +436,7 @@ class SublimeWSServer:
 
 	## input to sublime from server.
 	# fire event in KVS, if exist.
-	def fireKVStoredItem(self, eventName, eventParam=None):
+	def fireKVStoredItem(self, eventName, eventParam=None, results=None):
 		# print("fireKVStoredItem eventListen!", eventName,"eventParam",eventParam)
 
 		# event listener adopt
@@ -561,14 +537,14 @@ class SublimeWSServer:
 					return self.temporaryEventDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS][completionsKey]
 		
 
-	def runFoundationEvent(self, eventName, eventParam, reactorsDict):
+	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results):
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
 				reactDict = reactorsDict[eventName][SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT]
 			
 				selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
-				self.runAllSelector(reactDict, selector, eventParam)
+				self.api.runAllSelector(reactDict, selector, eventParam, results)
 				break
 
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER):				
@@ -598,7 +574,7 @@ class SublimeWSServer:
 					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ROWCOL] = rowColStr
 
 
-					self.runAllSelector(reactDict, currentSelector, currentEventParam)
+					self.api.runAllSelector(reactDict, currentSelector, currentEventParam, results)
 
 				break
 

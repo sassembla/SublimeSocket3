@@ -240,8 +240,12 @@ class SublimeSocketAPI:
 				self.appendRegion(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_RUNSELECORSONVIEW):
+				self.runSelectorsOnView(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_RUNWITHBUFFER):
-				self.runWithBuffer(params)
+				self.runWithBuffer(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_NOTIFY):
@@ -299,9 +303,33 @@ class SublimeSocketAPI:
 		return SublimeSocketAPISettings.PARSERESULT_NONE
 
 
-	## run API with interval.
-	def runOnInterval(self, key):
-		print("runOnInterval", key)
+
+	## run each selectors
+	def runAllSelector(self, paramDict, selectorsArray, eventParam, results):
+		def runForeachAPI(selector):
+			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
+
+			for commands in selector.keys():
+				command = commands
+				
+			params = selector[command]
+
+			# print "params", params, "command", command
+			currentParams = params.copy()
+
+			# replace parameters if key 'replace' exist
+			if SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in paramDict:
+				for fromKey in paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO].keys():
+					toKey = paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO][fromKey]
+					
+					# replace or append
+					currentParams[toKey] = eventParam[fromKey]
+
+			print("runAllSelector内でのrunAPI？")
+			self.runAPI(command, currentParams, results)
+
+		[runForeachAPI(selector) for selector in selectorsArray]
+
 
 	## run specific setting.txt file as API
 	def runSetting(self, filePath, client, results):
@@ -672,13 +700,14 @@ class SublimeSocketAPI:
 		contents = "empty"
 		resultDict = {}
 
-
+		# if "name" exist, set name.
 		if SublimeSocketAPISettings.CREATEBUFFER_NAME in params:
 			name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
 			generatedBuffer.set_name(name)
 
 			resultDict[SublimeSocketAPISettings.CREATEBUFFER_NAME] = name
 
+		# if "contents" exist, set contents to buffer.
 		if SublimeSocketAPISettings.CREATEBUFFER_CONTENTS in params:
 			contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
 			generatedBuffer.run_command('insert_message', {'string': contents})
@@ -728,7 +757,7 @@ class SublimeSocketAPI:
 			theCurrentViewInstance = sublime.active_window().active_view()
 			original_name = theCurrentViewInstance.file_name()
 
-			# set name if None. avoid matching JSON's "null" & Python's "None".
+			# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
 			if not original_name:
 				original_name = "None"
 
@@ -999,11 +1028,36 @@ class SublimeSocketAPI:
 		result = self.checkIfViewExist_appendRegion_Else_notFound(view, self.internal_detectViewInstance(view), line, message, condition)
 		self.setResultsParams(results, self.appendRegion, {"result":result[0], SublimeSocketAPISettings.APPENDREGION_LINE:result[1], SublimeSocketAPISettings.APPENDREGION_MESSAGE:result[2], SublimeSocketAPISettings.APPENDREGION_CONDITION:result[3]})
 		
+	## get specified view or current view then run selectors
+	def runSelectorsOnView(self, params, results):
+		assert SublimeSocketAPISettings.RUNSELECORSONVIEW_SELECTORS in params, "runSelectorsOnView require 'selectors' param"
+		selectorsArray = params[SublimeSocketAPISettings.RUNSELECORSONVIEW_SELECTORS]
+		
+		name = None
 
-	## emit ss_runWithBuffer event
-	def runWithBuffer(self, params):
+		if SublimeSocketAPISettings.RUNSELECORSONVIEW_NAME in params:
+			name = params[SublimeSocketAPISettings.RUNSELECORSONVIEW_NAME]
+			paramDict = {SublimeSocketAPISettings.OPENFILE_NAME:name}
+			self.openFile(paramDict, {})
+
+		# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
+		if not name:
+			name = "None"
+
+		# get current view
+		currentView = sublime.active_window().active_view()
+
+
+		print("空のresultを渡しているrunAllSelector2。上層の結果さえとれればOKなので異論は無い。")
+		self.runAllSelector({}, selectorsArray, {}, {})
+
+		self.setResultsParams(results, self.runSelectorsOnView, {"name":name})
+
+
+	## emit ss_f_runWithBuffer event
+	def runWithBuffer(self, params, results):
 		assert SublimeSocketAPISettings.RUNWITHBUFFER_VIEW in params, "runWithBuffer require 'view' param"
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params)
+		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
 
 
 	## emit notification mechanism
@@ -1096,19 +1150,25 @@ class SublimeSocketAPI:
 		results[SublimeSocketAPISettings.GETALLFILEPATH_PATHS] = header+joinedPathsStr+footer
 		
 
+	# not depends on Sublime Text API. (but depends on shortcut.)
 	def readFileData(self, params, results):
 		assert SublimeSocketAPISettings.READFILEDATA_PATH in params, "readFileData require 'path' param."
 		
-		path = params[SublimeSocketAPISettings.READFILEDATA_PATH]
+		original_path = params[SublimeSocketAPISettings.READFILEDATA_PATH]
+		path = original_path
+
+		if path.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
+			filePathArray = path.split(":")
+			path = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
 
 		currentFile = open(path, 'r')
 		data = currentFile.read()
 		currentFile.close()
 
 		if not data:
-			results[SublimeSocketAPISettings.READFILEDATA_DATA] = ""
+			self.setResultsParams(results, self.readFileData, {"data":""})
 		else:
-			results[SublimeSocketAPISettings.READFILEDATA_DATA] = data
+			self.setResultsParams(results, self.readFileData, {"data":data})
 
 
 	def eventEmit(self, params):
