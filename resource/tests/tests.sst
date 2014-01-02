@@ -1,15 +1,11 @@
-// SublimeSocketAsset's testSuite
-
-
-
-
+// testSuite for SublimeSocketAsset API.
 
 開始メッセージ/showStatusMessage: {
     "message": "test start\n\n"
 }->resetReactors: {
 
 }->resetResults: {
-	
+
 }
 
 
@@ -78,7 +74,7 @@
 
 
 
-->特定のファイルに対するrunWithBufferのテスト/openFile: {
+->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるんで、どうしたものか、、/openFile: {
 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
 }->setReactor: {
     "target": "testTarget",
@@ -693,7 +689,6 @@
 // 	"id": "close buffer succeeded",
 // 	"contains": {
 // 		"closeFile": {
-// 			"closed": true,
 // 			"name": "None"
 // 		}
 // 	},

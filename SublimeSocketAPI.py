@@ -28,13 +28,15 @@ class SublimeSocketAPI:
 		self.encoder = SublimeWSEncoder()
 		self.windowBasePath = sublime.active_window().active_view().file_name()
 		
+		self.isTesting = False
 
 	## Inner-API for add results to the other results/
 	def initResult(self, resultIdentity):
 		return {resultIdentity:{}}
 
 	def setResultsParams(self, results, apiFunc, value):
-		print("resultはあくまでもテスト用で、値渡しには使用しない。test時以外、セットを無視する機構が必要")
+		if not self.isTesting:
+			return results
 
 		if not results:
 			return results
@@ -185,7 +187,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
-				self.server.collectViews()
+				self.server.collectViews(results)
 				break
 
 			if case(SublimeSocketAPISettings.API_KEYVALUESTORE):
@@ -325,8 +327,8 @@ class SublimeSocketAPI:
 					# replace or append
 					currentParams[toKey] = eventParam[fromKey]
 
-			print("runAllSelector内でのrunAPI？")
-			self.runAPI(command, currentParams, results)
+			print("runAllSelector内でのrunAPI")
+			self.runAPI(command, currentParams, None, results)
 
 		[runForeachAPI(selector) for selector in selectorsArray]
 
@@ -516,7 +518,7 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param"
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
 		
-		# check contains PREFIX or not
+		# check contains PREFIX of path or not
 		if filePath.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
 			filePathArray = filePath.split(":")
 			filePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
@@ -526,22 +528,27 @@ class SublimeSocketAPI:
 		setting = settingFile.read()
 		settingFile.close()
 
-		# print "setting", setting
-
 		# remove //comment line
 		removeCommented_setting = re.sub(r'//.*', r'', setting)
 		
 		# remove spaces
 		removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
 		
-
 		# remove CRLF
 		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
 		
+
 		source = removeCRLF_setting
+
+		# start test
+		self.isTesting = True
 
 		# parse then get results
 		results = self.innerParse(source, client, results)
+
+		# end test
+		self.isTesting = False
+
 
 		# count Pass/Fail
 		def collectAsserts(key):
@@ -606,7 +613,9 @@ class SublimeSocketAPI:
 		# contains
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS]
-			
+			if debug:
+				print("start assertResult 'contains' in", identity)
+
 			# match
 			for key in currentDict:
 				for resultKey in resultBodies:
@@ -624,6 +633,9 @@ class SublimeSocketAPI:
 							return resultMessage
 			
 			# fail
+			if debug:
+				print("failed assertResult 'contains' in", identity)
+
 			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 							assertionIdentity, 
 							message)
@@ -635,7 +647,9 @@ class SublimeSocketAPI:
 		# not contains
 		if SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS]
-			
+			if debug:
+				print("start assertResult 'not contains' in", identity)
+
 			# match
 			for key in currentDict:
 				for resultKey in resultBodies:
@@ -648,6 +662,10 @@ class SublimeSocketAPI:
 								assertionIdentity, 
 								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
 							self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+
+							if debug:
+								print("failed assertResult 'not contains' in", identity)
+
 							return resultMessage
 
 			# pass
@@ -663,6 +681,9 @@ class SublimeSocketAPI:
 
 		# is empty or not
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISEMPTY in params:
+			if debug:
+				print("start assertResult 'empty' in", identity)
+
 			# match
 			if not resultBodies:
 				resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
@@ -672,6 +693,9 @@ class SublimeSocketAPI:
 				return resultMessage
 			
 			# fail
+			if debug:
+				print("failed assertResult 'empty' in", identity)
+
 			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 							assertionIdentity, 
 							message)
@@ -679,10 +703,15 @@ class SublimeSocketAPI:
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return resultMessage
 
+
+
 		resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 			assertionIdentity,
 			"assertion aborted in assertResult API.")
 		
+		if debug:
+				print(resultMessage, identity)
+
 		self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 
 		return resultMessage
@@ -736,11 +765,17 @@ class SublimeSocketAPI:
 		print(message)
 	
 		result = message
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_LOADING, {SublimeSocketAPISettings.VIEW_SELF:theOpenedViewInstance})
+		self.server.fireKVStoredItem(
+			SublimeSocketAPISettings.SS_EVENT_LOADING, 
+			{SublimeSocketAPISettings.VIEW_SELF:theOpenedViewInstance},
+			results)
+
 		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
 	
 	## close file. if specified -> close the file. if not specified -> close current file.
 	def closeFile(self, params, results):
+		original_name = "empty"
+		
 		if SublimeSocketAPISettings.CLOSEFILE_NAME in params:
 			original_name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
 			name = original_name
@@ -752,8 +787,6 @@ class SublimeSocketAPI:
 				theOpenedViewInstance = sublime.active_window().open_file(name)
 				theOpenedViewInstance.close()
 
-				self.setResultsParams(results, self.closeFile, {"closed":True, "name":original_name})
-
 		else:
 			theCurrentViewInstance = sublime.active_window().active_view()
 			original_name = theCurrentViewInstance.file_name()
@@ -764,7 +797,7 @@ class SublimeSocketAPI:
 
 			theCurrentViewInstance.close()
 
-			self.setResultsParams(results, self.closeFile, {"closed":True, "name":original_name})
+		self.setResultsParams(results, self.closeFile, {"name":original_name})
 			
 
 	## is contains regions or not.
@@ -980,7 +1013,6 @@ class SublimeSocketAPI:
 			
 			viewDict = self.server.viewDict()
 			viewKeys = viewDict.keys()
-			print("internal_detectViewInstance viewKeys", viewKeys)
 
 			viewSourceStr = viewSourceStr.replace("\\", "&")
 			viewSourceStr = viewSourceStr.replace("/", "&")
@@ -1026,7 +1058,14 @@ class SublimeSocketAPI:
 		message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
 		condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
 		
-		result = self.checkIfViewExist_appendRegion_Else_notFound(view, self.internal_detectViewInstance(view), line, message, condition)
+		result = self.checkIfViewExist_appendRegion_Else_notFound(
+			view, 
+			self.internal_detectViewInstance(view), 
+			line, 
+			message, 
+			condition,
+			results)
+
 		self.setResultsParams(results, self.appendRegion, {"result":result[0], SublimeSocketAPISettings.APPENDREGION_LINE:result[1], SublimeSocketAPISettings.APPENDREGION_MESSAGE:result[2], SublimeSocketAPISettings.APPENDREGION_CONDITION:result[3]})
 		
 	
@@ -1168,7 +1207,7 @@ class SublimeSocketAPI:
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
-		self.server.fireKVStoredItem(eventName, params)
+		self.server.fireKVStoredItem(eventName, params, results)
 		self.setResultsParams(results, self.eventEmit, {SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], 
 			SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
@@ -1419,7 +1458,7 @@ class SublimeSocketAPI:
 
 		print("ss: " + message)
 
-	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition):
+	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition, results):
 		# this check should be run in main thread
 		if not viewInstance:
 			params = {}
@@ -1429,7 +1468,7 @@ class SublimeSocketAPI:
 			params[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
 			params[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, params)
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, params, results)
 			return ("not appended", line, message, condition)
 
 		return self.internal_appendRegion(viewInstance, line, message, condition)

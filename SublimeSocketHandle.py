@@ -7,6 +7,8 @@ from .OpenPreference import Openpreference
 from . import SublimeSocketAPISettings
 import os
 
+import uuid
+
 
 # WebSocket server's thread
 thread = None
@@ -103,7 +105,7 @@ class SublimeSocketThread(threading.Thread):
 
     self._server = SublimeWSServer()
 
-  # send eventName and data to server
+  # send eventName and data to server. gen results from here for view-oriented-event-fireing.
   def toServer(self, eventName, view=None):
     if self._server is None:
       pass
@@ -129,7 +131,8 @@ class SublimeSocketThread(threading.Thread):
         SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME:     view.name()
       }
 
-      self._server.fireKVStoredItem(eventName, eventParam)
+      results = self._server.api.initResult("view:"+str(uuid.uuid4()))
+      self._server.fireKVStoredItem(eventName, eventParam, results)
 
   def fromServer(self, eventName, view=None):
     if self._server is None:

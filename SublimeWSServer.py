@@ -155,11 +155,13 @@ class SublimeWSServer:
 		return False
 
 	## collect current views
-	def collectViews(self):
+	def collectViews(self, results):
 		for views in [window.views() for window in sublime.windows()]:
 			for view in views:
-				self.fireKVStoredItem(SublimeSocketAPISettings.SS_EVENT_COLLECT, 
-					{SublimeSocketAPISettings.VIEW_SELF:view}
+				self.fireKVStoredItem(
+					SublimeSocketAPISettings.SS_EVENT_COLLECT, 
+					{SublimeSocketAPISettings.VIEW_SELF:view},
+					results
 				)
 	
 	## store region to viewDict-view in KVS
@@ -298,8 +300,7 @@ class SublimeWSServer:
 				del self.temporaryEventDict[event]#
 
 				# run all selector
-				print("空のresult辞書でrunAllSelectorを回している1。setとかがあると失敗する気がするなあ。")
-				self.api.runAllSelector(reactorDict, selectorsArray, eventParam, {})
+				self.api.runAllSelector(reactorDict, selectorsArray, eventParam, self.api.initResult("eventIntervals:"+str(uuid.uuid4())))
 
 			# continue
 			threading.Timer(interval/1000, self.eventIntervals, [target, event, selectorsArray, interval]).start()
@@ -354,8 +355,8 @@ class SublimeWSServer:
 		reactDict = reactorsDict[eventName][target]
 		
 		selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-		print("runOrSetUserDefinedEventからのrunAllSelector")
-		self.api.runAllSelector(reactDict, selector, eventParam, {})
+		
+		self.api.runAllSelector(reactDict, selector, eventParam, self.api.initResult("runOrSetUserDefinedEvent:"+str(uuid.uuid4())))
 
 
 	## emit event if params matches the regions that sink in view
@@ -408,7 +409,7 @@ class SublimeWSServer:
 					# append target
 					regionInfo[SublimeSocketAPISettings.REACTOR_TARGET] = target
 					
-					self.fireKVStoredItem(emit, regionInfo)
+					self.fireKVStoredItem(emit, regionInfo, results)
 					
 					if SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG in params:
 						debug = params[SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG]
@@ -418,8 +419,9 @@ class SublimeWSServer:
 
 							messageDict = {}
 							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
+							
 							print("containsRegionsからのrunAPI")
-							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict)
+							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict, None, results)
 							self.api.printout(message)
 							
 				[emitRegionMatchEvent(region) for region in regionIdentitiesList]
@@ -436,7 +438,7 @@ class SublimeWSServer:
 
 	## input to sublime from server.
 	# fire event in KVS, if exist.
-	def fireKVStoredItem(self, eventName, eventParam=None, results=None):
+	def fireKVStoredItem(self, eventName, eventParam, results):
 		# print("fireKVStoredItem eventListen!", eventName,"eventParam",eventParam)
 
 		# event listener adopt
@@ -464,7 +466,7 @@ class SublimeWSServer:
 			
 			# if exist, continue
 			if reactorsDict and eventName in reactorsDict:
-				self.runFoundationEvent(eventName, eventParam, reactorsDict)
+				self.runFoundationEvent(eventName, eventParam, reactorsDict, results)
 
 
 		# viewCollector "renew" will react
@@ -538,7 +540,7 @@ class SublimeWSServer:
 		
 
 	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results=None):
-		print("runFoundationEvent, resultの行き先に困っている")
+		print("runFoundationEvent, resultの行き先に困っている,", results)
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
 				reactDict = reactorsDict[eventName][SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT]
