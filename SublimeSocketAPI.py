@@ -29,10 +29,17 @@ class SublimeSocketAPI:
 		self.windowBasePath = sublime.active_window().active_view().file_name()
 		
 		self.isTesting = False
+		self.testResults = []
+
+		self.testPassedCount = 0
+		self.testFailedCount = 0
 
 	## Inner-API for add results to the other results/
 	def initResult(self, resultIdentity):
-		return {resultIdentity:{}}
+		initializedResults = {resultIdentity:{}}
+		self.testResults.append(initializedResults)
+
+		return self.testResults[-1]
 
 	def setResultsParams(self, results, apiFunc, value):
 		if not self.isTesting:
@@ -59,6 +66,19 @@ class SublimeSocketAPI:
 			return results[key]
 			
 		return {}
+
+	def insertResultsToTestResults(self, partialResults):
+		print("この時点でのself.testResults", self.testResults)
+		def getPartialResultIdentity(results):
+			for key in results:
+				return key 
+
+		partialResultsKey = getPartialResultIdentity(partialResults)
+
+		if partialResultsKey in list(self.testResults):
+			return
+
+		self.testResults.append(partialResults)
 
 
 	## Parse the API command
@@ -88,7 +108,6 @@ class SublimeSocketAPI:
 
 			if SublimeSocketAPISettings.PARSERESULT_SWITCH in parseResult:
 				resultKey = list(results)[0]
-				print("resultKey", resultKey)
 				results[resultKey] = {}
 			
 		return results
@@ -148,8 +167,16 @@ class SublimeSocketAPI:
 				assertedResult = self.assertResult(params, results)
 
 				# send for display test result
-				buf = self.encoder.text(assertedResult, mask=0)
+				buf = self.encoder.text(assertedResult[1], mask=0)
 				client.send(buf)
+
+				# countup
+				currentResult = False
+				if SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS in assertedResult[0]:
+					self.testPassedCount = self.testPassedCount + 1
+				else:
+					self.testFailedCount = self.testFailedCount + 1
+
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
@@ -536,12 +563,14 @@ class SublimeSocketAPI:
 		
 		# remove CRLF
 		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
-		
-
 		source = removeCRLF_setting
+
 
 		# start test
 		self.isTesting = True
+		
+		self.testPassedCount = 0
+		self.testFailedCount = 0
 
 		# parse then get results
 		results = self.innerParse(source, client, results)
@@ -550,36 +579,8 @@ class SublimeSocketAPI:
 		self.isTesting = False
 
 
-		# count Pass/Fail
-		def collectAsserts(key):
-			def detectAssert(results, keyAndId):
-				if keyAndId[0] is self.assertResult.__name__:
-					return results[keyAndId]
-						
-			the1stInnerResults = results[key]
-			for the2NdInnerResultKey in the1stInnerResults:
-				the2NdInnerResult = the1stInnerResults[the2NdInnerResultKey]
-				return [detectAssert(the2NdInnerResult, key) for key in the2NdInnerResult]
-
-
-		assertedResultsWithNone = [collectAsserts(the1stInnerResultsKey) for the1stInnerResultsKey in results]
-		
-
-		def countAsserts(assertionIdAndResult):
-			for assertionId in assertionIdAndResult:
-				result = assertionIdAndResult[assertionId]
-				if SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS in result:
-					return 1
-				else:
-					return -1
-
-		counted = [countAsserts(result) for result in assertedResultsWithNone[0] if result]
-
-		passed = counted.count(1)
-		failed = counted.count(-1)
-			
 		# count ASSERTRESULT_VALUE_PASS or ASSERTRESULT_VALUE_FAIL
-		message = "TOTAL:" + str(passed + failed) + " passed:" + str(passed) + " failed:" + str(failed)
+		message = "TOTAL:" + str(self.testPassedCount + self.testFailedCount) + " passed:" + str(self.testPassedCount) + " failed:" + str(self.testFailedCount)
 		buf = self.encoder.text(message, mask=0)
 		client.send(buf);
 
@@ -607,8 +608,20 @@ class SublimeSocketAPI:
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION]
 		
-		def assertionMessage(assertType, identity, message):
-			return assertType + " " + identity + " : " + message
+		
+
+		def genAssertionResult(passedOrFailed, assertionIdentity, message, results):
+
+			def assertionMessage(assertType, currentIdentity, currentMessage):
+				return assertType + " " + currentIdentity + " : " + currentMessage
+
+			resultMessage = assertionMessage(passedOrFailed,
+								assertionIdentity, 
+								message)
+
+			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
+			return (passedOrFailed, resultMessage)
+
 
 		# contains
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
@@ -626,22 +639,19 @@ class SublimeSocketAPI:
 							print("expected:", assertValue, "\n", "actual:", assertTarget, "\n")
 
 						if assertValue == assertTarget:
-							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+							return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
 								assertionIdentity, 
-								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
-							self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-							return resultMessage
-			
+								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]),
+								results)
+
 			# fail
 			if debug:
 				print("failed assertResult 'contains' in", identity)
 
-			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
-							assertionIdentity, 
-							message)
-
-			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-			return resultMessage
+			return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+				assertionIdentity, 
+				message,
+				results)
 
 
 		# not contains
@@ -658,25 +668,19 @@ class SublimeSocketAPI:
 						assertTarget = resultBodies[resultKey]
 
 						if assertValue == assertTarget:
-							resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
-								assertionIdentity, 
-								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]))
-							self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-
 							if debug:
 								print("failed assertResult 'not contains' in", identity)
 
-							return resultMessage
+							return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+								assertionIdentity, 
+								key + ":" + str(assertValue) + " in " + str(resultBodies[resultKey]),
+								results)
 
 			# pass
-			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
-							assertionIdentity, 
-							message)
-
-			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-			return resultMessage
-
-
+			return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+								assertionIdentity, 
+								message,
+								results)
 
 
 		# is empty or not
@@ -686,37 +690,29 @@ class SublimeSocketAPI:
 
 			# match
 			if not resultBodies:
-				resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
-								assertionIdentity, 
-								"is empty.")
-				self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-				return resultMessage
-			
+				return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+					assertionIdentity, 
+					"is empty.",
+					results)
+
 			# fail
 			if debug:
 				print("failed assertResult 'empty' in", identity)
 
-			resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
-							assertionIdentity, 
-							message)
-
-			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-			return resultMessage
+			return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+				assertionIdentity, 
+				message,
+				results)
 
 
-
-		resultMessage = assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
-			assertionIdentity,
-			"assertion aborted in assertResult API.")
-		
 		if debug:
 				print(resultMessage, identity)
 
-		self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
-
-		return resultMessage
-
-
+		return assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+			assertionIdentity,
+			"assertion aborted in assertResult API.",
+			results)
+		
 	
 	## input identity to client.
 	def inputIdentity(self, client, params, results):

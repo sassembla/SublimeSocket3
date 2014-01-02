@@ -54,8 +54,10 @@ class SublimeWSServer:
 		sublime.status_message(serverStartMessage)
 
 
+		# initialize API-results buffer for load-settings.
+		results = self.api.initResult("loadSettings:"+str(uuid.uuid4()))
+
 		# load settings
-		results = self.api.initResult(str(uuid.uuid4()))
 		self.loadSettings(results)
 
 
@@ -115,14 +117,11 @@ class SublimeWSServer:
 		currentClient = [client for client in self.clients.values() if client.clientId == clientId][0]
 		
 		# gen result id of toplevel
-		resultIdentity = str(uuid.uuid4())
-
-		def call(identity):
-			results = self.api.initResult(identity)
-			self.api.parse(apiData, currentClient, results)
+		resultIdentity = "callAPI:"+str(uuid.uuid4())
+	
+		results = self.api.initResult(resultIdentity)
+		self.api.parse(apiData, currentClient, results)
 		
-		call(resultIdentity)
-
 		
 	## tearDown the server
 	def tearDown(self):
