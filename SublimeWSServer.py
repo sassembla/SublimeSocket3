@@ -155,13 +155,27 @@ class SublimeWSServer:
 
 	## collect current views
 	def collectViews(self, results):
+
 		for views in [window.views() for window in sublime.windows()]:
 			for view in views:
-				self.fireKVStoredItem(
-					SublimeSocketAPISettings.SS_EVENT_COLLECT, 
-					{SublimeSocketAPISettings.VIEW_SELF:view},
-					results
-				)
+				view_file_name = view.file_name()
+
+				# run if not scratch
+				if view_file_name:
+					viewParams = {
+						SublimeSocketAPISettings.VIEW_SELF:		view,
+						SublimeSocketAPISettings.VIEW_ID:		view.id(),
+						SublimeSocketAPISettings.VIEW_BUFFERID:	view.buffer_id(),
+						SublimeSocketAPISettings.VIEW_PATH:		view_file_name,
+						SublimeSocketAPISettings.VIEW_BASENAME:	os.path.basename(view_file_name),
+						SublimeSocketAPISettings.VIEW_VNAME:	view.name()
+					}
+
+					self.fireKVStoredItem(
+						SublimeSocketAPISettings.SS_EVENT_COLLECT, 
+						viewParams,
+						results
+					)
 	
 	## store region to viewDict-view in KVS
 	def storeRegionToView(self, view, identity, region, line, message):
@@ -225,7 +239,7 @@ class SublimeWSServer:
 			assert SublimeSocketAPISettings.REACTOR_INTERVAL in params, "this type of event require 'interval' param."
 
 		# check event kind
-		# delete when set the reactor of the event.
+		# delete if already set the reactor of the event.
 		if event in self.temporaryEventDict:
 			del self.temporaryEventDict[event]
 		
@@ -343,8 +357,8 @@ class SublimeWSServer:
 		return False
 
 	# run user-defined event.
-	def runOrSetUserDefinedEvent(self, eventName, eventParam, reactorsDict):
-		# emit now or set to fire with interval
+	def runOrSetUserDefinedEvent(self, eventName, eventParam, reactorsDict, results):
+		# emit now or ready to fire after interval
 		if SublimeSocketAPISettings.REACTOR_INTERVAL in reactorsDict:
 			self.temporaryEventDict[eventName] = eventParam
 			return
@@ -355,7 +369,23 @@ class SublimeWSServer:
 		
 		selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 		
-		self.api.runAllSelector(reactDict, selector, eventParam, self.api.initResult("runOrSetUserDefinedEvent:"+str(uuid.uuid4())))
+		self.api.runAllSelector(reactDict, selector, eventParam, results)
+
+	# run event.
+	def runOrSetEvent(self, eventName, eventParam, reactorsDict, results):
+		# emit now or ready to fire after interval
+		if SublimeSocketAPISettings.REACTOR_INTERVAL in reactorsDict:
+			self.temporaryEventDict[eventName] = eventParam
+			return
+
+		# emit now
+		reactDicts = reactorsDict[eventName]
+		for reactDictKey in list(reactDicts):
+			reactDict = reactDicts[reactDictKey]
+
+			selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+
+			self.api.runAllSelector(reactDict, selector, eventParam, results)
 
 
 	## emit event if params matches the regions that sink in view
@@ -438,7 +468,6 @@ class SublimeWSServer:
 	## input to sublime from server.
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, eventName, eventParam, results):
-		# print("fireKVStoredItem eventListen!", eventName,"eventParam",eventParam)
 
 		# event listener adopt
 		if eventName in SublimeSocketAPISettings.REACTIVE_RESERVED_INTERVAL_EVENT:
@@ -455,7 +484,7 @@ class SublimeWSServer:
 			# if exist, continue
 			if reactorsDict and eventName in reactorsDict:
 				# interval-set or not
-				self.runOrSetUserDefinedEvent(eventName, eventParam, reactorsDict)
+				self.runOrSetUserDefinedEvent(eventName, eventParam, reactorsDict, results)
 
 
 		# run when the foundation-event occured adopt
@@ -471,12 +500,13 @@ class SublimeWSServer:
 		# viewCollector "renew" will react
 		if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
 			viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
+			filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME]
 
 			if viewInstance.is_scratch():
 				# print "scratch buffer."
 				pass
 				
-			elif not viewInstance.file_name():
+			elif not filePath:
 				# print "no path"
 				pass
 
@@ -491,26 +521,34 @@ class SublimeWSServer:
 				else:	
 					pass
 
-				filePath = viewInstance.file_name()
 
 				viewInfo = {}
 				if filePath in viewDict:
 					viewInfo = viewDict[filePath]
 
-				viewInfo[SublimeSocketAPISettings.VIEW_ID] = viewInstance.id()
-				viewInfo[SublimeSocketAPISettings.VIEW_BUFFERID] = viewInstance.buffer_id()
-				viewInfo[SublimeSocketAPISettings.VIEW_BASENAME] = os.path.basename(viewInstance.file_name())
-				viewInfo[SublimeSocketAPISettings.VIEW_VNAME] = viewInstance.name()
+				viewInfo[SublimeSocketAPISettings.VIEW_ID] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_ID]
+				viewInfo[SublimeSocketAPISettings.VIEW_BUFFERID] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID]
+				viewInfo[SublimeSocketAPISettings.VIEW_BASENAME] = filePath
+				viewInfo[SublimeSocketAPISettings.VIEW_VNAME] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME]
 				viewInfo[SublimeSocketAPISettings.VIEW_SELF] = viewInstance
 				
 				# add
 				viewDict[filePath] = viewInfo
 				self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
+			# run reactor if set
+			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
+			
+			# if exist, continue
+			if reactorsDict and eventName in reactorsDict:
+				# interval-set or not
+				self.runOrSetEvent(eventName, eventParam, reactorsDict, results)
+
 
 		# viewCollector "del" will react
 		if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
 			viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
+			filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME]
 
 			viewDict = {}
 			
@@ -520,14 +558,21 @@ class SublimeWSServer:
 
 			# create
 			else:	
-				return
-
-			filePath = viewInstance.file_name()
+				pass
 
 			# delete
 			if filePath in viewDict:
 				del viewDict[filePath]
 				self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
+
+			# run reactor if set
+			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
+			
+			# if exist, continue
+			if reactorsDict and eventName in reactorsDict:
+				# interval-set or not
+				self.runOrSetEvent(eventName, eventParam, reactorsDict, results)
+
 
 
 	## return param

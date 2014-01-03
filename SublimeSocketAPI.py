@@ -34,7 +34,7 @@ class SublimeSocketAPI:
 		self.testPassedCount = 0
 		self.testFailedCount = 0
 
-	## Inner-API for add results to the other results/
+	## initialize results as the part of testResults.
 	def initResult(self, resultIdentity):
 		initializedResults = {resultIdentity:{}}
 		self.testResults.append(initializedResults)
@@ -67,19 +67,6 @@ class SublimeSocketAPI:
 			
 		return {}
 
-	def insertResultsToTestResults(self, partialResults):
-		print("この時点でのself.testResults", self.testResults)
-		def getPartialResultIdentity(results):
-			for key in results:
-				return key 
-
-		partialResultsKey = getPartialResultIdentity(partialResults)
-
-		if partialResultsKey in list(self.testResults):
-			return
-
-		self.testResults.append(partialResults)
-
 
 	## Parse the API command
 	def parse(self, data, client=None, results=None):
@@ -87,7 +74,7 @@ class SublimeSocketAPI:
 		# SAMPLE: inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...
 		commands = data.split(SublimeSocketAPISettings.API_CONCAT_DELIM)
 
-    	# command and param  SAMPLE:		inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}
+		# command and param  SAMPLE:		inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}
 		for commandIdentityAndParams in commands :
 			command_params = commandIdentityAndParams.split(SublimeSocketAPISettings.API_COMMAND_PARAMS_DELIM, 1)
 			command = command_params[0]
@@ -98,7 +85,7 @@ class SublimeSocketAPI:
 					data = command_params[1].replace("\r\n", "\n")
 					data = data.replace("\r", "\n")
 					data = data.replace("\n", "\\n")
-					data = data.replace("\t", "    ")
+					data = data.replace("\t", "	")
 					params = json.loads(data)
 				except Exception as e:
 					print("JSON parse error", e, "source = ", command_params[1])
@@ -109,7 +96,8 @@ class SublimeSocketAPI:
 			if SublimeSocketAPISettings.PARSERESULT_SWITCH in parseResult:
 				resultKey = list(results)[0]
 				results[resultKey] = {}
-			
+		
+		
 		return results
 
 
@@ -569,31 +557,33 @@ class SublimeSocketAPI:
 		# start test
 		self.isTesting = True
 		
+		# reset testResults
+		self.testResults = []
+
+		# reset counts
 		self.testPassedCount = 0
 		self.testFailedCount = 0
 
 		# parse then get results
-		results = self.innerParse(source, client, results)
+		self.innerParse(source, client, results)
 
 		# end test
 		self.isTesting = False
 
 
 		# count ASSERTRESULT_VALUE_PASS or ASSERTRESULT_VALUE_FAIL
-		message = "TOTAL:" + str(self.testPassedCount + self.testFailedCount) + " passed:" + str(self.testPassedCount) + " failed:" + str(self.testFailedCount)
-		buf = self.encoder.text(message, mask=0)
+		totalResultMessage = "TOTAL:" + str(self.testPassedCount + self.testFailedCount) + " passed:" + str(self.testPassedCount) + " failed:" + str(self.testFailedCount)
+		buf = self.encoder.text(totalResultMessage, mask=0)
 		client.send(buf);
 
 		
 	## assertions
-	def assertResult(self, params, results):
+	def assertResult(self, params, currentResults):
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
 		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
 		
 		identity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		
-		# load results for check
-		resultBodies = self.resultBody(results)
 		
 
 		debug = False
@@ -601,10 +591,49 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.ASSERTRESULT_DEBUG in params:
 			debug = params[SublimeSocketAPISettings.ASSERTRESULT_DEBUG]
 		
+
+		results = currentResults
+		
+		
+		if SublimeSocketAPISettings.ASSERTRESULT_CONTEXT in params:
+			print("contextを実装する", results, "\nres ", self.testResults)
+			
+			contextKeyword = params[SublimeSocketAPISettings.ASSERTRESULT_CONTEXT]
+			print("self.testResultsから、contextを集めて合成、assertResultにかける", contextKeyword)
+
+			def checkIsResultsOf(currentContext, currentContextKeyword):
+				key = list(currentContext)[0]
+				
+				if currentContextKeyword in key:
+					return True
+					
+				return False
+
+			def collectResultsContextValues(currentContext):
+				key = list(currentContext)[0]
+				value = currentContext[key]
+
+				return value
+				
+			unmergedResultsList = [collectResultsContextValues(context) for context in self.testResults if checkIsResultsOf(context, contextKeyword)]
+			
+			resultValues = {}
+			mergedResults = {}
+			
+			for item in unmergedResultsList:
+				for key in list(item):
+					resultValues[key] = item[key]
+			
+			print("after results", resultValues)
+			results = {contextKeyword:resultValues}
+			print("this results", results)
+
+		# load results for check
+		resultBodies = self.resultBody(results)
 		if debug:
 			print("\nassertResult:\nid:", identity, "\n", resultBodies, "\n:assertResult\n")
 
-		
+
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		message = params[SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION]
 		
@@ -621,6 +650,7 @@ class SublimeSocketAPI:
 
 			self.setResultsParams(results, self.assertResult, {assertionIdentity:resultMessage})
 			return (passedOrFailed, resultMessage)
+
 
 
 		# contains
@@ -761,9 +791,22 @@ class SublimeSocketAPI:
 		print(message)
 	
 		result = message
+
+		view = theOpenedViewInstance
+		view_file_name = view.file_name()
+
+		viewParams = {
+			SublimeSocketAPISettings.VIEW_SELF:		view,
+			SublimeSocketAPISettings.VIEW_ID:		view.id(),
+			SublimeSocketAPISettings.VIEW_BUFFERID:	view.buffer_id(),
+			SublimeSocketAPISettings.VIEW_PATH:		view_file_name,
+			SublimeSocketAPISettings.VIEW_BASENAME:	os.path.basename(view_file_name),
+			SublimeSocketAPISettings.VIEW_VNAME:	view.name()
+		}
+		
 		self.server.fireKVStoredItem(
 			SublimeSocketAPISettings.SS_EVENT_LOADING, 
-			{SublimeSocketAPISettings.VIEW_SELF:theOpenedViewInstance},
+			viewParams,
 			results)
 
 		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
@@ -1310,7 +1353,7 @@ class SublimeSocketAPI:
 		html = htmlFile.read()
 		
 		htmlFile.close()
-		    
+			
 		# replace host:port, identity
 		html = html.replace(SublimeWSSettings.SS_HOST_REPLACE, host)
 		html = html.replace(SublimeWSSettings.SS_PORT_REPLACE, str(port))
@@ -1525,9 +1568,9 @@ class SublimeSocketAPI:
 
 
 class InsertMessageCommand(sublime_plugin.TextCommand):
-    """
-    A command to write a package message to the Package Control messaging buffer
-    """
+	"""
+	A command to write a package message to the Package Control messaging buffer
+	"""
 
-    def run(self, edit, string=''):
-        self.view.insert(edit, self.view.size(), string)
+	def run(self, edit, string=''):
+		self.view.insert(edit, self.view.size(), string)
