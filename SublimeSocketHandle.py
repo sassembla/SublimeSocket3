@@ -132,9 +132,9 @@ class SublimeSocketThread(threading.Thread):
       }
 
       results = self._server.api.initResult("view:"+str(uuid.uuid4()))
-      print("view results", results)
+      
       self._server.fireKVStoredItem(eventName, eventParam, results)
-      print("all?", self._server.api.testResults)
+
 
   def fromServer(self, eventName, view=None):
     if self._server is None:

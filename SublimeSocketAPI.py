@@ -105,11 +105,9 @@ class SublimeSocketAPI:
 
 
 	def innerParse(self, data, client=None, results=None):
-		print("innerParseでの初期results", results)
 		currentResults = self.initResult("inner:"+str(uuid.uuid4()))
 		innerResults = self.parse(data, client, currentResults)
 
-		print("innerParseでのinnerResults", innerResults)
 		return self.addInnerResult(results, innerResults)
 
 
@@ -233,11 +231,6 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RESETREACTORS):
 				self.resetReactors(params, client, results)
-				break
-
-			if case(SublimeSocketAPISettings.API_SETFOUNDATIONREACTOR):
-				# set foundationReactor
-				self.setFoundationReactor(params, client)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSHELL):
@@ -482,15 +475,7 @@ class SublimeSocketAPI:
 	## send message to the specific client.
 	def monocastMessage(self, params, results):
 		if SublimeSocketAPISettings.OUTPUT_FORMAT in params:
-			format = params[SublimeSocketAPISettings.OUTPUT_FORMAT]
-			for key in params:
-				if key != SublimeSocketAPISettings.OUTPUT_TARGET:
-					if key != SublimeSocketAPISettings.OUTPUT_FORMAT:
-						currentParam = params[key]
-						format = format.replace(key, currentParam)
-
-			params[SublimeSocketAPISettings.OUTPUT_MESSAGE] = format
-			del params[SublimeSocketAPISettings.OUTPUT_FORMAT]
+			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.OUTPUT_FORMAT, SublimeSocketAPISettings.OUTPUT_MESSAGE)
 			self.monocastMessage(params, results)
 			return
 
@@ -514,6 +499,10 @@ class SublimeSocketAPI:
 
 	## send message to the other via SS.
 	def showAtLog(self, params, results):
+		if SublimeSocketAPISettings.LOG_FORMAT in params:
+			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
+			self.showAtLog(params, results)
+			return
 
 		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param"
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
@@ -523,6 +512,11 @@ class SublimeSocketAPI:
 
 
 	def showDialog(self, params, results):
+		if SublimeSocketAPISettings.SHOWDIALOG_FORMAT in params:
+			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.SHOWDIALOG_FORMAT, SublimeSocketAPISettings.SHOWDIALOG_MESSAGE)
+			self.showDialog(params, results)
+			return
+
 		assert SublimeSocketAPISettings.SHOWDIALOG_MESSAGE in params, "showDialog require 'message' param"
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 
@@ -1037,12 +1031,6 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
 
 
-	## set FOUNDATION reactor for "foundation" categoly events.
-	def setFoundationReactor(self, params, client):
-		params[SublimeSocketAPISettings.REACTOR_TARGET] = SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT
-		params[SublimeSocketAPISettings.REACTOR_INTERVAL] = SublimeSocketAPISettings.FOUNDATIONREACTOR_INTERVAL_DEFAULT
-		self.server.setOrAddReactor(params, client)
-
 	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
 	def internal_detectViewInstance(self, path):
 		if self.server.viewDict():
@@ -1512,7 +1500,6 @@ class SublimeSocketAPI:
 		# this check should be run in main thread
 		if not viewInstance:
 			params = {}
-			params[SublimeSocketAPISettings.NOVIEWFOUND_TARGET] = SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT
 			params[SublimeSocketAPISettings.NOVIEWFOUND_VIEW] = view
 			params[SublimeSocketAPISettings.NOVIEWFOUND_LINE] = line
 			params[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
@@ -1575,7 +1562,17 @@ class SublimeSocketAPI:
 
 
 		
+	def formattingMessageParameters(self, params, formatKey, outputKey):
+		currentFormat = params[formatKey]
+		for key in params:
+			if key != formatKey:
+				currentParam = params[key]
+				currentFormat = currentFormat.replace(key, currentParam)
 
+		params[outputKey] = currentFormat
+		del params[formatKey]
+
+		return params
 
 
 class InsertMessageCommand(sublime_plugin.TextCommand):

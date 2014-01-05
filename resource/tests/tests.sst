@@ -10,6 +10,38 @@
 
 
 
+->noViewFoundを起こし、log出力をassertする/setReactor: {
+	"target": "noViewFoundEvent",
+	"event": "ss_f_noViewFound",
+	"replacefromto": {
+		"view": "0"
+	},
+	"selectors": [
+		{
+			"showAtLog": {
+				"message": "no view found",
+				"format": "view 0 not found.",
+				"0": "view for replace"
+			}
+		}
+	]
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "path": "exactlynotopenedfile.txt",
+    "condition": "keyword"
+}->assertResult: {
+    "id": "no view found raise",
+    "contains": {
+        "showAtLog": {
+            "output": "view exactlynotopenedfile.txt not found."
+        }
+    },
+    "description": "not match."
+}
+
+
+
 ->SublimeSocketとしての現在のbasePathを指定する/openFile: {
 	"name": "setSublimeSocketWindowBasePathTest.txt"
 }->setSublimeSocketWindowBasePath: {
@@ -21,8 +53,7 @@
 			"set": "ok"
 		}
 	},
-	"description": "not match",
-	"debug": true
+	"description": "not match"
 }->closeFile: {
 
 }
@@ -190,6 +221,8 @@
 }
 
 
+
+
 ->ログ出力のテスト/showAtLog: {
     "message": "testLogMessage"
 }->assertResult: {
@@ -201,6 +234,23 @@
     },
     "description": "not match."
 }
+
+->フォーマット付きログ出力のテスト/showAtLog: {
+    "message": "testLogMessage",
+    "format": "formatted log",
+    "formatted": "works",
+    "log": "fine."
+}->assertResult: {
+    "id": "log output test",
+    "contains": {
+        "showAtLog": {
+            "output": "works fine."
+        }
+    },
+    "description": "not match."
+}
+
+
 
 
 ->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
@@ -634,7 +684,7 @@
 
 
 
-->適当な名前のファイルを開き、regionの追加に失敗、noviewFoundを起こす/openFile: {
+->適当な名前のファイルを開き、regionの追加に失敗(noViewFoundを起こす)/openFile: {
     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
 }->appendRegion: {
     "line": "1",
@@ -843,21 +893,23 @@
     "description": "not contains."
 }
 
-->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
-}->assertResult: {
-    "id": "open not exist file",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
-        }
-    },
-    "description": "not contains."
-}->closeFile: {
+// ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// }->assertResult: {
+//     "id": "open not exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+//         }
+//     },
+//     "description": "not contains."
+// }->closeFile: {
 
-}
+// }
 
+
+// めんどうくさいダイアログ系
 // ->ダイアログを表示/showDialog:{
 //     "message": "here comes daredevil"
 // }->assertResult: {
@@ -869,6 +921,27 @@
 //     },
 //     "description": "not match."
 // }
+
+
+// ->ダイアログをフォーマット付きで表示/showDialog:{
+//     "message": "formatting",
+//     "format": "0:a1 b1 c1 d1",
+//     "0": "header",
+//     "a1": "the",
+//     "b1": "test",
+//     "c1": "is",
+//     "d1": "over"
+// }->assertResult: {
+//     "id" :"show dialog contains values.",
+//     "contains": {
+//         "showDialog": {
+//             "output": "header:the test is over"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
 
 ->終了時のメッセージ/showStatusMessage: {
     "message": "test over.\n\n"

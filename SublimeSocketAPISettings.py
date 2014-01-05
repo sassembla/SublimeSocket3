@@ -127,11 +127,6 @@ REACTOR_VIEWKEY_VNAME			= "vname"
 
 API_RESETREACTORS		= "resetReactors"
 
-API_SETFOUNDATIONREACTOR			= "setFoundationReactor"
-FOUNDATIONREACTOR_EVENT				= "event"
-FOUNDATIONREACTOR_SELECTORS		= "selectors"
-FOUNDATIONREACTOR_TARGET_DEFAULT 		= "default"
-FOUNDATIONREACTOR_INTERVAL_DEFAULT	= 0
 
 REACTIVE_RESERVED_INTERVAL_EVENT	= ["on_modified", "on_selection_modified", "on_pre_save", "on_post_save"]
 REACTIVE_PREFIX_USERDEFINED_EVENT	= "event_"
@@ -185,10 +180,12 @@ OUTPUT_FORMAT			= "format"
 OUTPUT_MESSAGE			= "message"
 
 API_SHOWATLOG			= "showAtLog"
+LOG_FORMAT				= "format"
 LOG_MESSAGE				= "message"
 LOG_prefix				= "ss:"
 
 API_SHOWDIALOG			= "showDialog"
+SHOWDIALOG_FORMAT		= "format"
 SHOWDIALOG_MESSAGE		= "message"
 
 API_APPENDREGION	= "appendRegion"

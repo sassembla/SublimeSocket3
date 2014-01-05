@@ -502,7 +502,6 @@ class SublimeWSServer:
 		if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
 			viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 			filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
-			print("renew filePath", filePath, "eventName", eventName)
 
 			if viewInstance.is_scratch():
 				# print "scratch buffer."
@@ -586,14 +585,17 @@ class SublimeWSServer:
 		
 
 	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results=None):
-		print("runFoundationEvent, resultの行き先に困っている,", results)
+
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
-				reactDict = reactorsDict[eventName][SublimeSocketAPISettings.FOUNDATIONREACTOR_TARGET_DEFAULT]
-			
-				selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+				reactDicts = reactorsDict[eventName]
 
-				self.api.runAllSelector(reactDict, selector, eventParam, results)
+				for target in list(reactDicts):
+					reactDict = reactDicts[target]
+					
+					selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+					self.api.runAllSelector(reactDict, selector, eventParam, results)
+
 				break
 
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER):				
