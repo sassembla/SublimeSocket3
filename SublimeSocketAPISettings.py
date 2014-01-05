@@ -192,7 +192,7 @@ API_SHOWDIALOG			= "showDialog"
 SHOWDIALOG_MESSAGE		= "message"
 
 API_APPENDREGION	= "appendRegion"
-APPENDREGION_VIEW	= "view"
+APPENDREGION_PATH	= "path"
 APPENDREGION_LINE	= "line"
 APPENDREGION_MESSAGE	= "message"
 APPENDREGION_CONDITION = "condition"
@@ -240,7 +240,7 @@ RUNCOMPLETION_LOCKCOUNT = "lockcount"
 API_OPENPAGE			= "openPage"
 OPENPAGE_IDENTITY = "identity"
 
-API_SETWINDOWBASEPATH = "setWindowBasePath"
+API_SETSUBLIMESOCKETWINDOWBASEPATH = "setSublimeSocketWindowBasePath"
 
 
 #Dictionaries for collection of "Views", "filters", "events"

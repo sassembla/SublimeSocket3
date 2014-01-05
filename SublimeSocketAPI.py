@@ -26,13 +26,16 @@ class SublimeSocketAPI:
 	def __init__(self, server):
 		self.server = server
 		self.encoder = SublimeWSEncoder()
-		self.windowBasePath = sublime.active_window().active_view().file_name()
-		
+
 		self.isTesting = False
 		self.testResults = []
 
 		self.testPassedCount = 0
 		self.testFailedCount = 0
+
+
+		self.setSublimeSocketWindowBasePath(None)
+		
 
 	## initialize results as the part of testResults.
 	def initResult(self, resultIdentity):
@@ -296,8 +299,8 @@ class SublimeSocketAPI:
 				self.openPage(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_SETWINDOWBASEPATH):
-				self.setWindowBasePath()
+			if case(SublimeSocketAPISettings.API_SETSUBLIMESOCKETWINDOWBASEPATH):
+				self.setSublimeSocketWindowBasePath(results)
 				break
 
 			# internal APIS
@@ -734,9 +737,9 @@ class SublimeSocketAPI:
 				message,
 				results)
 
-
+			
 		if debug:
-				print(resultMessage, identity)
+				print("assertion aborted in assertResult API.", message, identity)
 
 		return assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 			assertionIdentity,
@@ -835,7 +838,7 @@ class SublimeSocketAPI:
 				original_name = "None"
 
 			theCurrentViewInstance.close()
-
+		
 		self.setResultsParams(results, self.closeFile, {"name":original_name})
 			
 
@@ -1053,6 +1056,7 @@ class SublimeSocketAPI:
 			viewDict = self.server.viewDict()
 			viewKeys = viewDict.keys()
 
+
 			viewSourceStr = viewSourceStr.replace("\\", "&")
 			viewSourceStr = viewSourceStr.replace("/", "&")
 
@@ -1062,9 +1066,9 @@ class SublimeSocketAPI:
 				viewSearchKey = viewKey.replace("\\", "&")
 				viewSearchKey = viewSearchKey.replace("/", "&")
 
-				if re.findall(viewSearchKey, viewSourceStr):
+				if re.findall(viewSourceStr, viewSearchKey):
 					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
-
+				
 			# partial match in viewSourceStr. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
 				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
@@ -1087,19 +1091,24 @@ class SublimeSocketAPI:
 
 	## append region on ST
 	def appendRegion(self, params, results):
-		assert SublimeSocketAPISettings.APPENDREGION_VIEW in params, "appendRegion require 'view' param"
+		assert SublimeSocketAPISettings.APPENDREGION_PATH in params, "appendRegion require 'path' param"
 		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param"
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param"
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param"
 		
-		view = params[SublimeSocketAPISettings.APPENDREGION_VIEW]
+		path = params[SublimeSocketAPISettings.APPENDREGION_PATH]
+		
+		if SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH in path:
+			filePathArray = path.split(":")
+			path = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
+
 		line = params[SublimeSocketAPISettings.APPENDREGION_LINE]
 		message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
 		condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
 		
 		result = self.checkIfViewExist_appendRegion_Else_notFound(
-			view, 
-			self.internal_detectViewInstance(view), 
+			path, 
+			self.internal_detectViewInstance(path), 
 			line, 
 			message, 
 			condition,
@@ -1116,7 +1125,6 @@ class SublimeSocketAPI:
 		else:
 			view = sublime.active_window().active_view()
 			params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW] = view
-
 
 		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
 		name = view.name()
@@ -1172,9 +1180,9 @@ class SublimeSocketAPI:
 
 		anchor = params[SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR]
 
-		self.setWindowBasePath()
+		self.setSublimeSocketWindowBasePath(results)
 
-		filePath = self.windowBasePath
+		filePath = self.sublimeSocketWindowBasePath
 		if filePath:
 			folderPath = os.path.dirname(filePath)
 		else:
@@ -1373,8 +1381,11 @@ class SublimeSocketAPI:
 		self.runShell(shellParamDict, results)
 		pass
 
-	def setWindowBasePath(self):
-		self.windowBasePath = sublime.active_window().active_view().file_name()
+	def setSublimeSocketWindowBasePath(self, results):
+		self.sublimeSocketWindowBasePath = sublime.active_window().active_view().file_name()
+		
+
+		self.setResultsParams(results, self.setSublimeSocketWindowBasePath, {"set":"ok"})
 		
 	## verify SublimeSocket API-version and SublimeSocket version
 	def versionVerify(self, params, client, results):
@@ -1534,7 +1545,7 @@ class SublimeSocketAPI:
 	## erase all regions of view/condition
 	def eraseAllRegion(self, results):
 		deletes = self.server.deleteAllRegionsInAllView()
-		print("results", results)
+		
 		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 

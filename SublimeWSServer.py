@@ -180,6 +180,7 @@ class SublimeWSServer:
 	## store region to viewDict-view in KVS
 	def storeRegionToView(self, view, identity, region, line, message):
 		key = view.file_name()
+		print("self.getV(SublimeSocketAPISettings.DICT_VIEWS)", self.getV(SublimeSocketAPISettings.DICT_VIEWS))
 		specificViewDict = self.getV(SublimeSocketAPISettings.DICT_VIEWS)[key]
 
 		regionDict = {}
@@ -500,7 +501,8 @@ class SublimeWSServer:
 		# viewCollector "renew" will react
 		if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
 			viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
-			filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME]
+			filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
+			print("renew filePath", filePath, "eventName", eventName)
 
 			if viewInstance.is_scratch():
 				# print "scratch buffer."
