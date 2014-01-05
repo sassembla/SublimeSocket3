@@ -121,15 +121,16 @@ class SublimeSocketThread(threading.Thread):
         return
 
       view_file_name = view.file_name()
-      
-      eventParam = {
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:  view,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID:        view.id(),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID:  view.buffer_id(),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH:      view_file_name,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME:  os.path.basename(view_file_name),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME:     view.name()
-      }
+
+      eventParam = self._server.getSublimeViewInfo(
+        view,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME
+      )
 
       results = self._server.api.initResult("view:"+str(uuid.uuid4()))
       
@@ -150,15 +151,16 @@ class SublimeSocketThread(threading.Thread):
         return
 
       view_file_name = view.file_name()
-      
-      eventParam = {
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:  view,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID:        view.id(),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID:  view.buffer_id(),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH:      view_file_name,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME:  os.path.basename(view_file_name),
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME:     view.name()
-      }
+
+      eventParam = self._server.getSublimeViewInfo(
+        view,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME
+      )
 
       return self._server.getKVStoredItem(eventName, eventParam)
       

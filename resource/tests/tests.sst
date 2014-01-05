@@ -9,6 +9,20 @@
 }
 
 
+->viewを集める。一つ以上のファイルパスがあるはず/openFile: {
+	"name": "something.txt"
+}->collectViews: {
+
+}->assertResult: {
+	"id": "views is here.",
+	"isnotempty": "collectViews",
+	"description": "not match.",
+	"debug": true
+}->closeFile: {
+	
+}
+
+
 
 ->noViewFoundを起こし、log出力をassertする/setReactor: {
 	"target": "noViewFoundEvent",

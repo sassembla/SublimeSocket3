@@ -581,7 +581,6 @@ class SublimeSocketAPI:
 		
 		identity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		
-		
 
 		debug = False
 
@@ -593,11 +592,8 @@ class SublimeSocketAPI:
 		
 		
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTEXT in params:
-			print("contextを実装する", results, "\nres ", self.testResults)
-			
 			contextKeyword = params[SublimeSocketAPISettings.ASSERTRESULT_CONTEXT]
-			print("self.testResultsから、contextを集めて合成、assertResultにかける", contextKeyword)
-
+			
 			def checkIsResultsOf(currentContext, currentContextKeyword):
 				key = list(currentContext)[0]
 				
@@ -713,7 +709,7 @@ class SublimeSocketAPI:
 		# is empty or not
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISEMPTY in params:
 			if debug:
-				print("start assertResult 'empty' in", identity)
+				print("start assertResult 'isempty' in", identity)
 
 			# match
 			if not resultBodies:
@@ -732,10 +728,38 @@ class SublimeSocketAPI:
 				results)
 
 			
+
+		# is not empty or empty
+		elif SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY in params:
+			if debug:
+				print("start assertResult 'isnotempty' in", identity)
+
+			targetAPIKey = params[SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY]
+			print("targetAPIKey", targetAPIKey)
+
+			# 特定のAPIkeyに対して、値が存在している
+			print("resultBodies", resultBodies)
+			
+			for resultKey in resultBodies:
+				if resultKey[0] == targetAPIKey:
+					return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
+						assertionIdentity, 
+						"is not empty.",
+						results)
+
+			# fail
+			if debug:
+				print("failed assertResult 'isnotempty' in", identity)
+
+			return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+				assertionIdentity, 
+				message,
+				results)
+			
 		if debug:
 				print("assertion aborted in assertResult API.", message, identity)
 
-		return assertionMessage(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
+		return genAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 			assertionIdentity,
 			"assertion aborted in assertResult API.",
 			results)
@@ -791,15 +815,15 @@ class SublimeSocketAPI:
 
 		view = theOpenedViewInstance
 		view_file_name = view.file_name()
-
-		viewParams = {
-			SublimeSocketAPISettings.VIEW_SELF:		view,
-			SublimeSocketAPISettings.VIEW_ID:		view.id(),
-			SublimeSocketAPISettings.VIEW_BUFFERID:	view.buffer_id(),
-			SublimeSocketAPISettings.VIEW_PATH:		view_file_name,
-			SublimeSocketAPISettings.VIEW_BASENAME:	os.path.basename(view_file_name),
-			SublimeSocketAPISettings.VIEW_VNAME:	view.name()
-		}
+		viewParams = self.server.getSublimeViewInfo(
+						view,
+						SublimeSocketAPISettings.VIEW_SELF,
+						SublimeSocketAPISettings.VIEW_ID,
+						SublimeSocketAPISettings.VIEW_BUFFERID,
+						SublimeSocketAPISettings.VIEW_PATH,
+						SublimeSocketAPISettings.VIEW_BASENAME,
+						SublimeSocketAPISettings.VIEW_VNAME
+					)
 		
 		self.server.fireKVStoredItem(
 			SublimeSocketAPISettings.SS_EVENT_LOADING, 

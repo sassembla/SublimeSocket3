@@ -155,32 +155,37 @@ class SublimeWSServer:
 
 	## collect current views
 	def collectViews(self, results):
-
+		collectedViews = []
 		for views in [window.views() for window in sublime.windows()]:
 			for view in views:
 				view_file_name = view.file_name()
 
 				# run if not scratch
 				if view_file_name:
-					viewParams = {
-						SublimeSocketAPISettings.VIEW_SELF:		view,
-						SublimeSocketAPISettings.VIEW_ID:		view.id(),
-						SublimeSocketAPISettings.VIEW_BUFFERID:	view.buffer_id(),
-						SublimeSocketAPISettings.VIEW_PATH:		view_file_name,
-						SublimeSocketAPISettings.VIEW_BASENAME:	os.path.basename(view_file_name),
-						SublimeSocketAPISettings.VIEW_VNAME:	view.name()
-					}
+					viewParams = self.getSublimeViewInfo(
+						view,
+						SublimeSocketAPISettings.VIEW_SELF,
+						SublimeSocketAPISettings.VIEW_ID,
+						SublimeSocketAPISettings.VIEW_BUFFERID,
+						SublimeSocketAPISettings.VIEW_PATH,
+						SublimeSocketAPISettings.VIEW_BASENAME,
+						SublimeSocketAPISettings.VIEW_VNAME
+					)
 
 					self.fireKVStoredItem(
 						SublimeSocketAPISettings.SS_EVENT_COLLECT, 
 						viewParams,
 						results
 					)
+
+					collectedViews.append(view_file_name)
+
+		self.api.setResultsParams(results, self.collectViews, {"collected":collectedViews})
 	
 	## store region to viewDict-view in KVS
 	def storeRegionToView(self, view, identity, region, line, message):
 		key = view.file_name()
-		print("self.getV(SublimeSocketAPISettings.DICT_VIEWS)", self.getV(SublimeSocketAPISettings.DICT_VIEWS))
+
 		specificViewDict = self.getV(SublimeSocketAPISettings.DICT_VIEWS)[key]
 
 		regionDict = {}
@@ -212,7 +217,6 @@ class SublimeWSServer:
 				if regionsDict:
 					for regionIdentity in regionsDict.keys():
 						viewInstance.erase_regions(regionIdentity)
-						print("regionIdentity", regionIdentity)
 						deletes.append(regionIdentity)
 
 						viewDictValue[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS][regionIdentity] = 1
@@ -450,7 +454,6 @@ class SublimeWSServer:
 							messageDict = {}
 							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
 							
-							print("containsRegionsからのrunAPI")
 							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict, None, results)
 							self.api.printout(message)
 							
@@ -464,6 +467,18 @@ class SublimeWSServer:
 		print("ss: connections:")
 		for client in self.clients:
 			print("	", client)
+
+
+	## depends on sublime-view method
+	def getSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey):
+		return {
+			viewKey : viewInstance,
+			viewIdKey: viewInstance.id(),
+			viewBufferIdKey: viewInstance.buffer_id(),
+			viewPathKey: viewInstance.file_name(),
+			viewBaseNameKey: os.path.basename(viewInstance.file_name()),
+			viewVNameKey: viewInstance.name()
+		}
 
 
 	## input to sublime from server.
