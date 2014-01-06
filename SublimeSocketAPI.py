@@ -224,9 +224,12 @@ class SublimeSocketAPI:
 				self.runFiltering(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_SETREACTOR):
-				# set reactor
-				self.setReactor(params, client, results)
+			if case(SublimeSocketAPISettings.API_SETEVENTREACTOR):
+				self.setEventReactor(params, client, results)
+				break
+				
+			if case(SublimeSocketAPISettings.API_SETVIEWREACTOR):
+				self.setViewReactor(params, client, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_RESETREACTORS):
@@ -301,8 +304,8 @@ class SublimeSocketAPI:
 				self.showStatusMessage(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_I_ERASEALLREGION):
-				self.eraseAllRegion(results)
+			if case(SublimeSocketAPISettings.API_ERASEALLREGION):
+				self.eraseAllRegion(params, results)
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
@@ -822,7 +825,8 @@ class SublimeSocketAPI:
 						SublimeSocketAPISettings.VIEW_BUFFERID,
 						SublimeSocketAPISettings.VIEW_PATH,
 						SublimeSocketAPISettings.VIEW_BASENAME,
-						SublimeSocketAPISettings.VIEW_VNAME
+						SublimeSocketAPISettings.VIEW_VNAME,
+						SublimeSocketAPISettings.VIEW_SELECTED
 					)
 		
 		self.server.fireKVStoredItem(
@@ -840,12 +844,18 @@ class SublimeSocketAPI:
 			original_name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
 			name = original_name
 
+			theOpenedViewInstance = None
+
 			if name.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
 				filePathArray = name.split(":")
 				name = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
 
 				theOpenedViewInstance = sublime.active_window().open_file(name)
-				theOpenedViewInstance.close()
+
+			else:
+				theOpenedViewInstance = sublime.active_window().open_file(name)
+				
+			theOpenedViewInstance.close()
 
 		else:
 			theCurrentViewInstance = sublime.active_window().active_view()
@@ -860,8 +870,13 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.closeFile, {"name":original_name})
 			
 
-	## is contains regions or not.
+	## selected is contains regions or not.
 	def containsRegions(self, params, results):
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED in params, "containsRegions requires 'selected' param"
+
 		self.server.containsRegionsInKVS(params, results)
 		
 	## Define the filter and check filterPatterns
@@ -1043,10 +1058,14 @@ class SublimeSocketAPI:
 
 
 	## set reactor for reactive-event
-	def setReactor(self, params, client, results):
-		reactors = self.server.setOrAddReactor(params)
-		
-		self.setResultsParams(results, self.setReactor, {"reactors":reactors})
+	def setEventReactor(self, params, client, results):
+		reactors = self.server.setReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, params)
+		self.setResultsParams(results, self.setEventReactor, {"eventreactors":reactors})
+
+	## set reactor for view
+	def setViewReactor(self, params, client, results):
+		reactors = self.server.setReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, params)
+		self.setResultsParams(results, self.setViewReactor, {"viewreactors":reactors})
 		
 	## erase all reactors
 	def resetReactors(self, params, client, results):
@@ -1103,13 +1122,20 @@ class SublimeSocketAPI:
 
 	## append region on ST
 	def appendRegion(self, params, results):
-		assert SublimeSocketAPISettings.APPENDREGION_PATH in params, "appendRegion require 'path' param"
 		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param"
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param"
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param"
-		
-		path = params[SublimeSocketAPISettings.APPENDREGION_PATH]
-		
+	
+		path = ""	
+
+		# read path from parameter or get current view's path
+		if SublimeSocketAPISettings.APPENDREGION_PATH in params:
+			path = params[SublimeSocketAPISettings.APPENDREGION_PATH]
+		else:
+			path = sublime.active_window().active_view().file_name()
+		print("path", path)
+
+
 		if SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH in path:
 			filePathArray = path.split(":")
 			path = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+ filePathArray[1]
@@ -1554,9 +1580,15 @@ class SublimeSocketAPI:
 
 
 	## erase all regions of view/condition
-	def eraseAllRegion(self, results):
-		deletes = self.server.deleteAllRegionsInAllView()
+	def eraseAllRegion(self, params, results):
+		if SublimeSocketAPISettings.ERASEALLREGION_PATH in params:
+			targetViewPath = params[SublimeSocketAPISettings.ERASEALLREGION_PATH]
+
+			deletes = self.server.deleteAllRegionsInAllView(targetViewPath)
+		else:
+			deletes = self.server.deleteAllRegionsInAllView()
 		
+		print("deletes", deletes)
 		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 

@@ -52,7 +52,6 @@ REACTABLE_EVENT_ON_QUERY_COMPLETIONS = "on_query_completions"
 API_I_SHOWSTATUSMESSAGE	= "showStatusMessage"
 SHOWSTATUSMESSAGE_MESSAGE	= "message"
 
-API_I_ERASEALLREGION	= "eraseAllRegion"
 
 # /internal APIs
 
@@ -113,18 +112,27 @@ OPENFILE_NAME		= "name"
 API_CLOSEFILE		= "closeFile"
 CLOSEFILE_NAME		= "name"
 
-API_SETREACTOR		= "setReactor"
+
+API_SETEVENTREACTOR	= "setEventReactor"
+API_SETVIEWREACTOR	= "setViewReactor"
+
 REACTOR_TARGET		= "target"
-REACTOR_EVENT			= "event"
+REACTOR_REACT		= "react"
 REACTOR_SELECTORS	= "selectors"
 REACTOR_INTERVAL	= "interval"
 REACTOR_REPLACEFROMTO		= "replacefromto"
+
 REACTOR_VIEWKEY_VIEWSELF	= "view"
-REACTOR_VIEWKEY_ID				= "viewId"
+REACTOR_VIEWKEY_ID			= "viewId"
 REACTOR_VIEWKEY_BUFFERID	= "bufferId"
-REACTOR_VIEWKEY_PATH			= "path"
+REACTOR_VIEWKEY_PATH		= "path"
 REACTOR_VIEWKEY_BASENAME	= "basename"
-REACTOR_VIEWKEY_VNAME			= "vname"
+REACTOR_VIEWKEY_VNAME		= "vname"
+REACTOR_VIEWKEY_SELECTED	= "selected"
+
+REACTORTYPE_EVENT	= "event"
+REACTORTYPE_VIEW	= "view"
+
 
 API_RESETREACTORS		= "resetReactors"
 
@@ -157,6 +165,7 @@ FILTER_DEBUG			= "debug"
 API_CONTAINSREGIONS	= "containsRegions"
 CONTAINSREGIONS_VIEW	= "view"
 CONTAINSREGIONS_TARGET	= "target"
+CONTAINSREGIONS_SELECTED = "selected"
 CONTAINSREGIONS_EMIT	= "emit"
 CONTAINSREGIONS_DEBUG	= "debug"
 
@@ -194,6 +203,9 @@ APPENDREGION_PATH	= "path"
 APPENDREGION_LINE	= "line"
 APPENDREGION_MESSAGE	= "message"
 APPENDREGION_CONDITION = "condition"
+
+API_ERASEALLREGION	= "eraseAllRegion"
+ERASEALLREGION_PATH	= "path"
 
 API_RUNWITHBUFFER	= "runWithBuffer"
 RUNWITHBUFFER_VIEW = "view"
@@ -244,12 +256,14 @@ API_SETSUBLIMESOCKETWINDOWBASEPATH = "setSublimeSocketWindowBasePath"
 #Dictionaries for collection of "Views", "filters", "events"
 DICT_VIEWS				= "DICT_VIEWS"
 
-VIEW_PATH					= "path"
-VIEW_ID						= "viewId"
+VIEW_SELF				= "view"
+VIEW_PATH				= "path"
+VIEW_ID					= "viewId"
 VIEW_BUFFERID			= "bufferId"
 VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
-VIEW_SELF					= "view"
+VIEW_SELECTED			= "selected"
+
 
 VIEW_EVENTS_RENEW	= ["on_new", "on_clone", "on_load", "on_modified", SS_EVENT_COLLECT, SS_EVENT_LOADING] #list of acceptable-view renew event names.
 VIEW_EVENTS_DEL		= ["on_close"] #list of acceptable-view del event names.

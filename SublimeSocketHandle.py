@@ -129,7 +129,8 @@ class SublimeSocketThread(threading.Thread):
         SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
       )
 
       results = self._server.api.initResult("view:"+str(uuid.uuid4()))
@@ -159,7 +160,8 @@ class SublimeSocketThread(threading.Thread):
         SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
       )
 
       return self._server.getKVStoredItem(eventName, eventParam)
