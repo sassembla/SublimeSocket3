@@ -9,936 +9,420 @@
 }
 
 
-->viewを集める。一つ以上のファイルパスがあるはず/openFile: {
-	"name": "something.txt"
-}->collectViews: {
-
-}->assertResult: {
-	"id": "views is here.",
-	"isnotempty": "collectViews",
-	"description": "not match.",
-	"debug": true
-}->closeFile: {
-	
-}
-
-
-
-->noViewFoundを起こし、log出力をassertする/setReactor: {
-	"target": "noViewFoundEvent",
-	"event": "ss_f_noViewFound",
-	"replacefromto": {
-		"view": "0"
-	},
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "no view found",
-				"format": "view 0 not found.",
-				"0": "view for replace"
-			}
-		}
-	]
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "exactlynotopenedfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "no view found raise",
-    "contains": {
-        "showAtLog": {
-            "output": "view exactlynotopenedfile.txt not found."
-        }
-    },
-    "description": "not match."
-}
-
-
-
-->SublimeSocketとしての現在のbasePathを指定する/openFile: {
-	"name": "setSublimeSocketWindowBasePathTest.txt"
-}->setSublimeSocketWindowBasePath: {
-
-}->assertResult: {
-	"id": "set basePath",
-	"contains": {
-		"setSublimeSocketWindowBasePath": {
-			"set": "ok"
-		}
-	},
-	"description": "not match"
-}->closeFile: {
-
-}
-
-
-
-
-->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/openFile: {
-	"name": "runWithBufferTest.txt"
-}->setReactor: {
-    "target": "testTarget",
-    "event": "ss_f_runWithBuffer",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->runWithBuffer: {
-	
-}->assertResult: {
-	"id": "run with buffer",
-	"contains": {
-		"runWithBuffer": {
-			"name": "None"
-		}
-	},
-	"description": "not match."
-}->closeFile: {
-
-}->resetReactors: {
-
-}->resetResults: {
-	
-}
-
-
-
-->eventEmitのテスト/setReactor: {
-	"target": "event_EmitTestTarget",
-	"event": "event_EmitTestEvent",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "testing for eventEmit"
-			}
-		}
-	]
-}->eventEmit: {
-	"target": "event_EmitTestTarget",
-	"event": "event_EmitTestEvent"
-}->assertResult: {
-	"id": "eventEmit has emitted result",
-	"contains": {
-		"eventEmit": {
-			"target": "event_EmitTestTarget",
-			"event": "event_EmitTestEvent"
-		}
-	},
-	"description": "not match"
-}->resetReactors: {
-
-}->resetResults: {
-	
-}
-
-
-
-->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
-	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->setReactor: {
-    "target": "event_testTarget",
-    "event": "ss_f_runWithBuffer",
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "eventEmit2 over."
-            }
-        }
-    ]
-}->setReactor: {
-	"target": "event_testTarget",
-    "event": "on_close",
-    "replacefromto": {
-        "view": "view"
-    },
-    "selectors": [
-        {
-            "runWithBuffer": {
-                "view": "replace"
-            }
-        }
-    ]
-}->closeFile: {
-	// このイベントでreactorを着火する。その際、reactorのtargetは指定する事が出来ないので、全ターゲットに対して実行される。
-}->assertResult: {
-	"context": "view",
-	"id": "runWithBuffer with specific file",
-	"contains": {
-		"runWithBuffer": {
-			"name": "None" //この時点でcloseが走っており、viewの情報は取得出来ない。
-		}
-	},
-	"description": "not match."
-}->resetReactors: {
-
-}->resetResults: {
-	
-}
-
-
-
-->Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
-}->assertResult: {
-	"id": "read collect data",
-	"contains": {
-		"readFileData": {
-			"data": "sample2.txt"
-		}
-	},
-	"description": "not match."
-}
-
-
-->Notifyを表示する/notify: {
-    "title": "test_notify",
-    "message": "notice!"
-}->assertResult: {
-    "id": "show notification",
-    "contains": {
-        "notify": {
-            "title": "test_notify",
-            "message": "notice!"
-        }
-    },
-    "description": "not match."
-}
-
-->シェルを実行する/runShell: {
-    "main": "pwd"
-}->assertResult: {
-    "id": "ruh shell",
-    "contains": {
-        "runShell": {
-            "runnable": "pwd"
-        }
-    },
-    "description": "not match."
-}
-
-
-->ステータスバーにメッセージを表示/showStatusMessage: {
-    "message": "testStatusMessage"
-}->assertResult: {
-    "id": "show statusMessage",
-    "contains": {
-        "showStatusMessage": {
-            "output": "testStatusMessage"
-        }
-    },
-    "description": "status message not match."
-}
-
-
-
-
-->ログ出力のテスト/showAtLog: {
-    "message": "testLogMessage"
-}->assertResult: {
-    "id": "log output test",
-    "contains": {
-        "showAtLog": {
-            "output": "testLogMessage"
-        }
-    },
-    "description": "not match."
-}
-
-->フォーマット付きログ出力のテスト/showAtLog: {
-    "message": "testLogMessage",
-    "format": "formatted log",
-    "formatted": "works",
-    "log": "fine."
-}->assertResult: {
-    "id": "log output test",
-    "contains": {
-        "showAtLog": {
-            "output": "works fine."
-        }
-    },
-    "description": "not match."
-}
-
-
-
-
-->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
-    "name": "testFilter",
-    "patterns": [
-        {
-            "testPattern": {
-                "selectors": [
-                    {
-                        "showStatusMessage": {
-                            "message": "hello!"
-                        }
-                    }
-                ]
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "should have filter-info",
-    "contains": {
-        "defineFilter": {
-            "defined": {
-                "name": "testFilter",
-                "patterns": [
-                    {
-                        "testPattern": {
-                            "selectors": [
-                                {
-                                    "showStatusMessage": {
-                                        "message": "hello!"
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        }
-    },
-    "description": "not match."
-}
-
-
-->filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
-    "name": "filter_13/12/04 18:16:49",
-    "patterns": [
-        {
-            "(.*)dummyline": {
-                "selectors": [
-                    {
-                        "showStatusMessage": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
-                        }
-                    }
-                ]
-            }
-        }
-    ],
-    "dotall": true
-}->filtering: {
-    "name": "filter_13/12/04 18:16:49",
-    "source": "1\\n2 dummyline",
-    "debug": false
-}->assertResult: {
-    "id": "filter hit values",
-    "contains": {
-        "runFiltering": [
-            {
-                "filter_13/12/04 18:16:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
-    },
-    "description": "not match."
-}
-
-
-->filteringのテスト。フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
-    "name": "filter_13/12/04 23:58:49",
-    "patterns": [
-        {
-            "(.*)dummyline": {
-                "selectors": [
-                    {
-                        "showStatusMessage": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
-                        }
-                    }
-                ]
-            }
-        }
-    ],
-    "dotall": false
-}->filtering: {
-    "name": "filter_13/12/04 23:58:49",
-    "source": "1\\n2 dummyline"
-}->assertResult: {
-    "id": "filter not hit values",
-    "notcontains": {
-        "runFiltering": [
-            {
-                "13/12/04 23:58:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
-    },
-    "description": "but match, should not match"
-}
-
-
-
-->メッセージを特定クライアントに配信する。/inputIdentity: {
-    "id": "testMonocastMessage"
-}->monocastMessage: {
-    "target": "testMonocastMessage",
-    "message": "monocasting"
-}->assertResult: {
-    "id": "monocast message for specific client",
-    "contains": {
-        "monocastMessage": {
-            "target": "testMonocastMessage",
-            "message": "monocasting"
-        }
-    },
-    "description": "faild to monocast."
-}
-
-
-->フォーマットを使用したmonocast/inputIdentity: {
-    "id": "testMonocastMessageWithFormat"
-}->monocastMessage: {
-    "target": "testMonocastMessageWithFormat",
-    "message": "monocasting",
-    "format": "0:a1 b1 c1 d1",
-    "0": "header",
-    "a1": "the",
-    "b1": "test",
-    "c1": "is",
-    "d1": "over"
-}->assertResult: {
-    "id": "monocast message with format",
-    "contains": {
-        "monocastMessage": {
-            "target": "testMonocastMessageWithFormat",
-            "message": "header:the test is over"
-        }
-    },
-    "description": "faild to monocast with format."
-}
-
-
-->メッセージを全クライアントに配信する/inputIdentity: {
-    "id": "testBroadcastMessage"
-}->broadcastMessage: {
-    "message": "broadcasting"
-}->assertResult: {
-    "id": "broadcast message for every client",
-    "contains": {
-        "broadcastMessage": {
-            "sendedTo": [
-                "testBroadcastMessage"
-            ]
-        }
-    },
-    "description": "faild to broadcast."
-}
-
-->reactorをリセットする/resetReactors:{
-
-}->assertResult:{
-    "id": "reset all reactors",
-    "contains": {
-        "resetReactors": {
-            "deletedReactors": {}
-        }
-    },
-    "description": "not match"
-}
-
-
-
-->reactorをセットする/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-
-->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over.2"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
-
-}->setReactor: {
-    "target": "testTarget",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->setReactor: {
-    "target": "testTarget2",
-    "event": "testEvent",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over.2"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "reactor is set",
-    "contains": {
-        "setReactor": {
-            "reactors": {
-                "testEvent": {
-                    "testTarget": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over."
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    },
-                    "testTarget2": {
-                        "selectors": [
-                            {
-                                "showStatusMessage": {
-                                    "message": "eventEmit over.2"
-                                }
-                            }
-                        ],
-                        "interval": 100
-                    }
-                }
-            }
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-    
-}
-
-
-
-->Clientのidentityをセットする/inputIdentity: {
-    "id": "test"
-}->assertResult: {
-    "id": "inputIdentity done as test",
-    "contains": {
-        "inputIdentity": {
-            "inputIdentity": "test"
-        }
-    },
-    "description": "not match"
-}
-
-
-->設定の実行が実行されきったかどうか/runSetting: {
-    "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
-}->assertResult: {
-    "id": "setting done",
-    "contains": {
-        "runSetting": {
-            "result": "done"
-        }
-    },
-    "description": "not match"
-}->resetReactors:{
-
-}
-
-
-
-
-->適当な名前のファイルを開き、regionを追加する。pathの1部マッチ。追加後のidが入っていればOK。/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "notexistfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "contains region result",
-    "contains": {
-        "appendRegion": {
-            "result": "appended",
-            "condition": "keyword",
-            "line": "1",
-            "message": "test"
-        }
-    },
-    "description": "not match."
-}->closeFile: {
-
-}
-
-
-->適当な名前のファイルを開き、regionを追加する。pathの部分マッチ。追加後のidが入っていればOK。/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "testResources/notexistfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "contains region result",
-    "contains": {
-        "appendRegion": {
-            "result": "appended",
-            "condition": "keyword",
-            "line": "1",
-            "message": "test"
-        }
-    },
-    "description": "not match."
-}->closeFile: {
-
-}
-
-->適当な名前のファイルを開き、regionを追加する。pathの全部分マッチ。追加後のidが入っていればOK。/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "contains region result",
-    "contains": {
-        "appendRegion": {
-            "result": "appended",
-            "condition": "keyword",
-            "line": "1",
-            "message": "test"
-        }
-    },
-    "description": "not match."
-}->closeFile: {
-
-}
-
-
-
-->適当な名前のファイルを開き、regionの追加に失敗(noViewFoundを起こす)/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "exactlynotopenedfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "contains region result",
-    "contains": {
-        "appendRegion": {
-            "result": "not appended",
-            "condition": "keyword",
-            "line": "1",
-            "message": "test"
-        }
-    },
-    "description": "not match."
-}->closeFile: {
-
-}
-
-
-->eraseのテスト。適当な名前のファイルを開き、regionを追加する。消した個数が合っていればOK/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "notexistfile.txt",
-    "condition": "keyword"
-}->eraseAllRegion: {
-    
-}->assertResult: {
-    "id": "eraseAllRegion, all regions are become empty",
-    "contains": {
-        "eraseAllRegion": {
-            "erasedIdentities": [
-                "ss_(0, 0)"
-            ]
-        }
-    },
-    "description": "not all is empty."
-}->closeFile: {
-
-}
-
-
-
-->バージョンの精査、apiVersionmajorが一致、minorが低いのでクライアントのUpdateを勧められる+突破/versionVerify: {
-    "socketVersion": 3,
-    "apiVersion": "1.-1.0"
-}->assertResult: {
-    "id": "situation-please update possible",
-    "contains": {
-        "versionVerify": {
-            "result": 2
-        }
-    },
-    "description": "not match."
-}
-
-
-->バージョンの精査、apiVersion majorが一致、minorが一致、verifyの突破/versionVerify:
-{
-    "socketVersion": 3,
-    "apiVersion": "1.4.0"
-}->assertResult: {
-    "id": "situation-latest version",
-    "contains": {
-        "versionVerify": {
-            "result": 1
-        }
-    },
-    "description": "not match."
-}
-
-
-->バージョンの精査、apiVersion majorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify:
-{
-    "socketVersion": 3,
-    "apiVersion": "1.100.0",
-    "dryrun": true
-}->assertResult: {
-    "id": "situation-should update ss",
-    "contains": {
-        "versionVerify": {
-            "result": -1
-        }
-    },
-    "description": "not match."
-}
-
-->バージョンの精査、apiVersion majorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify:
-{
-    "socketVersion": 3,
-    "apiVersion": "0.0.0",
-    "dryrun": true
-}->assertResult: {
-    "id": "situation-should update client",
-    "contains": {
-        "versionVerify": {
-            "result": -2
-        }
-    },
-    "description": "not match."
-}
-
-->バージョンの精査、apiVersion majorが高いので、SSをupdateするアドレスを渡して切断/versionVerify:{
-   "socketVersion": 3,
-    "apiVersion": "2.0.0",
-    "dryrun": true
-}->assertResult: {
-    "id": "situation-should update ss",
-    "contains": {
-        "versionVerify": {
-            "result": -1
-        }
-    },
-    "description": "not match."
-}
-
-
-
-->適当に匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
-
-}->closeFile: {
-
-}->assertResult: {
-	"id": "close buffer succeeded",
-	"contains": {
-		"closeFile": {
-			"name": "None"
-		}
-	},
-	"description": "failed to close."
-}
-
-->存在しない特定の名称のファイルを開き、名指しで閉じる/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
-}->closeFile: {
-	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
-}->assertResult: {
-    "id": "close named scratch file",
-    "contains": {
-        "closeFile": {
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
-        }
-    },
-    "description": "not match."
-}
-
-->特定の名称のファイルのバッファを作成、内容を入力する。/createBuffer: {
-	"name": "test"
-}->assertResult: {
-    "id": "creates valid name and contents",
-    "contains": {
-        "createBuffer": {
-        	"name": "test"
-        }
-    },
-    "description": "not contains."
-}->closeFile: {
-	
-}
-
-->存在するファイルを開く/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->assertResult: {
-    "id": "open exist file",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-        }
-    },
-    "description": "not contains."
-}->closeFile: {
-
-}
-
-->存在するファイルを開く、閉じる、を二回繰り返し、閉じる順序と内容を確認する。/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->openFile: {
-	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
-}->closeFile: {
-
-}->closeFile: {
-
-}
-->assertResult: {
-    "id": "open exist file",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-        }
-    },
-    "description": "not contains."
-}->assertResult: {
-    "id": "open exist file2",
-    "contains": {
-        "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt is opened.",
-            "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
-        }
-    },
-    "description": "not contains."
-}
-
-// ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
-//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
-// }->assertResult: {
-//     "id": "open not exist file",
-//     "contains": {
-//         "openFile": {
-//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
-//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+//　途中。現在のビューをゲットする、みたいな仕掛けが必要かな。
+// ->containsRegionsを引き起こす/setReactor: {
+//     "target": "sublimesocketpreference",
+//     "event": "on_selection_modified",
+//     "selectors": [
+//         {
+//             "containsRegions": {
+//                 "view": "will be replace to specific view",
+//                 "target": "sublimesocketpreference",
+//                 "emit": "event_eventEmitted"
+//             }
 //         }
+//     ],
+//     "replacefromto": {
+//         "view": "view"
 //     },
-//     "description": "not contains."
+//     "interval": 1000
+// }->resetReactors
+
+
+
+
+
+// ->viewを集める。一つ以上のファイルパスがあるはず/openFile: {
+// 	"name": "something.txt"
+// }->collectViews: {
+
+// }->assertResult: {
+// 	"id": "views is here.",
+// 	"isnotempty": "collectViews",
+// 	"description": "not match.",
+// 	"debug": true
 // }->closeFile: {
 
 // }
 
 
-// めんどうくさいダイアログ系
-// ->ダイアログを表示/showDialog:{
-//     "message": "here comes daredevil"
+
+// ->noViewFoundを起こし、log出力をassertする/setReactor: {
+// 	"target": "noViewFoundEvent",
+// 	"event": "ss_f_noViewFound",
+// 	"replacefromto": {
+// 		"view": "0"
+// 	},
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "no view found",
+// 				"format": "view 0 not found.",
+// 				"0": "view for replace"
+// 			}
+// 		}
+// 	]
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "exactlynotopenedfile.txt",
+//     "condition": "keyword"
 // }->assertResult: {
-//     "id" :"show dialog contains values.",
+//     "id": "no view found raise",
 //     "contains": {
-//         "showDialog": {
-//             "output": "here comes daredevil"
+//         "showAtLog": {
+//             "output": "view exactlynotopenedfile.txt not found."
 //         }
 //     },
 //     "description": "not match."
 // }
 
 
-// ->ダイアログをフォーマット付きで表示/showDialog:{
-//     "message": "formatting",
+
+// ->SublimeSocketとしての現在のbasePathを指定する/openFile: {
+// 	"name": "setSublimeSocketWindowBasePathTest.txt"
+// }->setSublimeSocketWindowBasePath: {
+
+// }->assertResult: {
+// 	"id": "set basePath",
+// 	"contains": {
+// 		"setSublimeSocketWindowBasePath": {
+// 			"set": "ok"
+// 		}
+// 	},
+// 	"description": "not match"
+// }->closeFile: {
+
+// }
+
+
+
+
+// ->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/openFile: {
+// 	"name": "runWithBufferTest.txt"
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "ss_f_runWithBuffer",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->runWithBuffer: {
+	
+// }->assertResult: {
+// 	"id": "run with buffer",
+// 	"contains": {
+// 		"runWithBuffer": {
+// 			"name": "None"
+// 		}
+// 	},
+// 	"description": "not match."
+// }->closeFile: {
+
+// }->resetReactors: {
+
+// }->resetResults: {
+	
+// }
+
+
+
+// ->eventEmitのテスト/setReactor: {
+// 	"target": "event_EmitTestTarget",
+// 	"event": "event_EmitTestEvent",
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "testing for eventEmit"
+// 			}
+// 		}
+// 	]
+// }->eventEmit: {
+// 	"target": "event_EmitTestTarget",
+// 	"event": "event_EmitTestEvent"
+// }->assertResult: {
+// 	"id": "eventEmit has emitted result",
+// 	"contains": {
+// 		"eventEmit": {
+// 			"target": "event_EmitTestTarget",
+// 			"event": "event_EmitTestEvent"
+// 		}
+// 	},
+// 	"description": "not match"
+// }->resetReactors: {
+
+// }->resetResults: {
+	
+// }
+
+
+
+// ->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->setReactor: {
+//     "target": "event_testTarget",
+//     "event": "ss_f_runWithBuffer",
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit2 over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+// 	"target": "event_testTarget",
+//     "event": "on_close",
+//     "replacefromto": {
+//         "view": "view"
+//     },
+//     "selectors": [
+//         {
+//             "runWithBuffer": {
+//                 "view": "replace"
+//             }
+//         }
+//     ]
+// }->closeFile: {
+// 	// このイベントでreactorを着火する。その際、reactorのtargetは指定する事が出来ないので、全ターゲットに対して実行される。
+// }->assertResult: {
+// 	"context": "view",
+// 	"id": "runWithBuffer with specific file",
+// 	"contains": {
+// 		"runWithBuffer": {
+// 			"name": "None" //この時点でcloseが走っており、viewの情報は取得出来ない。
+// 		}
+// 	},
+// 	"description": "not match."
+// }->resetReactors: {
+
+// }->resetResults: {
+	
+// }
+
+
+
+// ->Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {
+// 	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+// }->assertResult: {
+// 	"id": "read collect data",
+// 	"contains": {
+// 		"readFileData": {
+// 			"data": "sample2.txt"
+// 		}
+// 	},
+// 	"description": "not match."
+// }
+
+
+// ->Notifyを表示する/notify: {
+//     "title": "test_notify",
+//     "message": "notice!"
+// }->assertResult: {
+//     "id": "show notification",
+//     "contains": {
+//         "notify": {
+//             "title": "test_notify",
+//             "message": "notice!"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->シェルを実行する/runShell: {
+//     "main": "pwd"
+// }->assertResult: {
+//     "id": "ruh shell",
+//     "contains": {
+//         "runShell": {
+//             "runnable": "pwd"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+// ->ステータスバーにメッセージを表示/showStatusMessage: {
+//     "message": "testStatusMessage"
+// }->assertResult: {
+//     "id": "show statusMessage",
+//     "contains": {
+//         "showStatusMessage": {
+//             "output": "testStatusMessage"
+//         }
+//     },
+//     "description": "status message not match."
+// }
+
+
+
+
+// ->ログ出力のテスト/showAtLog: {
+//     "message": "testLogMessage"
+// }->assertResult: {
+//     "id": "log output test",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "testLogMessage"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->フォーマット付きログ出力のテスト/showAtLog: {
+//     "message": "testLogMessage",
+//     "format": "formatted log",
+//     "formatted": "works",
+//     "log": "fine."
+// }->assertResult: {
+//     "id": "log output test",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "works fine."
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+
+
+// ->フィルタ定義を行い、フィルタが生成されている/defineFilter: {
+//     "name": "testFilter",
+//     "patterns": [
+//         {
+//             "testPattern": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "hello!"
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "should have filter-info",
+//     "contains": {
+//         "defineFilter": {
+//             "defined": {
+//                 "name": "testFilter",
+//                 "patterns": [
+//                     {
+//                         "testPattern": {
+//                             "selectors": [
+//                                 {
+//                                     "showStatusMessage": {
+//                                         "message": "hello!"
+//                                     }
+//                                 }
+//                             ]
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+// ->filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
+//     "name": "filter_13/12/04 18:16:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall": true
+// }->filtering: {
+//     "name": "filter_13/12/04 18:16:49",
+//     "source": "1\\n2 dummyline",
+//     "debug": false
+// }->assertResult: {
+//     "id": "filter hit values",
+//     "contains": {
+//         "runFiltering": [
+//             {
+//                 "filter_13/12/04 18:16:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "description": "not match."
+// }
+
+
+// ->filteringのテスト。フィルタをセット、改行指定無しで、結果に特定のデータが入らない、、はずだが、入ってる？それともテストツールがおかしい。/defineFilter: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "patterns": [
+//         {
+//             "(.*)dummyline": {
+//                 "selectors": [
+//                     {
+//                         "showStatusMessage": {
+//                             "message": "should be 1/2:groups[0] in filterSource[]/."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ],
+//     "dotall": false
+// }->filtering: {
+//     "name": "filter_13/12/04 23:58:49",
+//     "source": "1\\n2 dummyline"
+// }->assertResult: {
+//     "id": "filter not hit values",
+//     "notcontains": {
+//         "runFiltering": [
+//             {
+//                 "13/12/04 23:58:49": {
+//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+//                 }
+//             }
+//         ]
+//     },
+//     "description": "but match, should not match"
+// }
+
+
+
+// ->メッセージを特定クライアントに配信する。/inputIdentity: {
+//     "id": "testMonocastMessage"
+// }->monocastMessage: {
+//     "target": "testMonocastMessage",
+//     "message": "monocasting"
+// }->assertResult: {
+//     "id": "monocast message for specific client",
+//     "contains": {
+//         "monocastMessage": {
+//             "target": "testMonocastMessage",
+//             "message": "monocasting"
+//         }
+//     },
+//     "description": "faild to monocast."
+// }
+
+
+// ->フォーマットを使用したmonocast/inputIdentity: {
+//     "id": "testMonocastMessageWithFormat"
+// }->monocastMessage: {
+//     "target": "testMonocastMessageWithFormat",
+//     "message": "monocasting",
 //     "format": "0:a1 b1 c1 d1",
 //     "0": "header",
 //     "a1": "the",
@@ -946,10 +430,424 @@
 //     "c1": "is",
 //     "d1": "over"
 // }->assertResult: {
-//     "id" :"show dialog contains values.",
+//     "id": "monocast message with format",
 //     "contains": {
-//         "showDialog": {
-//             "output": "header:the test is over"
+//         "monocastMessage": {
+//             "target": "testMonocastMessageWithFormat",
+//             "message": "header:the test is over"
+//         }
+//     },
+//     "description": "faild to monocast with format."
+// }
+
+
+// ->メッセージを全クライアントに配信する/inputIdentity: {
+//     "id": "testBroadcastMessage"
+// }->broadcastMessage: {
+//     "message": "broadcasting"
+// }->assertResult: {
+//     "id": "broadcast message for every client",
+//     "contains": {
+//         "broadcastMessage": {
+//             "sendedTo": [
+//                 "testBroadcastMessage"
+//             ]
+//         }
+//     },
+//     "description": "faild to broadcast."
+// }
+
+// ->reactorをリセットする/resetReactors:{
+
+// }->assertResult:{
+//     "id": "reset all reactors",
+//     "contains": {
+//         "resetReactors": {
+//             "deletedReactors": {}
+//         }
+//     },
+//     "description": "not match"
+// }
+
+
+
+// ->reactorをセットする/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+
+// ->複数件の同名のevent-target reactorをセットして、増加しない/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+// ->複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
+
+// }->setReactor: {
+//     "target": "testTarget",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setReactor: {
+//     "target": "testTarget2",
+//     "event": "testEvent",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "reactor is set",
+//     "contains": {
+//         "setReactor": {
+//             "reactors": {
+//                 "testEvent": {
+//                     "testTarget": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over."
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     },
+//                     "testTarget2": {
+//                         "selectors": [
+//                             {
+//                                 "showStatusMessage": {
+//                                     "message": "eventEmit over.2"
+//                                 }
+//                             }
+//                         ],
+//                         "interval": 100
+//                     }
+//                 }
+//             }
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+    
+// }
+
+
+
+// ->Clientのidentityをセットする/inputIdentity: {
+//     "id": "test"
+// }->assertResult: {
+//     "id": "inputIdentity done as test",
+//     "contains": {
+//         "inputIdentity": {
+//             "inputIdentity": "test"
+//         }
+//     },
+//     "description": "not match"
+// }
+
+
+// ->設定の実行が実行されきったかどうか/runSetting: {
+//     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
+// }->assertResult: {
+//     "id": "setting done",
+//     "contains": {
+//         "runSetting": {
+//             "result": "done"
+//         }
+//     },
+//     "description": "not match"
+// }->resetReactors:{
+
+// }
+
+
+->適当な名前のファイルを開き、名前を指定せず、現在のviewへとregionを追加する/openFile: {
+	"name": "currentViewAppendRegionTest.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "condition": "keyword"	
+}->assertResult
+
+->closeFile: {
+
+}
+
+
+// ->適当な名前のファイルを開き、regionを追加する。pathの1部マッチ。追加後のidが入っていればOK。/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "notexistfile.txt",
+//     "condition": "keyword"
+// }->assertResult: {
+//     "id": "contains region result",
+//     "contains": {
+//         "appendRegion": {
+//             "result": "appended",
+//             "condition": "keyword",
+//             "line": "1",
+//             "message": "test"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }
+
+
+// ->適当な名前のファイルを開き、regionを追加する。pathの部分マッチ。追加後のidが入っていればOK。/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "testResources/notexistfile.txt",
+//     "condition": "keyword"
+// }->assertResult: {
+//     "id": "contains region result",
+//     "contains": {
+//         "appendRegion": {
+//             "result": "appended",
+//             "condition": "keyword",
+//             "line": "1",
+//             "message": "test"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }
+
+// ->適当な名前のファイルを開き、regionを追加する。pathの全部分マッチ。追加後のidが入っていればOK。/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
+//     "condition": "keyword"
+// }->assertResult: {
+//     "id": "contains region result",
+//     "contains": {
+//         "appendRegion": {
+//             "result": "appended",
+//             "condition": "keyword",
+//             "line": "1",
+//             "message": "test"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }
+
+
+
+// ->適当な名前のファイルを開き、regionの追加に失敗(noViewFoundを起こす)/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "exactlynotopenedfile.txt",
+//     "condition": "keyword"
+// }->assertResult: {
+//     "id": "contains region result",
+//     "contains": {
+//         "appendRegion": {
+//             "result": "not appended",
+//             "condition": "keyword",
+//             "line": "1",
+//             "message": "test"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }
+
+
+// ->eraseのテスト。適当な名前のファイルを開き、regionを追加する。消した個数が合っていればOK/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "notexistfile.txt",
+//     "condition": "keyword"
+// }->eraseAllRegion: {
+    
+// }->assertResult: {
+//     "id": "eraseAllRegion, all regions are become empty",
+//     "contains": {
+//         "eraseAllRegion": {
+//             "erasedIdentities": [
+//                 "ss_(0, 0)"
+//             ]
+//         }
+//     },
+//     "description": "not all is empty."
+// }->closeFile: {
+
+// }
+
+
+
+// ->バージョンの精査、apiVersionmajorが一致、minorが低いのでクライアントのUpdateを勧められる+突破/versionVerify: {
+//     "socketVersion": 3,
+//     "apiVersion": "1.-1.0"
+// }->assertResult: {
+//     "id": "situation-please update possible",
+//     "contains": {
+//         "versionVerify": {
+//             "result": 2
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+// ->バージョンの精査、apiVersion majorが一致、minorが一致、verifyの突破/versionVerify:
+// {
+//     "socketVersion": 3,
+//     "apiVersion": "1.4.0"
+// }->assertResult: {
+//     "id": "situation-latest version",
+//     "contains": {
+//         "versionVerify": {
+//             "result": 1
+//         }
+//     },
+//     "description": "not match."
+// }
+
+
+// ->バージョンの精査、apiVersion majorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify:
+// {
+//     "socketVersion": 3,
+//     "apiVersion": "1.100.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update ss",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -1
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->バージョンの精査、apiVersion majorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify:
+// {
+//     "socketVersion": 3,
+//     "apiVersion": "0.0.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update client",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -2
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->バージョンの精査、apiVersion majorが高いので、SSをupdateするアドレスを渡して切断/versionVerify:{
+//    "socketVersion": 3,
+//     "apiVersion": "2.0.0",
+//     "dryrun": true
+// }->assertResult: {
+//     "id": "situation-should update ss",
+//     "contains": {
+//         "versionVerify": {
+//             "result": -1
 //         }
 //     },
 //     "description": "not match."
@@ -957,6 +855,142 @@
 
 
 
-->終了時のメッセージ/showStatusMessage: {
-    "message": "test over.\n\n"
-}
+// ->適当に匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
+
+// }->closeFile: {
+
+// }->assertResult: {
+// 	"id": "close buffer succeeded",
+// 	"contains": {
+// 		"closeFile": {
+// 			"name": "None"
+// 		}
+// 	},
+// 	"description": "failed to close."
+// }
+
+// ->存在しない特定の名称のファイルを開き、名指しで閉じる/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
+// }->closeFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
+// }->assertResult: {
+//     "id": "close named scratch file",
+//     "contains": {
+//         "closeFile": {
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratchForClose.txt"
+//         }
+//     },
+//     "description": "not match."
+// }
+
+// ->特定の名称のファイルのバッファを作成、内容を入力する。/createBuffer: {
+// 	"name": "test"
+// }->assertResult: {
+//     "id": "creates valid name and contents",
+//     "contains": {
+//         "createBuffer": {
+//         	"name": "test"
+//         }
+//     },
+//     "description": "not contains."
+// }->closeFile: {
+	
+// }
+
+// ->存在するファイルを開く/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->assertResult: {
+//     "id": "open exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         }
+//     },
+//     "description": "not contains."
+// }->closeFile: {
+
+// }
+
+// ->存在するファイルを開く、閉じる、を二回繰り返し、閉じる順序と内容を確認する。/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->openFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+// }->closeFile: {
+
+// }->closeFile: {
+
+// }
+// ->assertResult: {
+//     "id": "open exist file",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         }
+//     },
+//     "description": "not contains."
+// }->assertResult: {
+//     "id": "open exist file2",
+//     "contains": {
+//         "openFile": {
+//             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt is opened.",
+//             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+//         }
+//     },
+//     "description": "not contains."
+// }
+
+// // ->存在しないファイルを開き、scratchが作成される(けどそれを認識する方法は無い)/openFile: {
+// //     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// // }->assertResult: {
+// //     "id": "open not exist file",
+// //     "contains": {
+// //         "openFile": {
+// //             "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt is opened.",
+// //             "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/scratch.txt"
+// //         }
+// //     },
+// //     "description": "not contains."
+// // }->closeFile: {
+
+// // }
+
+
+// // めんどうくさいダイアログ系
+// // ->ダイアログを表示/showDialog:{
+// //     "message": "here comes daredevil"
+// // }->assertResult: {
+// //     "id" :"show dialog contains values.",
+// //     "contains": {
+// //         "showDialog": {
+// //             "output": "here comes daredevil"
+// //         }
+// //     },
+// //     "description": "not match."
+// // }
+
+
+// // ->ダイアログをフォーマット付きで表示/showDialog:{
+// //     "message": "formatting",
+// //     "format": "0:a1 b1 c1 d1",
+// //     "0": "header",
+// //     "a1": "the",
+// //     "b1": "test",
+// //     "c1": "is",
+// //     "d1": "over"
+// // }->assertResult: {
+// //     "id" :"show dialog contains values.",
+// //     "contains": {
+// //         "showDialog": {
+// //             "output": "header:the test is over"
+// //         }
+// //     },
+// //     "description": "not match."
+// // }
+
+
+
+// ->終了時のメッセージ/showStatusMessage: {
+//     "message": "test over.\n\n"
+// }

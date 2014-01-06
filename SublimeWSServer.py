@@ -394,13 +394,14 @@ class SublimeWSServer:
 
 
 	## emit event if params matches the regions that sink in view
-	def containsRegions(self, params, results):
+	def containsRegionsInKVS(self, params, results):
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param"
+		
 		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_VIEWS):
 			viewDict = self.getV(SublimeSocketAPISettings.DICT_VIEWS)
 
-			assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param"
-			assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param"
-			assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param"
 			
 
 			# specify regions that are selected.

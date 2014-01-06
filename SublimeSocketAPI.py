@@ -862,7 +862,7 @@ class SublimeSocketAPI:
 
 	## is contains regions or not.
 	def containsRegions(self, params, results):
-		self.server.containsRegions(params, results)
+		self.server.containsRegionsInKVS(params, results)
 		
 	## Define the filter and check filterPatterns
 	def defineFilter(self, params, results):
