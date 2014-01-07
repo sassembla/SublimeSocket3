@@ -119,7 +119,7 @@ API_SETVIEWREACTOR	= "setViewReactor"
 REACTOR_TARGET		= "target"
 REACTOR_REACT		= "react"
 REACTOR_SELECTORS	= "selectors"
-REACTOR_INTERVAL	= "interval"
+REACTOR_DELAY		= "delay"
 REACTOR_REPLACEFROMTO		= "replacefromto"
 
 REACTOR_VIEWKEY_VIEWSELF	= "view"
@@ -140,8 +140,9 @@ API_SETSELECTION	= "setSelection"
 SETSELECTION_PATH	= "path"
 SETSELECTION_FROM	= "from"
 SETSELECTION_TO		= "to"
+SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION = "on_selection_modified_by_setselection"
 
-REACTIVE_RESERVED_INTERVAL_EVENT	= ["on_modified", "on_selection_modified", "on_pre_save", "on_post_save"]
+
 REACTIVE_PREFIX_USERDEFINED_EVENT	= "event_"
 REACTIVE_REACTABLE_EVENT			= [REACTABLE_EVENT_ON_QUERY_COMPLETIONS]
 REACTIVE_FOUNDATION_EVENT = [SS_FOUNDATION_NOVIEWFOUND, SS_FOUNDATION_RUNWITHBUFFER]
@@ -267,7 +268,6 @@ VIEW_BUFFERID			= "bufferId"
 VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
 VIEW_SELECTED			= "selected"
-
 
 VIEW_EVENTS_RENEW	= ["on_new", "on_clone", "on_load", "on_modified", SS_EVENT_COLLECT, SS_EVENT_LOADING] #list of acceptable-view renew event names.
 VIEW_EVENTS_DEL		= ["on_close"] #list of acceptable-view del event names.

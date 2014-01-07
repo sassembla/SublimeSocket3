@@ -323,7 +323,6 @@ class SublimeSocketAPI:
 		return SublimeSocketAPISettings.PARSERESULT_NONE
 
 
-
 	## run each selectors
 	def runAllSelector(self, paramDict, selectorsArray, eventParam, results):
 		def runForeachAPI(selector):
@@ -600,6 +599,7 @@ class SublimeSocketAPI:
 		
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTEXT in params:
 			contextKeyword = params[SublimeSocketAPISettings.ASSERTRESULT_CONTEXT]
+			print("self.testResults", self.testResults)
 			
 			def checkIsResultsOf(currentContext, currentContextKeyword):
 				key = list(currentContext)[0]
@@ -617,6 +617,8 @@ class SublimeSocketAPI:
 				
 			unmergedResultsList = [collectResultsContextValues(context) for context in self.testResults if checkIsResultsOf(context, contextKeyword)]
 			
+			print("unmergedResultsList", unmergedResultsList)
+
 			resultValues = {}
 			mergedResults = {}
 			
@@ -624,10 +626,8 @@ class SublimeSocketAPI:
 				for key in list(item):
 					resultValues[key] = item[key]
 			
-			print("after results", resultValues)
 			results = {contextKeyword:resultValues}
-			print("this results", results)
-
+			
 		# load results for check
 		resultBodies = self.resultBody(results)
 		if debug:
@@ -1078,16 +1078,40 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
 
 
+	## generate selection to view
 	def setSelection(self, params, results):
 		assert SublimeSocketAPISettings.SETSELECTION_PATH in params, "setSelection require 'path' param."
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
 		
-		# 選択範囲を作り出す。
-		view = self.internal_detectViewInstance(path)
-		selected = ""
+		path = params[SublimeSocketAPISettings.SETSELECTION_PATH]
+		
+		regionFrom = params[SublimeSocketAPISettings.SETSELECTION_FROM]
+		regionTo = params[SublimeSocketAPISettings.SETSELECTION_TO]
 
-		self.setResultsParams(results, self.setSelection, {"selected":selected})
+		view = self.internal_detectViewInstance(path)
+
+		if view:
+			pt = sublime.Region(regionFrom, regionTo)
+			view.sel().add(pt)
+			selected = str(pt)
+			
+			# emit viewReactor
+			viewParams = self.server.getSublimeViewInfo(
+						view,
+						SublimeSocketAPISettings.VIEW_SELF,
+						SublimeSocketAPISettings.VIEW_ID,
+						SublimeSocketAPISettings.VIEW_BUFFERID,
+						SublimeSocketAPISettings.VIEW_PATH,
+						SublimeSocketAPISettings.VIEW_BASENAME,
+						SublimeSocketAPISettings.VIEW_VNAME,
+						SublimeSocketAPISettings.VIEW_SELECTED
+					)
+
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+			self.setResultsParams(results, self.setSelection, {"selected":selected})
+
+		
 		
 	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
 	def internal_detectViewInstance(self, path):
@@ -1603,7 +1627,6 @@ class SublimeSocketAPI:
 		else:
 			deletes = self.server.deleteAllRegionsInAllView()
 		
-		print("deletes", deletes)
 		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 
