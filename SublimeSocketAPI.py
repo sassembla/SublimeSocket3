@@ -1078,12 +1078,17 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
 
 
-	def setSelection(self, params,results):
+	def setSelection(self, params, results):
 		assert SublimeSocketAPISettings.SETSELECTION_PATH in params, "setSelection require 'path' param."
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
+		
+		# 選択範囲を作り出す。
+		view = self.internal_detectViewInstance(path)
+		selected = ""
 
-	
+		self.setResultsParams(results, self.setSelection, {"selected":selected})
+		
 	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
 	def internal_detectViewInstance(self, path):
 		if self.server.viewDict():
