@@ -49,9 +49,10 @@
 		}
 	},
 	"description": "no showAtLog found."
-//}->selectRegion: {
-//     "path": "exactlynotopenedfile.txt",
-//     "region": 
+}->setSelection: {
+    "path": "exactlynotopenedfile.txt",
+    "from": 0,
+    "to": 0
 }->closeFile: {
     
 }->resetReactors: {
@@ -64,180 +65,179 @@
 
 
 
-->viewを集める。一つ以上のファイルパスがあるはず/openFile: {
-	"name": "something.txt"
-}->collectViews: {
+// ->viewを集める。一つ以上のファイルパスがあるはず/openFile: {
+// 	"name": "something.txt"
+// }->collectViews: {
 
-}->assertResult: {
-	"id": "views is here.",
-	"isnotempty": "collectViews",
-	"description": "not match.",
-	"debug": true
-}->closeFile: {
+// }->assertResult: {
+// 	"id": "views is here.",
+// 	"isnotempty": "collectViews",
+// 	"description": "not match.",
+// 	"debug": true
+// }->closeFile: {
 
-}->resetResults: {
+// }->resetResults: {
 
-}
-
-
-
-->noViewFoundを起こし、log出力をassertする/setEventReactor: {
-	"target": "noViewFoundEvent",
-	"react": "ss_f_noViewFound",
-	"replacefromto": {
-		"view": "0"
-	},
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "no view found",
-				"format": "view 0 not found.",
-				"0": "view for replace"
-			}
-		}
-	]
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "path": "exactlynotopenedfile.txt",
-    "condition": "keyword"
-}->assertResult: {
-    "id": "no view found raise",
-    "contains": {
-        "showAtLog": {
-            "output": "view exactlynotopenedfile.txt not found."
-        }
-    },
-    "description": "not match."
-}->resetResults: {
-
-}
+// }
 
 
 
-->SublimeSocketとしての現在のbasePathを指定する/openFile: {
-	"name": "setSublimeSocketWindowBasePathTest.txt"
-}->setSublimeSocketWindowBasePath: {
+// ->noViewFoundを起こし、log出力をassertする/setEventReactor: {
+// 	"target": "noViewFoundEvent",
+// 	"react": "ss_f_noViewFound",
+// 	"replacefromto": {
+// 		"view": "0"
+// 	},
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "no view found",
+// 				"format": "view 0 not found.",
+// 				"0": "view for replace"
+// 			}
+// 		}
+// 	]
+// }->appendRegion: {
+//     "line": "1",
+//     "message": "test",
+//     "path": "exactlynotopenedfile.txt",
+//     "condition": "keyword"
+// }->assertResult: {
+//     "id": "no view found raise",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "view exactlynotopenedfile.txt not found."
+//         }
+//     },
+//     "description": "not match."
+// }->resetResults: {
 
-}->assertResult: {
-	"id": "set basePath",
-	"contains": {
-		"setSublimeSocketWindowBasePath": {
-			"set": "ok"
-		}
-	},
-	"description": "not match"
-}->closeFile: {
-
-}->resetResults: {
-
-}
+// }
 
 
 
+// ->SublimeSocketとしての現在のbasePathを指定する/openFile: {
+// 	"name": "setSublimeSocketWindowBasePathTest.txt"
+// }->setSublimeSocketWindowBasePath: {
 
-->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/openFile: {
-	"name": "runWithBufferTest.txt"
-}->setReactor: {
-    "target": "testTarget",
-    "react": "ss_f_runWithBuffer",
-    "interval": 100,
-    "selectors": [
-        {
-            "showStatusMessage": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->runWithBuffer: {
+// }->assertResult: {
+// 	"id": "set basePath",
+// 	"contains": {
+// 		"setSublimeSocketWindowBasePath": {
+// 			"set": "ok"
+// 		}
+// 	},
+// 	"description": "not match"
+// }->closeFile: {
+
+// }->resetResults: {
+
+// }
+
+
+
+
+// ->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/openFile: {
+// 	"name": "runWithBufferTest.txt"
+// }->setReactor: {
+//     "target": "testTarget",
+//     "react": "ss_f_runWithBuffer",
+//     "interval": 100,
+//     "selectors": [
+//         {
+//             "showStatusMessage": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->runWithBuffer: {
 	
-}->assertResult: {
-	"id": "run with buffer",
-	"contains": {
-		"runWithBuffer": {
-			"name": "None"
-		}
-	},
-	"description": "not match."
-}->closeFile: {
+// }->assertResult: {
+// 	"id": "run with buffer",
+// 	"contains": {
+// 		"runWithBuffer": {
+// 			"name": "None"
+// 		}
+// 	},
+// 	"description": "not match."
+// }->closeFile: {
 
-}->resetReactors: {
+// }->resetReactors: {
 
-}->resetResults: {
+// }->resetResults: {
 	
-}
+// }
 
 
 
-->eventEmitのテスト/setReactor: {
-	"target": "event_EmitTestTarget",
-	"react": "event_EmitTestEvent",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "testing for eventEmit"
-			}
-		}
-	]
-}->eventEmit: {
-	"target": "event_EmitTestTarget",
-	"event": "event_EmitTestEvent"
-}->assertResult: {
-	"id": "eventEmit has emitted result",
-	"contains": {
-		"eventEmit": {
-			"target": "event_EmitTestTarget",
-			"event": "event_EmitTestEvent"
-		}
-	},
-	"description": "not match"
-}->resetReactors: {
+// ->eventEmitのテスト/setReactor: {
+// 	"target": "event_EmitTestTarget",
+// 	"react": "event_EmitTestEvent",
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "testing for eventEmit"
+// 			}
+// 		}
+// 	]
+// }->eventEmit: {
+// 	"target": "event_EmitTestTarget",
+// 	"event": "event_EmitTestEvent"
+// }->assertResult: {
+// 	"id": "eventEmit has emitted result",
+// 	"contains": {
+// 		"eventEmit": {
+// 			"target": "event_EmitTestTarget",
+// 			"event": "event_EmitTestEvent"
+// 		}
+// 	},
+// 	"description": "not match"
+// }->resetReactors: {
 
-}->resetResults: {
+// }->resetResults: {
 	
-}
+// }
 
 
 
-->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
-	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->setEventReactor: {
-    "target": "event_testTarget",
-    "react": "ss_f_runWithBuffer",
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "eventEmit2 over."
-            }
-        }
-    ]
-}->setViewReactor: {
-	"target": "event_testTarget",
-    "react": "on_close",
-    "selectors": [
-        {
-            "runWithBuffer": {
+// ->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->setEventReactor: {
+//     "target": "event_testTarget",
+//     "react": "ss_f_runWithBuffer",
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit2 over."
+//             }
+//         }
+//     ]
+// }->setViewReactor: {
+// 	"target": "event_testTarget",
+//     "react": "on_close",
+//     "selectors": [
+//         {
+//             "runWithBuffer": {
 
-            }
-        }
-    ]
-}->closeFile: {
-	// このイベントでreactorを着火する。その際、reactorのtargetは指定する事が出来ないので、全ターゲットに対して実行される。
-}->assertResult: {
-	"context": "view",
-	"id": "runWithBuffer with specific file",
-	"contains": {
-		"runWithBuffer": {
-			"name": "None" //この時点でcloseが走っており、viewの情報は取得出来ない。
-		}
-	},
-	"description": "not match.",
-	"debug": true
-}->resetReactors: {
+//             }
+//         }
+//     ]
+// }->closeFile: {
+// 	// このイベントでreactorを着火する。その際、reactorのtargetは指定する事が出来ないので、全ターゲットに対して実行される。
+// }->assertResult: {
+// 	"context": "view",
+// 	"id": "runWithBuffer with specific file",
+// 	"contains": {
+// 		"runWithBuffer": {
+// 			"name": "None" //この時点でcloseが走っており、viewの情報は取得出来ない。
+// 		}
+// 	},
+// 	"description": "not match."
+// }->resetReactors: {
 
-}->resetResults: {
+// }->resetResults: {
 	
-}
+// }
 
 
 

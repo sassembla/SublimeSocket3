@@ -136,6 +136,10 @@ REACTORTYPE_VIEW	= "view"
 
 API_RESETREACTORS		= "resetReactors"
 
+API_SETSELECTION	= "setSelection"
+SETSELECTION_PATH	= "path"
+SETSELECTION_FROM	= "from"
+SETSELECTION_TO		= "to"
 
 REACTIVE_RESERVED_INTERVAL_EVENT	= ["on_modified", "on_selection_modified", "on_pre_save", "on_post_save"]
 REACTIVE_PREFIX_USERDEFINED_EVENT	= "event_"

@@ -233,7 +233,11 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_RESETREACTORS):
-				self.resetReactors(params, client, results)
+				self.resetReactors(params, results)
+				break
+
+			if case(SublimeSocketAPISettings.API_SETSELECTION):
+				self.setSelection(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSHELL):
@@ -1068,12 +1072,18 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.setViewReactor, {"viewreactors":reactors})
 		
 	## erase all reactors
-	def resetReactors(self, params, client, results):
+	def resetReactors(self, params, results):
 		deletedReactors = self.server.removeAllReactors()
 
 		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
 
 
+	def setSelection(self, params,results):
+		assert SublimeSocketAPISettings.SETSELECTION_PATH in params, "setSelection require 'path' param."
+		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
+		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
+
+	
 	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
 	def internal_detectViewInstance(self, path):
 		if self.server.viewDict():
