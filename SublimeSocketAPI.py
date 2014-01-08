@@ -616,8 +616,6 @@ class SublimeSocketAPI:
 				return value
 				
 			unmergedResultsList = [collectResultsContextValues(context) for context in self.testResults if checkIsResultsOf(context, contextKeyword)]
-			
-			print("unmergedResultsList", unmergedResultsList)
 
 			resultValues = {}
 			mergedResults = {}
@@ -631,7 +629,7 @@ class SublimeSocketAPI:
 		# load results for check
 		resultBodies = self.resultBody(results)
 		if debug:
-			print("\nassertResult:\nid:", identity, "\n", resultBodies, "\n:assertResult\n")
+			print("\nassertResult:\nid:", identity, "\nresultBodies:", resultBodies, "\n:assertResult\n")
 
 
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
@@ -834,6 +832,7 @@ class SublimeSocketAPI:
 					)
 		
 		self.server.fireKVStoredItem(
+			SublimeSocketAPISettings.REACTORTYPE_VIEW,
 			SublimeSocketAPISettings.SS_EVENT_LOADING, 
 			viewParams,
 			results)
@@ -1107,7 +1106,7 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.VIEW_VNAME,
 				SublimeSocketAPISettings.VIEW_SELECTED)
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
 			self.setResultsParams(results, self.setSelection, {"selected":selected})
 
 		
@@ -1202,13 +1201,14 @@ class SublimeSocketAPI:
 			view = sublime.active_window().active_view()
 			params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW] = view
 
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
+		self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
+
 		name = view.name()
 
 		# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
 		if not name:
 			name = "None"
-
+		
 		self.setResultsParams(results, self.runWithBuffer, {"name":name})
 
 
@@ -1330,7 +1330,7 @@ class SublimeSocketAPI:
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
-		self.server.fireKVStoredItem(eventName, params, results)
+		self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
 		self.setResultsParams(results, self.eventEmit, {SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], 
 			SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
@@ -1593,7 +1593,7 @@ class SublimeSocketAPI:
 			params[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
 			params[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, params, results)
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, params, results)
 			return ("not appended", line, message, condition)
 
 		return self.internal_appendRegion(viewInstance, line, message, condition)

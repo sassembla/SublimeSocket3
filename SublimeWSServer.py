@@ -173,6 +173,7 @@ class SublimeWSServer:
 					)
 
 					self.fireKVStoredItem(
+						SublimeSocketAPISettings.REACTORTYPE_VIEW,
 						SublimeSocketAPISettings.SS_EVENT_COLLECT, 
 						viewParams,
 						results
@@ -306,7 +307,7 @@ class SublimeWSServer:
 		return reactorsDict
 
 
-	def runReactor(self, reactorType, reactorDict, selectorsArray, eventParam):
+	def runReactor(self, reactorType, reactorDict, eventParam, results):
 		# reactorTypeで判別、viewの場合は引数の暗黙変換を行う。
 		for case in PythonSwitch(reactorType):
 			if case(SublimeSocketAPISettings.REACTORTYPE_EVENT):
@@ -321,7 +322,8 @@ class SublimeWSServer:
 					}
 				break
 
-		self.api.runAllSelector(reactorDict, selectorsArray, eventParam, self.api.initResult("runReactor:"+str(uuid.uuid4())))
+		selectors = reactorDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+		self.api.runAllSelector(reactorDict, selectors, eventParam, results)
 
 
 	# ready for react completion. old-loading completion will ignore.
@@ -417,7 +419,7 @@ class SublimeWSServer:
 					regionInfo[SublimeSocketAPISettings.REACTOR_TARGET] = target
 					
 					print("なんでわざわざイベント扱いしてるんだろう。selectorじゃダメなのかな。")
-					self.fireKVStoredItem(emit, regionInfo, results)
+					self.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionInfo, results)
 					
 					if SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG in params:
 						debug = params[SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG]
@@ -458,7 +460,7 @@ class SublimeWSServer:
 
 	## input to sublime from server.
 	# fire event in KVS, if exist.
-	def fireKVStoredItem(self, eventName, eventParam, results):
+	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
 		print("eventName", eventName)
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 
@@ -474,20 +476,27 @@ class SublimeWSServer:
 					selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 				
 					self.api.runAllSelector(reactDict, selector, eventParam, results)
-					
-		else:
-			if eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
-				self.runFoundationEvent(eventName, eventParam, reactorsDict, results)
+
+		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
+			if reactorsDict and eventName in reactorsDict:
+				self.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
 				
-			elif eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
-				self.runRenewReactor(eventName, eventParam, reactorsDict, results)
+		else:
+			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
+				self.runRenew(eventParam)
 
-			elif eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
-				self.runDeletionReactor(eventName, eventParam, reactorsDict, results)
+			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
+				self.runDeletion(eventParam)
 
-			else:
-				print("hereComes,", eventName)
-				# 上記以外のイベントについて、対応する。selectorを走らせるだけなんだけど。
+			# if reactor exist, run all selectors
+			if reactorsDict and eventName in reactorsDict:
+				reactorDict = reactorsDict[eventName]
+				for reactorKey in list(reactorDict):
+					reactorParams = reactorDict[reactorKey]
+					print("delay要素を入れるとしたら、このへん。")
+
+					self.runReactor(reactorType, reactorParams, eventParam, results)
+
 
 
 	## return param
@@ -499,7 +508,7 @@ class SublimeWSServer:
 			pass
 
 
-	def runRenewReactor(self, eventName, eventParam, reactorsDict, results):
+	def runRenew(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
@@ -537,18 +546,7 @@ class SublimeWSServer:
 			viewDict[filePath] = viewInfo
 			self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
-		# if reactor exist, run all selectors
-		if reactorsDict and eventName in reactorsDict:
-			reactDicts = reactorsDict[eventName]
-			for reactDictKey in list(reactDicts):
-				reactDict = reactDicts[reactDictKey]
-
-				selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-
-				self.api.runAllSelector(reactDict, selector, eventParam, results)
-
-
-	def runDeletionReactor(self, eventName, eventParam, reactorsDict, results):
+	def runDeletion(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME]
 
@@ -567,70 +565,53 @@ class SublimeWSServer:
 			del viewDict[filePath]
 			self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
-		# if reactor exist, run all selectors
-		if reactorsDict and eventName in reactorsDict:
-			reactDicts = reactorsDict[eventName]
-			for reactDictKey in list(reactDicts):
-				reactDict = reactDicts[reactDictKey]
-
-				selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-
-				self.api.runAllSelector(reactDict, selector, eventParam, results)
-
-
-	def runFoundationEvent(self, eventName, eventParam, reactorsDict, results=None):
-		if eventName in list(reactorsDict):
-			pass
-		else:
-			return
-
+	def runFoundationEvent(self, eventName, eventParam, reactors, results):
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
-				reactDicts = reactorsDict[eventName]
-
-				for target in list(reactDicts):
-					reactDict = reactDicts[target]
-					
-					selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-					self.api.runAllSelector(reactDict, selector, eventParam, results)
-
+				self.foundation_noViewFound(reactors, eventParam, results)
 				break
 
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER):
-				for currentDict in reactorsDict[eventName]:
-					# get data from view-buffer
-					
-					bodyView = eventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW]
-					
-					currentRegion = sublime.Region(0, bodyView.size())
-
-					body = bodyView.substr(bodyView.word(currentRegion))
-					path = bodyView.file_name()
-					path = path.replace(":","&").replace("\\", "/")
-					# get line num
-					sel = bodyView.sel()[0]
-					(row, col) = bodyView.rowcol(sel.a)
-					rowColStr = str(row)+","+str(col)
-
-					reactDict = reactorsDict[eventName][currentDict].copy()
-					currentSelector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-					
-					# append 'body' 'path' param from buffer
-					currentEventParam = {}
-					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW] = bodyView
-					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ID] = str(uuid.uuid4())
-					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_BODY] = body
-					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_PATH] = path
-					currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ROWCOL] = rowColStr
-
-
-					self.api.runAllSelector(reactDict, currentSelector, currentEventParam, results)
-
+				self.foundation_runWithBuffer(reactors, eventParam, results)
 				break
 
-			if case():
-				print("unknown foundation api", command)
-				break
+
+	def foundation_noViewFound(self, reactDicts, eventParam, results):
+		for target in list(reactDicts):
+			reactDict = reactDicts[target]
+			
+			selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+			self.api.runAllSelector(reactDict, selector, eventParam, results)
+
+
+	def foundation_runWithBuffer(self, reactDicts, eventParam, results):
+		for currentDict in reactDicts:
+			# get data from view-buffer
+			
+			bodyView = eventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW]
+			
+			currentRegion = sublime.Region(0, bodyView.size())
+
+			body = bodyView.substr(bodyView.word(currentRegion))
+			path = bodyView.file_name()
+			path = path.replace(":","&").replace("\\", "/")
+			# get line num
+			sel = bodyView.sel()[0]
+			(row, col) = bodyView.rowcol(sel.a)
+			rowColStr = str(row)+","+str(col)
+
+			currentReactDict = reactDicts[currentDict].copy()
+			currentSelector = currentReactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
+			
+			# append 'body' 'path' param from buffer
+			currentEventParam = {}
+			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW] = bodyView
+			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ID] = str(uuid.uuid4())
+			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_BODY] = body
+			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_PATH] = path
+			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ROWCOL] = rowColStr
+
+			self.api.runAllSelector(currentReactDict, currentSelector, currentEventParam, results)
 
 
 	## KVSControl
