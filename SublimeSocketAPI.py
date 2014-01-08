@@ -1098,15 +1098,14 @@ class SublimeSocketAPI:
 			
 			# emit viewReactor
 			viewParams = self.server.getSublimeViewInfo(
-						view,
-						SublimeSocketAPISettings.VIEW_SELF,
-						SublimeSocketAPISettings.VIEW_ID,
-						SublimeSocketAPISettings.VIEW_BUFFERID,
-						SublimeSocketAPISettings.VIEW_PATH,
-						SublimeSocketAPISettings.VIEW_BASENAME,
-						SublimeSocketAPISettings.VIEW_VNAME,
-						SublimeSocketAPISettings.VIEW_SELECTED
-					)
+				view,
+				SublimeSocketAPISettings.VIEW_SELF,
+				SublimeSocketAPISettings.VIEW_ID,
+				SublimeSocketAPISettings.VIEW_BUFFERID,
+				SublimeSocketAPISettings.VIEW_PATH,
+				SublimeSocketAPISettings.VIEW_BASENAME,
+				SublimeSocketAPISettings.VIEW_VNAME,
+				SublimeSocketAPISettings.VIEW_SELECTED)
 
 			self.server.fireKVStoredItem(SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
 			self.setResultsParams(results, self.setSelection, {"selected":selected})

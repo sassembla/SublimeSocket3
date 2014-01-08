@@ -459,6 +459,7 @@ class SublimeWSServer:
 	## input to sublime from server.
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, eventName, eventParam, results):
+		print("eventName", eventName)
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 
 		# run when the event occured adopt. start with specific "user-defined" event identity that defined as REACTIVE_PREFIX_USERDEFINED_EVENT.
@@ -478,11 +479,15 @@ class SublimeWSServer:
 			if eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 				self.runFoundationEvent(eventName, eventParam, reactorsDict, results)
 				
-			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
+			elif eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
 				self.runRenewReactor(eventName, eventParam, reactorsDict, results)
 
-			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
+			elif eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
 				self.runDeletionReactor(eventName, eventParam, reactorsDict, results)
+
+			else:
+				print("hereComes,", eventName)
+				# 上記以外のイベントについて、対応する。selectorを走らせるだけなんだけど。
 
 
 	## return param
