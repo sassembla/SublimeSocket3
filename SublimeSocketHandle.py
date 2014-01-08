@@ -122,20 +122,21 @@ class SublimeSocketThread(threading.Thread):
 
       view_file_name = view.file_name()
 
-      eventParam = self._server.getSublimeViewInfo(
-        view,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-      )
+      if view_file_name:
+        eventParam = self._server.getSublimeViewInfo(
+          view,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
+        )
 
-      results = self._server.api.initResult("view:"+str(uuid.uuid4()))
-      
-      self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
+        results = self._server.api.initResult("view:"+str(uuid.uuid4()))
+        
+        self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
   def fromServer(self, eventName, view=None):
@@ -153,18 +154,19 @@ class SublimeSocketThread(threading.Thread):
 
       view_file_name = view.file_name()
 
-      eventParam = self._server.getSublimeViewInfo(
-        view,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-      )
+      if view_file_name:
+        eventParam = self._server.getSublimeViewInfo(
+          view,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
+        )
 
-      return self._server.getKVStoredItem(eventName, eventParam)
+        return self._server.getKVStoredItem(eventName, eventParam)
       
   def currentConnections(self):
     self._server.showCurrentStatusAndConnections()

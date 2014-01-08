@@ -10,6 +10,7 @@ from . import SublimeSocketAPISettings
 import subprocess
 import shlex
 import os
+import time
 
 import re
 from functools import reduce
@@ -332,6 +333,7 @@ class SublimeSocketAPI:
 
 	## run each selectors
 	def runAllSelector(self, paramDict, eventParam, results):
+		
 		def runForeachAPI(selector):
 			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
 
@@ -848,25 +850,28 @@ class SublimeSocketAPI:
 		result = message
 
 		view = theOpenedViewInstance
-		view_file_name = view.file_name()
-		viewParams = self.server.getSublimeViewInfo(
-						view,
-						SublimeSocketAPISettings.VIEW_SELF,
-						SublimeSocketAPISettings.VIEW_ID,
-						SublimeSocketAPISettings.VIEW_BUFFERID,
-						SublimeSocketAPISettings.VIEW_PATH,
-						SublimeSocketAPISettings.VIEW_BASENAME,
-						SublimeSocketAPISettings.VIEW_VNAME,
-						SublimeSocketAPISettings.VIEW_SELECTED
-					)
 		
-		self.server.fireKVStoredItem(
-			SublimeSocketAPISettings.REACTORTYPE_VIEW,
-			SublimeSocketAPISettings.SS_EVENT_LOADING, 
-			viewParams,
-			results)
+		view_file_name = view.file_name()
 
-		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
+		if view_file_name:
+			viewParams = self.server.getSublimeViewInfo(
+							view,
+							SublimeSocketAPISettings.VIEW_SELF,
+							SublimeSocketAPISettings.VIEW_ID,
+							SublimeSocketAPISettings.VIEW_BUFFERID,
+							SublimeSocketAPISettings.VIEW_PATH,
+							SublimeSocketAPISettings.VIEW_BASENAME,
+							SublimeSocketAPISettings.VIEW_VNAME,
+							SublimeSocketAPISettings.VIEW_SELECTED
+						)
+			
+			self.server.fireKVStoredItem(
+				SublimeSocketAPISettings.REACTORTYPE_VIEW,
+				SublimeSocketAPISettings.SS_EVENT_LOADING, 
+				viewParams,
+				results)
+
+			self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
 	
 	## close file. if specified -> close the file. if not specified -> close current file.
 	def closeFile(self, params, results):

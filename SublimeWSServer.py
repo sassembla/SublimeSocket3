@@ -258,14 +258,19 @@ class SublimeWSServer:
 
 	## set reactor to KVS
 	def setReactor(self, reactorType, params):
+		assert SublimeSocketAPISettings.REACTOR_TARGET in params, "setXReactor require 'target' param."
+		assert SublimeSocketAPISettings.REACTOR_REACT in params, "setXReactor require 'react' param."
+		assert SublimeSocketAPISettings.REACTOR_SELECTORS in params, "setXReactor require 'selectors' param."
+
 		reactorsDict = {}
+		reactorsLogDict = {}
 
 		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORS):
 			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 
-		assert SublimeSocketAPISettings.REACTOR_TARGET in params, "setXReactor require 'target' param."
-		assert SublimeSocketAPISettings.REACTOR_REACT in params, "setXReactor require 'react' param."
-		assert SublimeSocketAPISettings.REACTOR_SELECTORS in params, "setXReactor require 'selectors' param."
+		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORSLOG):
+			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+
 
 		target = params[SublimeSocketAPISettings.REACTOR_TARGET]
 		reactEventName = params[SublimeSocketAPISettings.REACTOR_REACT]
@@ -274,7 +279,6 @@ class SublimeWSServer:
 		# set default delay
 		delay = 0
 		if SublimeSocketAPISettings.REACTOR_DELAY in params:
-			# このイベントに対して、最後に実行されたタイミングから一定時間ignoreを発生させる
 			delay = params[SublimeSocketAPISettings.REACTOR_DELAY]
 		
 		reactDict = {}
@@ -287,10 +291,18 @@ class SublimeWSServer:
 		# already set or not-> spawn dictionary for name.
 		if not reactEventName in reactorsDict:			
 			reactorsDict[reactEventName] = {}
+			reactorsLogDict[reactEventName] = {}
+
 
 		# store reactor			
 		reactorsDict[reactEventName][target] = reactDict
+
+		# reset reactLog too
+		reactorsLogDict[reactEventName][target] = {}
+
+
 		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
+		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 			
 
 		return reactorsDict
@@ -301,8 +313,14 @@ class SublimeWSServer:
 		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORS):
 			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 
+		reactorsLogDict = {}
+		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORSLOG):
+			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+
 		deletedReactorsDict = reactorsDict
+
 		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, {})
+		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, {})
 
 		return reactorsDict
 
@@ -315,6 +333,7 @@ class SublimeWSServer:
 				break
 
 			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
+				# add view param for react.
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				reactorDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
 					SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
@@ -461,6 +480,7 @@ class SublimeWSServer:
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
+		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
 		# run when the event occured adopt. start with specific "user-defined" event identity that defined as REACTIVE_PREFIX_USERDEFINED_EVENT.
 		if eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT):
@@ -471,9 +491,10 @@ class SublimeWSServer:
 				if target in reactorsDict[eventName]:
 					reactDict = reactorsDict[eventName][target]
 					
-					print("ディレイのチェック、同じイベントが最後に実行された瞬間を見つける。")
-					
-					self.api.runAllSelector(reactDict, eventParam, results)
+					if self.shouldDelay(reactorsDict, eventName, target):
+						pass
+					else:
+						self.api.runAllSelector(reactDict, eventParam, results)
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 			if reactorsDict and eventName in reactorsDict:
@@ -486,16 +507,45 @@ class SublimeWSServer:
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
 				self.runDeletion(eventParam)
 
-			# if reactor exist, run all selectors
+			# if reactor exist, run all selectors. not depends on "target".
 			if reactorsDict and eventName in reactorsDict:
 				reactorDict = reactorsDict[eventName]
 				for reactorKey in list(reactorDict):
 					reactorParams = reactorDict[reactorKey]
-					print("delay要素を入れるとしたら、このへん。")
 
-					self.runReactor(reactorType, reactorParams, eventParam, results)
+					if self.shouldDelay(reactorsDict, eventName, reactorKey):
+						pass
+					else:
+						self.runReactor(reactorType, reactorParams, eventParam, results)
 
 
+	## should delay = pass or not.
+	def shouldDelay(self, reactorsDict, name, target):
+		currentTime = round(int(time.time()*1000))
+		
+		delay = reactorsDict[name][target][SublimeSocketAPISettings.REACTOR_DELAY]
+
+		if delay is 0:
+			return False
+
+		else:
+			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+			log = reactorsLogDict[name][target]
+			
+			if log:
+				latest = log[SublimeSocketAPISettings.REACTORSLOG_LATEST]
+				print(SublimeSocketAPISettings.REACTORSLOG_LATEST, latest, "sub = ", (delay + latest - currentTime))
+				if 0 > (delay + latest - currentTime):
+					reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
+					self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+					return True
+					
+			else:
+				reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
+				self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+				return True
+
+		return False
 
 	## return param
 	def getKVStoredItem(self, eventName, eventParam=None):
