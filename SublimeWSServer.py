@@ -274,6 +274,7 @@ class SublimeWSServer:
 		# set default delay
 		delay = 0
 		if SublimeSocketAPISettings.REACTOR_DELAY in params:
+			# このイベントに対して、最後に実行されたタイミングから一定時間ignoreを発生させる
 			delay = params[SublimeSocketAPISettings.REACTOR_DELAY]
 		
 		reactDict = {}
@@ -287,10 +288,9 @@ class SublimeWSServer:
 		if not reactEventName in reactorsDict:			
 			reactorsDict[reactEventName] = {}
 
-		if not target in reactorsDict[reactEventName]:
-			# store reactor			
-			reactorsDict[reactEventName][target] = reactDict
-			self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
+		# store reactor			
+		reactorsDict[reactEventName][target] = reactDict
+		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
 			
 
 		return reactorsDict
@@ -322,8 +322,7 @@ class SublimeWSServer:
 					}
 				break
 
-		selectors = reactorDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-		self.api.runAllSelector(reactorDict, selectors, eventParam, results)
+		self.api.runAllSelector(reactorDict, eventParam, results)
 
 
 	# ready for react completion. old-loading completion will ignore.
@@ -461,7 +460,6 @@ class SublimeWSServer:
 	## input to sublime from server.
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
-		print("eventName", eventName)
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 
 		# run when the event occured adopt. start with specific "user-defined" event identity that defined as REACTIVE_PREFIX_USERDEFINED_EVENT.
@@ -472,10 +470,10 @@ class SublimeWSServer:
 				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
 				if target in reactorsDict[eventName]:
 					reactDict = reactorsDict[eventName][target]
-				
-					selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-				
-					self.api.runAllSelector(reactDict, selector, eventParam, results)
+					
+					print("ディレイのチェック、同じイベントが最後に実行された瞬間を見つける。")
+					
+					self.api.runAllSelector(reactDict, eventParam, results)
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 			if reactorsDict and eventName in reactorsDict:
@@ -580,8 +578,7 @@ class SublimeWSServer:
 		for target in list(reactDicts):
 			reactDict = reactDicts[target]
 			
-			selector = reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
-			self.api.runAllSelector(reactDict, selector, eventParam, results)
+			self.api.runAllSelector(reactDict, eventParam, results)
 
 
 	def foundation_runWithBuffer(self, reactDicts, eventParam, results):
@@ -601,7 +598,6 @@ class SublimeWSServer:
 			rowColStr = str(row)+","+str(col)
 
 			currentReactDict = reactDicts[currentDict].copy()
-			currentSelector = currentReactDict[SublimeSocketAPISettings.REACTOR_SELECTORS]
 			
 			# append 'body' 'path' param from buffer
 			currentEventParam = {}
@@ -611,7 +607,7 @@ class SublimeWSServer:
 			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_PATH] = path
 			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ROWCOL] = rowColStr
 
-			self.api.runAllSelector(currentReactDict, currentSelector, currentEventParam, results)
+			self.api.runAllSelector(currentReactDict, currentEventParam, results)
 
 
 	## KVSControl

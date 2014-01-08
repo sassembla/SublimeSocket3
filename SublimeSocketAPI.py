@@ -33,6 +33,7 @@ class SublimeSocketAPI:
 		self.testPassedCount = 0
 		self.testFailedCount = 0
 
+		self.counts = {}
 
 		self.setSublimeSocketWindowBasePath(None)
 		
@@ -146,8 +147,6 @@ class SublimeSocketAPI:
 				return SublimeSocketAPISettings.PARSERESULT_SWITCH
 				break
 
-
-
 			if case(SublimeSocketAPISettings.API_RUNTESTS):
 				self.runTests(params, client, results)
 				break
@@ -166,6 +165,14 @@ class SublimeSocketAPI:
 				else:
 					self.testFailedCount = self.testFailedCount + 1
 
+				break
+
+			if case(SublimeSocketAPISettings.API_COUNTUP):
+				self.countUp(params, results)
+				break			
+
+			if case(SublimeSocketAPISettings.API_RESETCOUNTS):
+				self.resetCounts(results)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
@@ -324,7 +331,7 @@ class SublimeSocketAPI:
 
 
 	## run each selectors
-	def runAllSelector(self, paramDict, selectorsArray, eventParam, results):
+	def runAllSelector(self, paramDict, eventParam, results):
 		def runForeachAPI(selector):
 			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
 
@@ -347,7 +354,29 @@ class SublimeSocketAPI:
 			print("runAllSelector内でのrunAPI")
 			self.runAPI(command, currentParams, None, results)
 
-		[runForeachAPI(selector) for selector in selectorsArray]
+		[runForeachAPI(selector) for selector in paramDict[SublimeSocketAPISettings.REACTOR_SELECTORS]]
+
+
+	## count up specified labelled param.
+	def countUp(self, params, results):
+		assert SublimeSocketAPISettings.COUNTUP_LABEL in params, "countUp requre 'label' param."
+		assert SublimeSocketAPISettings.COUNTUP_DEFAULT in params, "countUp requre 'default' param."
+
+		label = params[SublimeSocketAPISettings.COUNTUP_LABEL]
+
+		if label in self.counts:
+			self.counts[label] = self.counts[label] + 1
+
+		else:
+			self.counts[label] = params[SublimeSocketAPISettings.COUNTUP_DEFAULT]
+
+		self.setResultsParams(results, self.countUp, {SublimeSocketAPISettings.COUNTUP_LABEL:label, "count":self.counts[label]})
+
+
+	def resetCounts(self, results):
+		self.counts = {}
+
+		self.setResultsParams(results, self.resetCounts, {})
 
 
 	## run specific setting.txt file as API
@@ -535,7 +564,7 @@ class SublimeSocketAPI:
 	def runTests(self, params, client, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param"
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
-		
+
 		# check contains PREFIX of path or not
 		if filePath.startswith(SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH):
 			filePathArray = filePath.split(":")
