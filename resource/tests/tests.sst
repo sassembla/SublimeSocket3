@@ -105,46 +105,6 @@
 }
 
 
-->setSelectionを連続で発生、delayedBufferの内容が最終のものに更新される/openFile: {
-	"name": "dummy.txt"
-}->setViewReactor: {
-	"target": "delayTest",
-	"react": "on_selection_modified_by_setselection",
-	"selectors": [
-		{
-			"countUp": {
-				"label": "delayTest2",
-				"default": 0
-			}
-		}
-	],
-	"delay": 100
-}->setSelection: {
-	"path": "dummy.txt",
-	"from": 0,
-	"to": 0
-}->setSelection: {
-	"path": "dummy.txt",
-	"from": 0,
-	"to": 0
-}->assertResult: {
-	"id": "reactor with delay will reacts latest one",
-	"notcontains": {
-		"countUp": {
-			"label": "delayTest2",
-			"count": 0
-		}
-	},
-	"description": "not once."
-}->closeFile: {
-
-}->resetReactors: {
-
-}->resetCounts: {
-
-}
-
-
 
 
 ->setSelectionで選択範囲を作成する/openFile: {
