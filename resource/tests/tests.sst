@@ -9,6 +9,58 @@
 }
 
 
+
+
+->cancelCompletionのテスト、trigger_basereducedを成立させる/openFile: {
+    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+}->: {
+
+}->assertResult: {
+    "id": "cancel completion by trigger_basereduced",
+    "contains": {
+
+    }
+}
+
+
+
+// ->存在しないファイルのパスを指定して、depthoverする/openFile: {
+//     "name": "notFoundFile.txt"
+// }->getAllFilePath: {
+//     "anchor": "notFoundFile.txt",
+//     "limit": 1
+// }->assertResult: {
+//     "id": "getAllFilePath testing",
+//     "contains": {
+//         "getAllFilePath": {
+//             "result": "depthover"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }->resetResults: {
+
+// }
+
+
+// ->basePathを足がかりに特定のファイルが含まれるフォルダより下のすべてのファイルパスを取得する/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->getAllFilePath: {
+//     "anchor": "sample.txt",
+//     "limit": 1
+// }->assertResult: {
+//     "id": "getAllFilePath the path found",
+//     "isnotempty": "getAllFilePath",
+//     "description": "not match.",
+//     "debug": true
+// }->closeFile: {
+
+// }->resetResults: {
+
+// }
+
+
 // ->countUp: {
 // 	"label": "testCount",
 // 	"default": 0
@@ -619,7 +671,7 @@
 //     "id": "broadcast message for every client",
 //     "contains": {
 //         "broadcastMessage": {
-//             "sendedTo": [
+//             "sentTo": [
 //                 "testBroadcastMessage"
 //             ]
 //         }
@@ -684,54 +736,83 @@
 
 
 
-->複数件の同名のevent-target reactorをセットして、上書きされる。/resetReactors:{
 
-}->setEventReactor: {
-    "target": "testTarget",
-    "react": "event_testEvent",
-    "delay": 100,
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "eventEmit over."
-            }
-        }
-    ]
-}->setEventReactor: {
-    "target": "testTarget",
-    "react": "event_testEvent",
-    "delay": 100,
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "eventEmit over.2"
-            }
-        }
-    ]
-}->eventEmit: {
-	"target": "testTarget",
-	"event": "event_testEvent"
-}->assertResult: {
-    "id": "reactor is set part2-1",
-    "notcontains": {
-        "showAtLog": {
-            "output": "eventEmit over."
-        }
-    },
-    "description": "not match. 1"
-}->assertResult: {
-	"id": "reactor is set part2-2",
-    "contains": {
-       "showAtLog": {
-            "output": "message": "eventEmit over.2"
-        }
-    },
-    "description": "not match. 2"
-}->resetReactors:{
+// ->delayが存在するsetEventReactorを実行、即時実行される/setEventReactor: {
+//     "target": "runImmediate",
+//     "react": "event_runImmediate",
+//     "delay": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "run before delay"
+//             }
+//         }
+//     ]
+// }->eventEmit: {
+//     "target": "runImmediate",
+//     "event": "event_runImmediate"
+// }->assertResult: {
+//     "id": "run once",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "run before delay"
+//         }
+//     },
+//     "description": "not yet run."
+// }
+
+
+
+
+// ->複数件の同名のevent-target reactorをセットして、上書きされる。/resetReactors:{
+
+// }->setEventReactor: {
+//     "target": "testTarget",
+//     "react": "event_testEvent",
+//     "delay": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over."
+//             }
+//         }
+//     ]
+// }->setEventReactor: {
+//     "target": "testTarget",
+//     "react": "event_testEvent",
+//     "delay": 100,
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "eventEmit over.2"
+//             }
+//         }
+//     ]
+// }->eventEmit: {
+// 	"target": "testTarget",
+// 	"event": "event_testEvent"
+// }->assertResult: {
+//     "id": "reactor is set part2-1",
+//     "notcontains": {
+//         "showAtLog": {
+//             "output": "eventEmit over."
+//         }
+//     },
+//     "description": "not match. 1"
+// }->assertResult: {
+// 	"id": "reactor is set part2-2",
+//     "contains": {
+//        "showAtLog": {
+//             "output": "eventEmit over.2"
+//         }
+//     },
+//     "description": "not match. 2",
+//     "debug": true
+// }->resetReactors: {
     
-}->resetResults: {
+// }->resetResults: {
 
-}
+// }
 
 
 

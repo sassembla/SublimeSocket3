@@ -293,7 +293,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_CANCELCOMPLETION):
-				self.cancelCompletion(params)
+				self.cancelCompletion(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_PREPARECOMPLETION):
@@ -506,7 +506,7 @@ class SublimeSocketAPI:
 		for client in clients:
 			client.send(buf)
 
-		self.setResultsParams(results, self.broadcastMessage, {"sendedTo":clientNames})
+		self.setResultsParams(results, self.broadcastMessage, {"sentTo":clientNames})
 	
 
 	## send message to the specific client.
@@ -536,6 +536,7 @@ class SublimeSocketAPI:
 
 	## send message to the other via SS.
 	def showAtLog(self, params, results):
+		print("showAtLog", params)
 		if SublimeSocketAPISettings.LOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
 			self.showAtLog(params, results)
@@ -1129,19 +1130,21 @@ class SublimeSocketAPI:
 			view.sel().add(pt)
 			selected = str(pt)
 			
-			# emit viewReactor
-			viewParams = self.server.getSublimeViewInfo(
-				view,
-				SublimeSocketAPISettings.VIEW_SELF,
-				SublimeSocketAPISettings.VIEW_ID,
-				SublimeSocketAPISettings.VIEW_BUFFERID,
-				SublimeSocketAPISettings.VIEW_PATH,
-				SublimeSocketAPISettings.VIEW_BASENAME,
-				SublimeSocketAPISettings.VIEW_VNAME,
-				SublimeSocketAPISettings.VIEW_SELECTED)
+			filePath = view.file_name()
+			if filePath:
+				# emit viewReactor
+				viewParams = self.server.getSublimeViewInfo(
+					view,
+					SublimeSocketAPISettings.VIEW_SELF,
+					SublimeSocketAPISettings.VIEW_ID,
+					SublimeSocketAPISettings.VIEW_BUFFERID,
+					SublimeSocketAPISettings.VIEW_PATH,
+					SublimeSocketAPISettings.VIEW_BASENAME,
+					SublimeSocketAPISettings.VIEW_VNAME,
+					SublimeSocketAPISettings.VIEW_SELECTED)
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
-			self.setResultsParams(results, self.setSelection, {"selected":selected})
+				self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+				self.setResultsParams(results, self.setSelection, {"selected":selected})
 
 		
 		
@@ -1305,7 +1308,12 @@ class SublimeSocketAPI:
 
 		folderPath2 = folderPath
 
-		
+
+		limitation = -1
+		if SublimeSocketAPISettings.GETALLFILEPATH_LIMIT in params:
+			limitation = params[SublimeSocketAPISettings.GETALLFILEPATH_LIMIT]
+
+
 		for i in range(depth-1):
 			for r,d,f in os.walk(folderPath):
 
@@ -1318,23 +1326,36 @@ class SublimeSocketAPI:
 					break
 
 			if basePath != basePath_default:
-					break
+				break
+
+			
+			if limitation == 0:
+				self.setResultsParams(results, self.getAllFilePath, {"result":"depthover"})
+				return
+
+			limitation = limitation - 1
 
 			# not hit, up
 			folderPath = os.path.dirname(folderPath)
-		
+			print("folderPath", folderPath, "limitation", limitation)
+
+			
 
 		baseDir = os.path.dirname(basePath)
+		print("baseDir", baseDir)
 
 		pathArray = []
 		for r,d,f in os.walk(baseDir):
 			for files in f:
 				pathArray.append(os.path.join(r,files))
 
-		joinedPathsStr = ','.join(pathArray)
+		delim = ","
+		if SublimeSocketAPISettings.GETALLFILEPATH_DELIM in params:
+			delim = params[SublimeSocketAPISettings.GETALLFILEPATH_DELIM]
 
-		results[SublimeSocketAPISettings.GETALLFILEPATH_PATHS] = header+joinedPathsStr+footer
-		
+		joinedPathsStr = delim.join(pathArray)
+
+		self.setResultsParams(results, self.getAllFilePath, {"result":joinedPathsStr, SublimeSocketAPISettings.GETALLFILEPATH_HEADER:header, SublimeSocketAPISettings.GETALLFILEPATH_FOOTER:footer, SublimeSocketAPISettings.GETALLFILEPATH_DELIM:delim})
 
 	# not depends on Sublime Text API. (but depends on shortcut.)
 	def readFileData(self, params, results):
@@ -1369,7 +1390,7 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
 
-	def cancelCompletion(self, params):
+	def cancelCompletion(self, params, results):
 		assert SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params, "cancelCompletion require 'view' param."
 		assert SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER in params, "cancelCompletion require 'trigger' param."
 
@@ -1392,7 +1413,7 @@ class SublimeSocketAPI:
 								
 							sublime.set_timeout(delayed_cancel_complete, 1)
 							self.prepareCompletion({SublimeSocketAPISettings.PREPARECOMPLETION_ID:"cancelled"})
-
+					self.setResultsParams(results, self.cancelCompletion, {SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER:trigger})
 					break
 				if case():
 					break

@@ -48,10 +48,10 @@ defineFilter:
     ]
 }
 
-->setReactor:
+->setViewReactor:
 {
     "target": "UnityEditor",
-    "event": "on_selection_modified",
+    "react": "on_selection_modified",
     "selectors": [
         {
             "containsRegions": {

@@ -479,6 +479,7 @@ class SublimeWSServer:
 	## input to sublime from server.
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
+		print("reactorType", reactorType, "eventName", eventName)
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
@@ -524,7 +525,7 @@ class SublimeWSServer:
 		currentTime = round(int(time.time()*1000))
 		
 		delay = reactorsDict[name][target][SublimeSocketAPISettings.REACTOR_DELAY]
-
+		
 		if delay is 0:
 			return False
 
@@ -534,8 +535,8 @@ class SublimeWSServer:
 			
 			if log:
 				latest = log[SublimeSocketAPISettings.REACTORSLOG_LATEST]
-				print(SublimeSocketAPISettings.REACTORSLOG_LATEST, latest, "sub = ", (delay + latest - currentTime))
-				if 0 > (delay + latest - currentTime):
+				
+				if 0 < (delay + latest - currentTime):
 					reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
 					self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 					return True
@@ -543,9 +544,10 @@ class SublimeWSServer:
 			else:
 				reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
 				self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
-				return True
+				return False
 
 		return False
+		
 
 	## return param
 	def getKVStoredItem(self, eventName, eventParam=None):
