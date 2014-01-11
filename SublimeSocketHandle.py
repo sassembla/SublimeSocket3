@@ -196,7 +196,8 @@ class CaptureEditing(sublime_plugin.EventListener):
 
   def on_load(self, view):
     self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_LOAD, view)
-
+    self.updateViewInfo(view)
+    
   def on_close(self, view):
     self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_CLOSE, view)
 
@@ -208,7 +209,7 @@ class CaptureEditing(sublime_plugin.EventListener):
     
   def on_selection_modified(self, view):
     self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_SELECTION_MODIFIED, view)
-    self.updateViewInfo(view)
+    # self.updateViewInfo(view)
 
   def on_query_completions(self, view, prefix, locations):
     ret = self.get(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
@@ -218,6 +219,7 @@ class CaptureEditing(sublime_plugin.EventListener):
 
   ## call when the event happen
   def update(self, eventName, view=None):
+    print("eventName!", eventName)
     global thread
 
     if thread is not None and thread.is_alive():
@@ -225,21 +227,26 @@ class CaptureEditing(sublime_plugin.EventListener):
 
 
   def updateViewInfo(self, view):
-    if self.currentViewInfo:
-      beforeSize = self.currentViewInfo["size"]
-      
-      self.currentViewInfo["view"] = view
-      self.currentViewInfo["size"] = view.size()
+    print("updateViewInfo")
+    if self.currentViewInfo and self.currentViewInfo["view"] == view:
+        print("updateViewInfo currentあり", view.size())
+        beforeSize = self.currentViewInfo["size"]
+        
+        self.currentViewInfo["view"] = view
+        self.currentViewInfo["size"] = view.size()
 
-      if beforeSize > self.currentViewInfo["size"]:
-        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
-      
-      if beforeSize < self.currentViewInfo["size"]:
-        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
-
+        if beforeSize > self.currentViewInfo["size"]:
+          print("down", view.file_name())
+          self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
+        
+        if beforeSize < self.currentViewInfo["size"]:
+          print("up", view.file_name())
+          self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
+          
     else:
       self.currentViewInfo["view"] = view
       self.currentViewInfo["size"] = view.size()
+      print("updateViewInfo currentなし", view.size())
 
 
   def get(self, eventName, view=None):    

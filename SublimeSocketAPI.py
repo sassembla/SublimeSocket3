@@ -1156,17 +1156,18 @@ class SublimeSocketAPI:
 		view = None
 		if SublimeSocketAPISettings.MODIFYVIEW_VIEW in params:
 			view = params[SublimeSocketAPISettings.MODIFYVIEW_VIEW]
+			path = view.file_name()
 
 		if SublimeSocketAPISettings.MODIFYVIEW_NAME in params:
 			path = params[SublimeSocketAPISettings.MODIFYVIEW_NAME]
 			view = self.internal_detectViewInstance(path)
 
 		assert view, "modifyView require 'view' or 'name' param."
-		print("before", view.size())
 		
 		if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
+			print("viewは", view.file_name())
 			view.run_command('insert_text', {'string': params[SublimeSocketAPISettings.MODIFYVIEW_ADD]})
-			print("appended", view.size())
+			print("over")
 			
 		if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
 			view.run_command('reduce_text')
