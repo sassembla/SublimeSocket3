@@ -45,7 +45,12 @@ F_RUNWITHBUFFER_ID			= "id"
 F_RUNWITHBUFFER_ROWCOL		= "rowcol"
 
 
+
+
+# view events
 REACTABLE_EVENT_ON_QUERY_COMPLETIONS = "on_query_completions"
+
+
 
 
 # internal APIs/
@@ -144,7 +149,21 @@ REACTORTYPE_VIEW	= "view"
 
 API_RESETREACTORS		= "resetReactors"
 
+
+API_VIEWEMIT		= "viewEmit"
+VIEWEMIT_NAME		= "name"
+VIEWEMIT_VIEW		= "view"
+VIEWEMIT_SELECTORS	= "selectors"
+
+
+API_MODIFYVIEW		= "modifyView"
+MODIFYVIEW_VIEW		= "view"
+MODIFYVIEW_PATH		= "path"
+MODIFYVIEW_ADD		= "add"
+MODIFYVIEW_REDUCE	= "reduce"
+
 API_SETSELECTION	= "setSelection"
+SETSELECTION_VIEW	= "view"
 SETSELECTION_PATH	= "path"
 SETSELECTION_FROM	= "from"
 SETSELECTION_TO		= "to"
@@ -152,7 +171,6 @@ SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION = "on_selection_modified_by_setsel
 
 
 REACTIVE_PREFIX_USERDEFINED_EVENT	= "event_"
-REACTIVE_REACTABLE_EVENT			= [REACTABLE_EVENT_ON_QUERY_COMPLETIONS]
 REACTIVE_FOUNDATION_EVENT = [SS_FOUNDATION_NOVIEWFOUND, SS_FOUNDATION_RUNWITHBUFFER]
 REACTIVE_CURRENT_COMPLETINGS = "currentcompletings"
 
@@ -244,6 +262,7 @@ API_EVENTEMIT			= "eventEmit"
 EVENTEMIT_TARGET	= "target"
 EVENTEMIT_EVENT		= "event"
 
+
 API_CANCELCOMPLETION = "cancelCompletion"
 CANCELCOMPLETION_VIEW = "view"
 CANCELCOMPLETION_TRIGGER = "trigger"
@@ -279,8 +298,25 @@ VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
 VIEW_SELECTED			= "selected"
 
-VIEW_EVENTS_RENEW	= ["on_new", "on_clone", "on_load", "on_modified", SS_EVENT_COLLECT, SS_EVENT_LOADING] #list of acceptable-view renew event names.
-VIEW_EVENTS_DEL		= ["on_close"] #list of acceptable-view del event names.
+
+# definition of sublime's view events
+REACTABLE_VIEW_ON_NEW				= "on_new"
+REACTABLE_VIEW_ON_CLONE				= "on_clone"
+REACTABLE_VIEW_ON_CLOSE				= "on_close"
+REACTABLE_VIEW_ON_LOAD				= "on_load"
+REACTABLE_VIEW_ON_MODIFIED			= "on_modified"
+REACTABLE_VIEW_ON_QUERY_COMPLETIONS	= "on_query_completions"
+REACTABLE_VIEW_ON_PRE_SAVE			= "on_pre_save"
+REACTABLE_VIEW_ON_POST_SAVE			= "on_post_save"
+REACTABLE_VIEW_ON_SELECTION_MODIFIED	= "on_selection_modified"
+REACTABLE_VIEW_SS_V_DECREASED		= "ss_v_decreased"
+REACTABLE_VIEW_SS_V_INCREASED		= "ss_v_increased"
+
+
+VIEW_EVENTS_RENEW		= [REACTABLE_VIEW_ON_NEW, REACTABLE_VIEW_ON_CLONE, REACTABLE_VIEW_ON_LOAD, REACTABLE_VIEW_ON_MODIFIED, SS_EVENT_COLLECT, SS_EVENT_LOADING] #list of acceptable-view renew event names.
+VIEW_EVENTS_DEL			= [REACTABLE_VIEW_ON_CLOSE] #list of acceptable-view del event names.
+VIEW_EVENTS_REACTIVE	= [REACTABLE_VIEW_ON_QUERY_COMPLETIONS, REACTABLE_VIEW_SS_V_DECREASED, REACTABLE_VIEW_SS_V_INCREASED]
+
 
 DICT_FILTERS			= "DICT_FILTERS"
 

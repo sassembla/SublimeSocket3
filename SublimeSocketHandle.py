@@ -106,18 +106,17 @@ class SublimeSocketThread(threading.Thread):
     self._server = SublimeWSServer()
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
-  def toServer(self, eventName, view=None):
+  def toServer(self, eventName, view):
     if self._server is None:
       pass
     else:
 
+      if not view:
+        return
+        
       # avoid empty-file
       if view.is_scratch():
         # print "scratch buffer."
-        return
-        
-      elif not view.file_name():
-        # print "no path"
         return
 
       view_file_name = view.file_name()
@@ -135,11 +134,11 @@ class SublimeSocketThread(threading.Thread):
         )
 
         results = self._server.api.initResult("view:"+str(uuid.uuid4()))
-        
+        print("eventName", eventName)
         self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
-  def fromServer(self, eventName, view=None):
+  def getReactorDataFromServer(self, eventName, view):
     if self._server is None:
       pass
     else:
@@ -166,7 +165,7 @@ class SublimeSocketThread(threading.Thread):
           SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
         )
 
-        return self._server.getKVStoredItem(eventName, eventParam)
+        return self._server.getKVStoredViewItem(eventName)
       
   def currentConnections(self):
     self._server.showCurrentStatusAndConnections()
@@ -182,46 +181,69 @@ class SublimeSocketThread(threading.Thread):
 
 # event listeners
 class CaptureEditing(sublime_plugin.EventListener):
+  def __init__(self):
+    self.currentViewInfo = {}
   
   def on_modified(self, view):
-    self.update("on_modified", view)
-    
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_MODIFIED, view)
+    self.updateViewInfo(view)
+
   def on_new(self, view):
-    self.update("on_new", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_NEW, view)
 
   def on_clone(self, view):
-    self.update("on_clone", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_CLOSE, view)
 
   def on_load(self, view):
-    self.update("on_load", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_LOAD, view)
 
   def on_close(self, view):
-    self.update("on_close", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_CLOSE, view)
 
   def on_pre_save(self, view):
-    self.update("on_pre_save", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_PRE_SAVE, view)
 
   def on_post_save(self, view):
-    self.update("on_post_save", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_POST_SAVE, view)
     
   def on_selection_modified(self, view):
-    self.update("on_selection_modified", view)
+    self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_SELECTION_MODIFIED, view)
+    self.updateViewInfo(view)
 
   def on_query_completions(self, view, prefix, locations):
-    ret = self.get("on_query_completions", view)
+    ret = self.get(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
     
     if ret:
       return ret
 
   ## call when the event happen
-  def update(self, eventName, view = None):    
+  def update(self, eventName, view=None):
     global thread
 
     if thread is not None and thread.is_alive():
       thread.toServer(eventName, view)
 
-  def get(self, eventName, view = None):    
+
+  def updateViewInfo(self, view):
+    if self.currentViewInfo:
+      beforeSize = self.currentViewInfo["size"]
+      
+      self.currentViewInfo["view"] = view
+      self.currentViewInfo["size"] = view.size()
+
+      if beforeSize > self.currentViewInfo["size"]:
+        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
+      
+      if beforeSize < self.currentViewInfo["size"]:
+        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
+
+    else:
+      self.currentViewInfo["view"] = view
+      self.currentViewInfo["size"] = view.size()
+
+
+  def get(self, eventName, view=None):    
     global thread
 
     if thread is not None and thread.is_alive():
-      return thread.fromServer(eventName, view)
+      return thread.getReactorDataFromServer(eventName, view)

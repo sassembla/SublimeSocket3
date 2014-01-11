@@ -10,17 +10,173 @@
 
 
 
+// ->viewに対してselectorを実行する,viewEmit/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->viewEmit: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt",
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "view emit over."
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "view emit api test",
+//     "contains": {
+//         "viewEmit": {
+//             "name":"SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }
 
-->cancelCompletionのテスト、trigger_basereducedを成立させる/openFile: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->: {
 
-}->assertResult: {
-    "id": "cancel completion by trigger_basereduced",
-    "contains": {
 
-    }
-}
+
+// ->deepなレイヤーのviewEmitを実行してみる/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->setViewReactor: {
+//     "target": "viewEmitTest",
+//     "react": "on_selection_modified_by_setselection",
+//     "selectors": [
+//         {
+//             "viewEmit": {
+//                 "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt",
+//                 "selectors": [
+//                     {
+//                         "showAtLog": {
+//                             "message": "view emit over in deep nest."
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ]
+// }->viewEmit: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt",
+//     "selectors": [
+//         {
+//             "setSelection": {
+//                 "from": 0,
+//                 "to": 1
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "viewEmit in deep level",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "view emit over in deep nest."
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+
+// }
+
+
+// ->そのビューの文字列が増えたら、ss_v_increased イベントがでる/setViewReactor: {
+// 	"target": "someone",
+// 	"react": "ss_v_increased",
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "increased."
+// 			}
+// 		}
+// 	]
+// }->openFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->modifyView: {
+// 	"path": "sample.txt",
+// 	"add": "1"
+// }->closeFile: {
+
+// }->assertResult: {
+// 	"context": "view",
+// 	"id": "view text increased",
+// 	"contains": {
+// 		"showAtLog": {
+// 			"output": "increased."
+// 		}
+// 	},
+// 	"description": "not match."
+// }->resetReactors: {
+	
+// }
+
+
+// ->そのビューの文字列が減ったら、ss_v_decreased イベントがでる/setViewReactor: {
+// 	"target": "someone",
+// 	"react": "ss_v_decreased",
+// 	"selectors": [
+// 		{
+// 			"showAtLog": {
+// 				"message": "decreased."
+// 			}
+// 		}
+// 	]
+// }->openFile: {
+// 	"name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->modifyView: {
+// 	"path": "sample.txt",
+// 	"add": "1"
+// }->modifyView: {
+// 	"path": "sample.txt",
+// 	"reduce": 1
+// }->closeFile: {
+
+// }->assertResult: {
+// 	"context": "view",
+// 	"id": "view text decreased",
+// 	"contains": {
+// 		"showAtLog": {
+// 			"output": "decreased."
+// 		}
+// 	},
+// 	"description": "not match."
+// }->resetReactors: {
+	
+// }
+
+
+// setfromto のアイデア
+
+//　まだ用途不明
+// ->prepareCompletionのテスト、発生後の処理を行う/prepareCompletion: {
+//     "id": "testPrepareCompletion"
+// }
+
+//　ファイルを開いて、キャンセルを発生させるチェックを発生させる。viewに対して、文字数が減るとかしてれば、該当するイベント発行。
+
+// ->cancelCompletionのテスト、trigger_basereducedを成立させる/openFile: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->setViewReactor: {
+//     "target": "cancelCompletionTarget",
+//     "react": "on_selection_modified_by_setselection",
+//     "selectors": [
+//         {// viewの現在のカーソル位置に対して、デリートを発生させる
+            
+//         },
+//         {
+//             "cancelCompletion": {
+
+//             }
+//         }
+//     ]
+// }->viewを得る/setSelection: {
+//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt",
+//     "from": 0,
+//     "to": 1
+// }->assertResult: {
+//     "id": "cancel completion by trigger_basereduced",
+//     "contains": {
+//         "cancelCompletion"
+//     }
+// }
 
 
 

@@ -346,20 +346,28 @@ class SublimeWSServer:
 
 	# ready for react completion. old-loading completion will ignore.
 	def prepareCompletion(self, identity):
-		print("prepareCompletion!!!!!!!!!!!!")
+		print("prepareCompletion", identity)
+		# reset
+
 		# if SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS in self.temporaryReactorDict:
 		# 	del self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS]
 
-		# # re-generate completions dictionaries
+		# 再度、アイデンティティのみの状態で作成
+		
+		# re-generate completions dictionaries
 		# self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS] = {}
 		# self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS][identity] = {}
 
-		# # reset current completing data
+		# リセット
+		
+		# reset current completing data
 		# self.temporaryReactorDict[SublimeSocketAPISettings.REACTIVE_CURRENT_COMPLETINGS] = {}
 
 
 	def updateCompletion(self, identity, completions, lockcount):
 		print("updateCompletion!!!!!!!!")
+		# どこかにcompletionを保管しておく必要はある。その発生タイミングから先なので、もう補完が発生すると見て良い。
+		
 		# if SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS in self.temporaryReactorDict:
 		# 	if identity in self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS]:
 		# 		# set completion
@@ -479,7 +487,7 @@ class SublimeWSServer:
 	## input to sublime from server.
 	# fire event in KVS, if exist.
 	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
-		print("reactorType", reactorType, "eventName", eventName)
+		print("fireKVStoredItem", eventName)
 		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
 		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
@@ -514,6 +522,7 @@ class SublimeWSServer:
 				for reactorKey in list(reactorDict):
 					reactorParams = reactorDict[reactorKey]
 
+					
 					if self.shouldDelay(reactorsDict, eventName, reactorKey):
 						pass
 					else:
@@ -550,8 +559,9 @@ class SublimeWSServer:
 		
 
 	## return param
-	def getKVStoredItem(self, eventName, eventParam=None):
-		if eventName in SublimeSocketAPISettings.REACTIVE_REACTABLE_EVENT:
+	def getKVStoredViewItem(self, eventName, ):
+		if eventName in SublimeSocketAPISettings.VIEW_EVENTS_REACTIVE:
+			print("getKVStoredItem 取得しにきてる", eventName)
 			# if SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS in self.temporaryReactorDict:
 			# 	for completionsKey in self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS]:
 			# 		return self.temporaryReactorDict[SublimeSocketAPISettings.REACTABLE_EVENT_ON_QUERY_COMPLETIONS][completionsKey]
