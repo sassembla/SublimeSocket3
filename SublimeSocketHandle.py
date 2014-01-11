@@ -134,7 +134,7 @@ class SublimeSocketThread(threading.Thread):
         )
 
         results = self._server.api.initResult("view:"+str(uuid.uuid4()))
-        print("eventName", eventName)
+
         self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 

@@ -8,6 +8,60 @@
 
 }
 
+// viewReactorのtargetって意味あんのかなー。無いならsetReactorシリーズの共通ポイント消したい。
+
+
+
+->補完を表示する/openFile: {
+	"name": "completionTestView.txt"
+}->viewEmit:{
+	"name": "completionTestView.txt",
+	"selectors":[
+		{
+			"runCompletion":{
+				"completion": [
+				    {
+				        "HEAD": "DrawLine",
+				        "paramsTargetFmt": "(${1: start},${2: end},${3: color},${4: duration},${5: depthTest})",
+				        "return": "Void",
+				        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+				        "head": "DrawLine"
+				    }
+				],
+				"head": "HEADparamsTypeDef\treturn",
+				"tail": "headparamsTargetFmt$0"
+			}
+		}
+	]
+}
+// ->closeFile: {
+
+// }
+
+
+// ->表示されているcompletion windowを閉じる/openFile: {
+// 	"name": "cancelCompletionTest.txt"
+// }->viewEmit: {
+// 	"selectors": [
+// 		{
+// 			"cancelCompletion": {
+
+// 			}
+// 		}
+// 	]
+// }->assertResult: {
+// 	"id": "completion cancel",
+// 	"contains": {
+// 		"cancelCompletion": {
+
+// 		}
+// 	},
+// 	"description": "not match."
+// }->closeFile: {
+	
+// }
+
+
 
 
 // ->viewに対してselectorを実行する,viewEmit/openFile: {
@@ -78,6 +132,7 @@
 // }
 
 
+
 // ->そのビューの文字列が増えたら、ss_v_increased イベントがでる/setViewReactor: {
 // 	"target": "someone",
 // 	"react": "ss_v_increased",
@@ -107,6 +162,7 @@
 // }->resetReactors: {
 	
 // }
+
 
 
 // ->そのビューの文字列が減ったら、ss_v_decreased イベントがでる/setViewReactor: {
@@ -143,44 +199,8 @@
 // }
 
 
-// setfromto のアイデア
 
-//　まだ用途不明
-// ->prepareCompletionのテスト、発生後の処理を行う/prepareCompletion: {
-//     "id": "testPrepareCompletion"
-// }
-
-//　ファイルを開いて、キャンセルを発生させるチェックを発生させる。viewに対して、文字数が減るとかしてれば、該当するイベント発行。
-
-// ->cancelCompletionのテスト、trigger_basereducedを成立させる/openFile: {
-//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-// }->setViewReactor: {
-//     "target": "cancelCompletionTarget",
-//     "react": "on_selection_modified_by_setselection",
-//     "selectors": [
-//         {// viewの現在のカーソル位置に対して、デリートを発生させる
-            
-//         },
-//         {
-//             "cancelCompletion": {
-
-//             }
-//         }
-//     ]
-// }->viewを得る/setSelection: {
-//     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "cancel completion by trigger_basereduced",
-//     "contains": {
-//         "cancelCompletion"
-//     }
-// }
-
-
-
-// ->存在しないファイルのパスを指定して、depthoverする/openFile: {
+// ->存在しないファイルのパスを指定して、getAllFilePathがdepthoverする/openFile: {
 //     "name": "notFoundFile.txt"
 // }->getAllFilePath: {
 //     "anchor": "notFoundFile.txt",

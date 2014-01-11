@@ -304,10 +304,6 @@ class SublimeSocketAPI:
 				self.cancelCompletion(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_PREPARECOMPLETION):
-				self.prepareCompletion(params)
-				break
-
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
 				self.runCompletion(params, results)
 				break
@@ -485,7 +481,6 @@ class SublimeSocketAPI:
 
 		if SublimeSocketAPISettings.RUNSHELL_DEBUG in params:
 			debugFlag = params[SublimeSocketAPISettings.RUNSHELL_DEBUG]
-			
 
 		if debugFlag:
 			print("runnable", runnable)
@@ -1401,12 +1396,11 @@ class SublimeSocketAPI:
 
 			# not hit, up
 			folderPath = os.path.dirname(folderPath)
-			print("folderPath", folderPath, "limitation", limitation)
 
 			
 
 		baseDir = os.path.dirname(basePath)
-		print("baseDir", baseDir)
+
 
 		pathArray = []
 		for r,d,f in os.walk(baseDir):
@@ -1450,66 +1444,32 @@ class SublimeSocketAPI:
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
 		self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
-		self.setResultsParams(results, self.eventEmit, {SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], 
-			SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
+		self.setResultsParams(results, 
+			self.eventEmit, 
+			{SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
 
-	# 本文の更新に対して、特定の所作がみとめられたら発生してる奴だ。なので、時系列のアクションを持ってるやつが必要。うーーーん、、、何のキーが押されたかとかで反射したいが。
 	def cancelCompletion(self, params, results):
-		print("cancelCompletion!")
-		assert SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params, "cancelCompletion require 'view' param."
-		assert SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER in params, "cancelCompletion require 'trigger' param."
-
-		if params[SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER] in SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGERS:
-			trigger = params[SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER]
-
-			for case in PythonSwitch(trigger):
-
-				if case(SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER_BASEREDUCED):
-					# cancel or not by checking amount of text. 
-					# if reduced, cancel completion.
-					currentViewSize = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW].size()
-					completionLockCountDict = self.server.getCurrentCompletingsDict()
-					if SublimeSocketAPISettings.RUNCOMPLETION_LOCKCOUNT in completionLockCountDict:
-
-						completionLockCount = completionLockCountDict[SublimeSocketAPISettings.RUNCOMPLETION_LOCKCOUNT]
-						if currentViewSize < completionLockCount:
-							view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
-							
-							# cancel completion
-							def delayed_cancel_complete():
-								# cancel completions
-								view.run_command("hide_auto_complete")
-								
-							sublime.set_timeout(delayed_cancel_complete, 1)
-							self.prepareCompletion({SublimeSocketAPISettings.PREPARECOMPLETION_ID:"cancelled"})
-
-					self.setResultsParams(results, self.cancelCompletion, {SublimeSocketAPISettings.CANCELCOMPLETION_TRIGGER:trigger})
-					break
-					
-				if case():
-					break
-
-	def prepareCompletion(self, params):
-		assert SublimeSocketAPISettings.PREPARECOMPLETION_ID in params, "prepareCompletion require 'id' param."
-		self.server.prepareCompletion(params[SublimeSocketAPISettings.PREPARECOMPLETION_ID])
+		assert SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params, "cancelCompletion rquire 'view' param."
+		view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
+		view.run_command("hide_auto_complete")
+		self.setResultsParams(results, self.cancelCompletion, {})
 
 	
 	def runCompletion(self, params, results):
-		print("runCompletion", params)
-		assert SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params, "runCompletion require 'view' param."
+		view = None
+		if SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params:
+			view = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
+
+		if SublimeSocketAPISettings.RUNCOMPLETION_PATH in params:
+			currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_PATH]
+			view = self.internal_detectViewInstance(currentViewPath)
+
+		assert view, "runCompletion require 'view' or 'path' param."
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
-		assert SublimeSocketAPISettings.RUNCOMPLETION_ID in params, "runCompletion require 'id' param."
-
-		identity = params[SublimeSocketAPISettings.RUNCOMPLETION_ID]
-
-		# cancelled or loading
-		if self.server.isLoadingCompletion(identity):
-			pass
-		else:
-			return
-
+		
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
+		print("completions", completions)
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -1519,7 +1479,7 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
 			formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
 		
-		
+		print("formatHead", formatHead, "formatTail", formatTail)
 		def transformToFormattedTuple(sourceDict):
 			a = formatHead
 			b = formatTail
@@ -1530,20 +1490,13 @@ class SublimeSocketAPI:
 			return (a, b)
 			
 		completionStrs = list(map(transformToFormattedTuple, completions))
-		
-		currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
+		print("completionStrs", completionStrs)
 
-		view = self.internal_detectViewInstance(currentViewPath)
-		if view:
-			# memory view size as textCount. unlock completion when reduce size than this count
-			textCount = view.size()
-			
-			# set completion
-			self.server.updateCompletion(identity, completionStrs, textCount)
+		# set completion
+		self.server.updateCompletion(completionStrs)
 
-			# display completions
-			view.run_command("auto_complete")
-			
+		# display completions
+		view.run_command("auto_complete")
 			
 
 	def openPage(self, params, results):
