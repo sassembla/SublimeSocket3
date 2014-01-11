@@ -450,11 +450,15 @@ class SublimeSocketAPI:
 				val = val.replace("`", SublimeSocketAPISettings.RUNSHELL_REPLACE_SINGLEQUOTE);
 				val = val.replace("@s@s@", SublimeSocketAPISettings.RUNSHELL_REPLACE_At_s_At_s_At);
 
+
 				# check contains PREFIX or not
 				val = self.getKeywordBasedPath(val, 
 					SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 					sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/")
 
+				if " " in val:
+					val = "\"" + val + "\""
+					
 				return val
 
 			if type(params[key]) == list:
