@@ -1157,11 +1157,11 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.MODIFYVIEW_VIEW in params:
 			view = params[SublimeSocketAPISettings.MODIFYVIEW_VIEW]
 
-		if SublimeSocketAPISettings.MODIFYVIEW_PATH in params:
-			path = params[SublimeSocketAPISettings.MODIFYVIEW_PATH]
+		if SublimeSocketAPISettings.MODIFYVIEW_NAME in params:
+			path = params[SublimeSocketAPISettings.MODIFYVIEW_NAME]
 			view = self.internal_detectViewInstance(path)
 
-		assert view, "modifyView require 'view' or 'path' param."
+		assert view, "modifyView require 'view' or 'name' param."
 		print("before", view.size())
 		
 		if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
@@ -1178,11 +1178,11 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.SETSELECTION_VIEW in params:
 			view = params[SublimeSocketAPISettings.SETSELECTION_VIEW]
 
-		elif SublimeSocketAPISettings.SETSELECTION_PATH in params:
-			path = params[SublimeSocketAPISettings.SETSELECTION_PATH]
+		elif SublimeSocketAPISettings.SETSELECTION_NAME in params:
+			path = params[SublimeSocketAPISettings.SETSELECTION_NAME]
 			view = self.internal_detectViewInstance(path)
 
-		assert view, "setSelection require 'view' or 'path' param."
+		assert view, "setSelection require 'view' or 'name' param."
 
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
@@ -1454,53 +1454,68 @@ class SublimeSocketAPI:
 
 
 	def cancelCompletion(self, params, results):
-		assert SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params, "cancelCompletion rquire 'view' param."
-		view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
+		view = None
+		if SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params:
+			view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
+			currentViewPath = view.file_name()
+
+		if SublimeSocketAPISettings.CANCELCOMPLETION_NAME in params:
+			currentViewPath = params[SublimeSocketAPISettings.CANCELCOMPLETION_NAME]
+			view = self.internal_detectViewInstance(currentViewPath)
+
+		assert view, "cancelCompletion require 'view' or 'name' param."
+
+		# hide completion
 		view.run_command("hide_auto_complete")
-		self.setResultsParams(results, self.cancelCompletion, {})
+
+		self.setResultsParams(results, self.cancelCompletion, {"cancelled":currentViewPath})
 
 	
 	def runCompletion(self, params, results):
 		view = None
 		if SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params:
 			view = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
+			currentViewPath = view.file_name()
 
-		if SublimeSocketAPISettings.RUNCOMPLETION_PATH in params:
-			currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_PATH]
+		if SublimeSocketAPISettings.RUNCOMPLETION_NAME in params:
+			currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_NAME]
 			view = self.internal_detectViewInstance(currentViewPath)
 
-		assert view, "runCompletion require 'view' or 'path' param."
+		assert view, "runCompletion require 'view' or 'name' param."
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		
-		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
-		print("completions", completions)
-
-		formatHead = ""
-		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
-			formatHead = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD]
-
-		formatTail = ""
-		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
-			formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
+		viewIdentity = view.file_name()
 		
-		print("formatHead", formatHead, "formatTail", formatTail)
-		def transformToFormattedTuple(sourceDict):
-			a = formatHead
-			b = formatTail
-			for key in sourceDict:
-				a = a.replace(key, sourceDict[key])
-				b = b.replace(key, sourceDict[key])
-			
-			return (a, b)
-			
-		completionStrs = list(map(transformToFormattedTuple, completions))
-		print("completionStrs", completionStrs)
+		if viewIdentity:
+			completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
 
-		# set completion
-		self.server.updateCompletion(completionStrs)
+			formatHead = ""
+			if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
+				formatHead = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD]
 
-		# display completions
-		view.run_command("auto_complete")
+			formatTail = ""
+			if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
+				formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
+			
+			
+			def transformToFormattedTuple(sourceDict):
+				a = formatHead
+				b = formatTail
+				for key in sourceDict:
+					a = a.replace(key, sourceDict[key])
+					b = b.replace(key, sourceDict[key])
+				
+				return (a, b)
+				
+			completionStrs = list(map(transformToFormattedTuple, completions))
+			
+			# set completion
+			self.server.updateCompletion(viewIdentity, completionStrs)
+
+			# display completions
+			view.run_command("auto_complete")
+
+			self.setResultsParams(results, self.runCompletion, {"completed":currentViewPath})
 			
 
 	def openPage(self, params, results):

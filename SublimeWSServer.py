@@ -30,7 +30,7 @@ class SublimeWSServer:
 		self.api = SublimeSocketAPI(self)
 
 		self.deletedRegionIdPool = []
-		self.completion = []
+		self.currentCompletion = {}
 
 
 	def start(self, host, port):
@@ -344,10 +344,6 @@ class SublimeWSServer:
 		self.api.runAllSelector(reactorDict, eventParam, results)
 
 
-	def updateCompletion(self, completions):
-		print("updateCompletion!!!!!!!!", completions)
-		self.completion = completions
-
 
 	## emit event if params matches the regions that sink in view
 	def containsRegionsInKVS(self, params, results):
@@ -511,11 +507,23 @@ class SublimeWSServer:
 		return False
 		
 
-	## return param
-	def getKVStoredViewItem(self, eventName, ):
-		if self.completion:
-			return self.completion
+	## return completion then delete.
+	def consumeCompletion(self, viewIdentity, eventName):
+		# イベントによる振り分けとかがまったくなってない、用途の狭まってない物体。
+		print("getKVStoredViewItem", eventName)
+		
+		if viewIdentity in list(self.currentCompletion):
+			completion = self.currentCompletion[viewIdentity]
+			del self.currentCompletion[viewIdentity]
+			return completion
 
+		return None
+
+
+	def updateCompletion(self, viewIdentity, completions):
+		print("updateCompletion viewIdentity", viewIdentity)
+		self.currentCompletion[viewIdentity] = completions
+		
 
 	def runRenew(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]

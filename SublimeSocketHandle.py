@@ -165,7 +165,7 @@ class SublimeSocketThread(threading.Thread):
           SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
         )
 
-        return self._server.getKVStoredViewItem(eventName)
+        return self._server.consumeCompletion(view_file_name, eventName)
       
   def currentConnections(self):
     self._server.showCurrentStatusAndConnections()
