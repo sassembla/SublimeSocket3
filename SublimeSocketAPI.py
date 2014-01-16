@@ -423,7 +423,7 @@ class SublimeSocketAPI:
 	## run shellScript
 	# params is array that will be evaluated as commandline marameters.
 	def runShell(self, params, results=None):
-		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param"
+		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param."
 
 		if SublimeSocketAPISettings.RUNSHELL_DELAY in params:
 			delay = params[SublimeSocketAPISettings.RUNSHELL_DELAY]
@@ -498,7 +498,7 @@ class SublimeSocketAPI:
 	## emit message to clients.
 	# broadcast messages if no-"target" key.
 	def broadcastMessage(self, params, results):
-		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "broadcastMessage require 'message' param"
+		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "broadcastMessage require 'message' param."
 		
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 
@@ -522,8 +522,8 @@ class SublimeSocketAPI:
 			self.monocastMessage(params, results)
 			return
 
-		assert SublimeSocketAPISettings.OUTPUT_TARGET in params, "monocastMessage require 'target' param"
-		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "monocastMessage require 'message' param"
+		assert SublimeSocketAPISettings.OUTPUT_TARGET in params, "monocastMessage require 'target' param."
+		assert SublimeSocketAPISettings.OUTPUT_MESSAGE in params, "monocastMessage require 'message' param."
 		
 		target = params[SublimeSocketAPISettings.OUTPUT_TARGET]
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
@@ -547,7 +547,7 @@ class SublimeSocketAPI:
 			self.showAtLog(params, results)
 			return
 
-		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param"
+		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param."
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 		print(SublimeSocketAPISettings.LOG_prefix, message)
 
@@ -560,7 +560,7 @@ class SublimeSocketAPI:
 			self.showDialog(params, results)
 			return
 
-		assert SublimeSocketAPISettings.SHOWDIALOG_MESSAGE in params, "showDialog require 'message' param"
+		assert SublimeSocketAPISettings.SHOWDIALOG_MESSAGE in params, "showDialog require 'message' param."
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 
 		sublime.message_dialog(message)
@@ -570,7 +570,7 @@ class SublimeSocketAPI:
 
 	## run testus
 	def runTests(self, params, client, results):
-		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param"
+		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
 
 		# check contains PREFIX of path or not
@@ -619,8 +619,8 @@ class SublimeSocketAPI:
 		
 	## assertions
 	def assertResult(self, params, currentResults):
-		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param"
-		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param"
+		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param."
+		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param."
 		
 		identity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
 		
@@ -910,10 +910,10 @@ class SublimeSocketAPI:
 
 	## selected is contains regions or not.
 	def containsRegions(self, params, results):
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param"
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param"
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param"
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED in params, "containsRegions requires 'selected' param"
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param."
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param."
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param."
+		assert SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED in params, "containsRegions requires 'selected' param."
 
 		self.server.containsRegionsInKVS(params, results)
 		
@@ -950,7 +950,7 @@ class SublimeSocketAPI:
 
 	## filtering. matching -> run API
 	def runFiltering(self, params, results):
-		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param"
+		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param."
 
 		filterName = params[SublimeSocketAPISettings.FILTER_NAME]
 
@@ -1113,7 +1113,7 @@ class SublimeSocketAPI:
 
 
 	def viewEmit(self, params, results):
-		assert SublimeSocketAPISettings.VIEWEMIT_SELECTORS in params, "viewEmit require 'selectors' param"
+		assert SublimeSocketAPISettings.VIEWEMIT_SELECTORS in params, "viewEmit require 'selectors' param."
 		
 		if SublimeSocketAPISettings.VIEWEMIT_VIEW in params:
 			view = params[SublimeSocketAPISettings.VIEWEMIT_VIEW]
@@ -1122,7 +1122,7 @@ class SublimeSocketAPI:
 		# detect view from name.
 		elif SublimeSocketAPISettings.VIEWEMIT_NAME in params:
 			
-			assert SublimeSocketAPISettings.VIEWEMIT_NAME in params, "viewEmit require 'path' param"
+			assert SublimeSocketAPISettings.VIEWEMIT_NAME in params, "viewEmit require 'path' param."
 			name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
 
 			completed_name = self.getKeywordBasedPath(name, 
@@ -1249,11 +1249,33 @@ class SublimeSocketAPI:
 		# totally, return None and do nothing
 		return None
 
+	def internal_getViewFromViewOrName(self, params, viewParamKey, nameParamKey):
+		view = None
+		if viewParamKey in params:
+			view = params[viewParamKey]
+			path = view.file_name()
+
+		elif nameParamKey in params:
+			name = params[nameParamKey]
+			view = self.internal_detectViewInstance(name)
+			if view:
+				path = view.file_name()
+			else:
+				path = None
+				
+		else:
+			view = None
+			path = None
+			
+		return (view, path)
+
+
+
 	########## APIs for shortcut ST2-Display ##########
 
 	## show message on ST
 	def showStatusMessage(self, params, results):
-		assert SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE in params, "showStatusMessage require 'message' param"
+		assert SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE in params, "showStatusMessage require 'message' param."
 		message = params[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE]
 		sublime.status_message(message)
 
@@ -1261,37 +1283,27 @@ class SublimeSocketAPI:
 
 	## append region on ST
 	def appendRegion(self, params, results):
-		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param"
-		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param"
-		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param"
-	
-		path = ""	
+		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param."
+		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param."
+		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param."
 
-		# read path from parameter or get current view's path
-		if SublimeSocketAPISettings.APPENDREGION_PATH in params:
-			path = params[SublimeSocketAPISettings.APPENDREGION_PATH]
-		else:
-			path = sublime.active_window().active_view().file_name()
-		print("path", path)
+		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.APPENDREGION_VIEW, SublimeSocketAPISettings.APPENDREGION_NAME)
+		if view and path:
+				
+			line = params[SublimeSocketAPISettings.APPENDREGION_LINE]
+			message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
+			condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
+			
+			resultReason, resultLine, resultMessage, resultCondition = self.checkIfViewExist_appendRegion_Else_notFound(
+				path, 
+				view, 
+				line, 
+				message, 
+				condition,
+				results)
 
-		path = self.getKeywordBasedPath(path, 
-			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/")
-
-		line = params[SublimeSocketAPISettings.APPENDREGION_LINE]
-		message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
-		condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
-		
-		result = self.checkIfViewExist_appendRegion_Else_notFound(
-			path, 
-			self.internal_detectViewInstance(path), 
-			line, 
-			message, 
-			condition,
-			results)
-
-		self.setResultsParams(results, self.appendRegion, {"result":result[0], SublimeSocketAPISettings.APPENDREGION_LINE:result[1], SublimeSocketAPISettings.APPENDREGION_MESSAGE:result[2], SublimeSocketAPISettings.APPENDREGION_CONDITION:result[3]})
-		
+			self.setResultsParams(results, self.appendRegion, {"result":resultReason, SublimeSocketAPISettings.APPENDREGION_LINE:resultLine, SublimeSocketAPISettings.APPENDREGION_MESSAGE:resultMessage, SublimeSocketAPISettings.APPENDREGION_CONDITION:resultCondition})
+			
 	
 	## emit ss_f_runWithBuffer event
 	def runWithBuffer(self, params, results):
@@ -1315,8 +1327,8 @@ class SublimeSocketAPI:
 
 	## emit notification mechanism
 	def notify(self, params, results):
-		assert SublimeSocketAPISettings.NOTIFY_TITLE in params, "notify require 'title' param"
-		assert SublimeSocketAPISettings.NOTIFY_MESSAGE in params, "notify require 'message' param"
+		assert SublimeSocketAPISettings.NOTIFY_TITLE in params, "notify require 'title' param."
+		assert SublimeSocketAPISettings.NOTIFY_MESSAGE in params, "notify require 'message' param."
 
 		title = params[SublimeSocketAPISettings.NOTIFY_TITLE]
 		message = params[SublimeSocketAPISettings.NOTIFY_MESSAGE]
@@ -1455,35 +1467,20 @@ class SublimeSocketAPI:
 
 
 	def cancelCompletion(self, params, results):
-		view = None
-		if SublimeSocketAPISettings.CANCELCOMPLETION_VIEW in params:
-			view = params[SublimeSocketAPISettings.CANCELCOMPLETION_VIEW]
-			currentViewPath = view.file_name()
-
-		if SublimeSocketAPISettings.CANCELCOMPLETION_NAME in params:
-			currentViewPath = params[SublimeSocketAPISettings.CANCELCOMPLETION_NAME]
-			view = self.internal_detectViewInstance(currentViewPath)
-
+		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.CANCELCOMPLETION_VIEW, SublimeSocketAPISettings.CANCELCOMPLETION_NAME)
 		assert view, "cancelCompletion require 'view' or 'name' param."
 
 		# hide completion
 		view.run_command("hide_auto_complete")
 
-		self.setResultsParams(results, self.cancelCompletion, {"cancelled":currentViewPath})
+		self.setResultsParams(results, self.cancelCompletion, {"cancelled":path})
 
 	
 	def runCompletion(self, params, results):
-		view = None
-		if SublimeSocketAPISettings.RUNCOMPLETION_VIEW in params:
-			view = params[SublimeSocketAPISettings.RUNCOMPLETION_VIEW]
-			currentViewPath = view.file_name()
-
-		if SublimeSocketAPISettings.RUNCOMPLETION_NAME in params:
-			currentViewPath = params[SublimeSocketAPISettings.RUNCOMPLETION_NAME]
-			view = self.internal_detectViewInstance(currentViewPath)
-
-		assert view, "runCompletion require 'view' or 'name' param."
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
+		
+		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
+		assert view, "runCompletion require 'view' or 'name' param."
 		
 		viewIdentity = view.file_name()
 		
@@ -1516,7 +1513,7 @@ class SublimeSocketAPI:
 			# display completions
 			view.run_command("auto_complete")
 
-			self.setResultsParams(results, self.runCompletion, {"completed":currentViewPath})
+			self.setResultsParams(results, self.runCompletion, {"completed":path})
 			
 
 	def openPage(self, params, results):

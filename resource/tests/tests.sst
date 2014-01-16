@@ -461,7 +461,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "sample.txt",
+    "name": "sample.txt",
     "condition": "keyword"
 }->setSelection: {
     "name": "sample.txt",
@@ -519,7 +519,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "exactlynotopenedfile.txt",
+    "name": "exactlynotopenedfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "no view found raise",
@@ -1166,12 +1166,13 @@
 }
 
 
-->適当な名前のファイルを開き、名前を指定せず、現在のviewへとregionを追加する/openFile: {
+->適当な名前のファイルを開き、その名前を指定し、regionを追加する/openFile: {
 	"name": "currentViewAppendRegionTest.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "condition": "keyword"	
+    "condition": "keyword",
+    "name": "currentViewAppendRegionTest.txt"
 }->assertResult: {
 	"id": "add region to current file",
 	"contains": {
@@ -1195,7 +1196,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "notexistfile.txt",
+    "name": "notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "contains region result",
@@ -1220,7 +1221,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "testResources/notexistfile.txt",
+    "name": "testResources/notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "contains region result",
@@ -1245,7 +1246,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
+    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "contains region result",
@@ -1270,7 +1271,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "exactlynotopenedfile.txt",
+    "name": "exactlynotopenedfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "contains region result",
@@ -1297,13 +1298,15 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "condition": "keyword"
+    "condition": "keyword",
+    "name": "notexistfileA.txt"
 }->openFile: {
     "name": "notexistfileB.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "condition": "keyword"
+    "condition": "keyword",
+    "name": "notexistfileB.txt"
 }->eraseAllRegion: {
     
 }->assertResult: {
@@ -1324,7 +1327,7 @@
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "path": "notexistfile.txt",
+    "name": "notexistfile.txt",
     "condition": "keyword"
 }->eraseAllRegion: {
     
@@ -1345,13 +1348,15 @@
 }->appendRegion: {
 	"line": "1",
     "message": "test",
-    "condition": "keyword"
+    "condition": "keyword",
+    "name": "fileA.txt"
 }->openFile: {
 	"name": "fileB.txt"
 }->appendRegion: {
 	"line": "1",
     "message": "test",
-    "condition": "keyword"
+    "condition": "keyword",
+    "name": "fileB.txt"
 }->eraseAllRegion: {
 	"path": "fileA.txt"
 }->assertResult: {
