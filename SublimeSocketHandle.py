@@ -119,23 +119,20 @@ class SublimeSocketThread(threading.Thread):
         # print "scratch buffer."
         return
 
-      view_file_name = view.file_name()
+      eventParam = self._server.generateSublimeViewInfo(
+        view,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST
+      )
 
-      if view_file_name:
-        eventParam = self._server.getSublimeViewInfo(
-          view,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-        )
-
-        results = self._server.api.initResult("view:"+str(uuid.uuid4()))
-
-        self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
+      results = self._server.api.initResult("view:"+str(uuid.uuid4()))
+      self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
   def getReactorDataFromServer(self, eventName, view):
@@ -154,7 +151,7 @@ class SublimeSocketThread(threading.Thread):
       view_file_name = view.file_name()
 
       if view_file_name:
-        eventParam = self._server.getSublimeViewInfo(
+        eventParam = self._server.generateSublimeViewInfo(
           view,
           SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
           SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
@@ -162,7 +159,8 @@ class SublimeSocketThread(threading.Thread):
           SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
           SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
           SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED,
+          SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST
         )
 
         return self._server.consumeCompletion(view_file_name, eventName)
@@ -219,7 +217,6 @@ class CaptureEditing(sublime_plugin.EventListener):
 
   ## call when the event happen
   def update(self, eventName, view=None):
-    print("eventName!", eventName)
     global thread
 
     if thread is not None and thread.is_alive():
@@ -227,26 +224,21 @@ class CaptureEditing(sublime_plugin.EventListener):
 
 
   def updateViewInfo(self, view):
-    print("updateViewInfo")
     if self.currentViewInfo and self.currentViewInfo["view"] == view:
-        print("updateViewInfo currentあり", view.size())
         beforeSize = self.currentViewInfo["size"]
         
         self.currentViewInfo["view"] = view
         self.currentViewInfo["size"] = view.size()
 
         if beforeSize > self.currentViewInfo["size"]:
-          print("down", view.file_name())
           self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
         
         if beforeSize < self.currentViewInfo["size"]:
-          print("up", view.file_name())
           self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
-          
+
     else:
       self.currentViewInfo["view"] = view
       self.currentViewInfo["size"] = view.size()
-      print("updateViewInfo currentなし", view.size())
 
 
   def get(self, eventName, view=None):    

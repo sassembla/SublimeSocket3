@@ -30,7 +30,7 @@ SS_EVENT_LOADING	= "ss_loading"
 
 SS_FOUNDATION_NOVIEWFOUND	= "ss_f_noViewFound"
 NOVIEWFOUND_TARGET		= "target"
-NOVIEWFOUND_VIEW			= "view"
+NOVIEWFOUND_PATH			= "path"
 NOVIEWFOUND_LINE			= "line"
 NOVIEWFOUND_MESSAGE		= "message"
 NOVIEWFOUND_CONDITION = "condition"
@@ -119,12 +119,14 @@ API_CREATEBUFFER	= "createBuffer"
 CREATEBUFFER_NAME	= "name"
 CREATEBUFFER_CONTENTS = "contents"
 
+
 API_OPENFILE		= "openFile"
 OPENFILE_NAME		= "name"
 
 API_CLOSEFILE		= "closeFile"
 CLOSEFILE_NAME		= "name"
 
+API_CLOSEALLBUFFER	= "closeAllBuffer"
 
 API_SETEVENTREACTOR	= "setEventReactor"
 API_SETVIEWREACTOR	= "setViewReactor"
@@ -142,6 +144,8 @@ REACTOR_VIEWKEY_PATH		= "path"
 REACTOR_VIEWKEY_BASENAME	= "basename"
 REACTOR_VIEWKEY_VNAME		= "vname"
 REACTOR_VIEWKEY_SELECTED	= "selected"
+REACTOR_VIEWKEY_ISEXIST		= "isExist"
+
 
 REACTORTYPE_EVENT	= "event"
 REACTORTYPE_VIEW	= "view"
@@ -294,6 +298,7 @@ VIEW_BUFFERID			= "bufferId"
 VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
 VIEW_SELECTED			= "selected"
+VIEW_ISEXIST			= "isExist"
 
 
 # definition of sublime's view events

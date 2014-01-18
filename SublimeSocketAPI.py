@@ -206,6 +206,10 @@ class SublimeSocketAPI:
 				self.closeFile(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_CLOSEALLBUFFER):
+				self.closeAllBuffer(results)
+				break
+
 			if case(SublimeSocketAPISettings.API_CONTAINSREGIONS):
 				self.containsRegions(params, results)
 				break
@@ -814,26 +818,24 @@ class SublimeSocketAPI:
 
 	## create buffer then set contents if exist.
 	def createBuffer(self, params, results):
-		generatedBuffer = sublime.active_window().new_file()
+		assert SublimeSocketAPISettings.CREATEBUFFER_NAME in params, "createBuffer require 'name' param"
 		
-		contents = "empty"
-		resultDict = {}
+		name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
+		view = sublime.active_window().open_file(name)
 
-		# if "name" exist, set name.
-		if SublimeSocketAPISettings.CREATEBUFFER_NAME in params:
-			name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
-			generatedBuffer.set_name(name)
+		# buffer generated or exist file had opened.
+		if self.server.isViewBufferOnly(view):
+			message = "buffer "+ name +" created."
+			result = message
 
-			resultDict[SublimeSocketAPISettings.CREATEBUFFER_NAME] = name
+			view.set_name(name)
 
-		# if "contents" exist, set contents to buffer.
-		if SublimeSocketAPISettings.CREATEBUFFER_CONTENTS in params:
-			contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
-			generatedBuffer.run_command('insert_text', {'string': contents})
-			resultDict[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS] = contents
-
-
-		self.setResultsParams(results, self.createBuffer, resultDict)
+			# if "contents" exist, set contents to buffer.
+			if SublimeSocketAPISettings.CREATEBUFFER_CONTENTS in params:
+				contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
+				view.run_command('insert_text', {'string': contents})
+			
+			self.setResultsParams(results, self.createBuffer, {"result":result, SublimeSocketAPISettings.CREATEBUFFER_NAME:name})
 		
 	
 	## open file
@@ -846,20 +848,26 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 			sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/")
 
-		theOpenedViewInstance = sublime.active_window().open_file(name)
+		view = sublime.active_window().open_file(name)
 
-		# never failure. open file although not exist.
-		message = "file " + original_name + " is opened."
-		print(message)
-	
-		result = message
-
-		view = theOpenedViewInstance
+		path = view.file_name()
 		
-		view_file_name = view.file_name()
+		if self.server.isViewBufferOnly(view):
+			message = "file " + original_name + " is not exist."
+			print(message)
 
-		if view_file_name:
-			viewParams = self.server.getSublimeViewInfo(
+			result = message
+			
+			view.close()
+
+
+		else:
+			message = "file " + original_name + " is opened."
+			print(message)
+		
+			result = message
+
+			viewParams = self.server.generateSublimeViewInfo(
 							view,
 							SublimeSocketAPISettings.VIEW_SELF,
 							SublimeSocketAPISettings.VIEW_ID,
@@ -867,7 +875,8 @@ class SublimeSocketAPI:
 							SublimeSocketAPISettings.VIEW_PATH,
 							SublimeSocketAPISettings.VIEW_BASENAME,
 							SublimeSocketAPISettings.VIEW_VNAME,
-							SublimeSocketAPISettings.VIEW_SELECTED
+							SublimeSocketAPISettings.VIEW_SELECTED,
+							SublimeSocketAPISettings.VIEW_ISEXIST
 						)
 			
 			self.server.fireKVStoredItem(
@@ -876,37 +885,47 @@ class SublimeSocketAPI:
 				viewParams,
 				results)
 
-			self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
+		self.setResultsParams(results, self.openFile, {SublimeSocketAPISettings.OPENFILE_NAME:original_name, "result":result})
 	
 	## close file. if specified -> close the file. if not specified -> close current file.
 	def closeFile(self, params, results):
-		original_name = "empty"
+		name = "empty"
 		
 		if SublimeSocketAPISettings.CLOSEFILE_NAME in params:
-			original_name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
-			name = original_name
-
-			theOpenedViewInstance = None
-
-			name = self.getKeywordBasedPath(name, 
-				SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-				sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/")
-
-			theOpenedViewInstance = sublime.active_window().open_file(name)		
-			theOpenedViewInstance.close()
+			name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
+			view = self.internal_detectViewInstance(name)
 
 		else:
-			theCurrentViewInstance = sublime.active_window().active_view()
-			original_name = theCurrentViewInstance.file_name()
+			view = sublime.active_window().active_view()
+			name = view.file_name()
 
-			# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
-			if not original_name:
-				original_name = "None"
-
-			theCurrentViewInstance.close()
+		# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
+		if not name:
+			name = "None"
 		
-		self.setResultsParams(results, self.closeFile, {"name":original_name})
+		view.close()
+		self.setResultsParams(results, self.closeFile, {"name":name})
+
+
+	def closeAllBuffer(self, results):
+		closed = []
+
+		def close(view):
+			viewPath = self.internal_detectViewPath(view)
+			closed.append(viewPath)
+
+			before = len(self.server.viewsDict())
+			view.close()
+
+			after = len(self.server.viewsDict())
+			message = "not reduced. strange." + str(viewPath)
+			assert after < before, message
 			
+		[close(view) for view in sublime.active_window().views() if self.server.isViewBufferOnly(view)]
+		
+
+		self.setResultsParams(results, self.closeAllBuffer, {"closed":closed})
+
 
 	## selected is contains regions or not.
 	def containsRegions(self, params, results):
@@ -1115,41 +1134,19 @@ class SublimeSocketAPI:
 	def viewEmit(self, params, results):
 		assert SublimeSocketAPISettings.VIEWEMIT_SELECTORS in params, "viewEmit require 'selectors' param."
 		
-		if SublimeSocketAPISettings.VIEWEMIT_VIEW in params:
-			view = params[SublimeSocketAPISettings.VIEWEMIT_VIEW]
-			name = view.file_name()
-			
-		# detect view from name.
-		elif SublimeSocketAPISettings.VIEWEMIT_NAME in params:
-			
-			assert SublimeSocketAPISettings.VIEWEMIT_NAME in params, "viewEmit require 'path' param."
-			name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
 
-			completed_name = self.getKeywordBasedPath(name, 
-				SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-				sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/")
+		# set view param.
+		eventParam = {SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:view}
 
-			view = self.internal_detectViewInstance(completed_name)	
+		# interpolate "replace from to" automatically
+		params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
+			SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
+			SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
+		}
 
-		# no view, name. use current view.
-		else:
-			view = sublime.active_window().active_view()
-			name = view.file_name()
-			
-		if view:
-			path = view.file_name()
-
-			# set view param.
-			eventParam = {SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:view}
-
-			# interpolate "replace from to" automatically
-			params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
-				SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-				SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-			}
-
-			self.runAllSelector(params, eventParam, results)
-			self.setResultsParams(results, self.viewEmit, {"name":name})
+		self.runAllSelector(params, eventParam, results)
+		self.setResultsParams(results, self.viewEmit, {"name":path})
 
 
 	def modifyView(self, params, results):
@@ -1198,7 +1195,7 @@ class SublimeSocketAPI:
 		filePath = view.file_name()
 		if filePath:
 			# emit viewReactor
-			viewParams = self.server.getSublimeViewInfo(
+			viewParams = self.server.generateSublimeViewInfo(
 				view,
 				SublimeSocketAPISettings.VIEW_SELF,
 				SublimeSocketAPISettings.VIEW_ID,
@@ -1206,7 +1203,8 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.VIEW_PATH,
 				SublimeSocketAPISettings.VIEW_BASENAME,
 				SublimeSocketAPISettings.VIEW_VNAME,
-				SublimeSocketAPISettings.VIEW_SELECTED)
+				SublimeSocketAPISettings.VIEW_SELECTED,
+				SublimeSocketAPISettings.VIEW_ISEXIST)
 
 			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
 			self.setResultsParams(results, self.setSelection, {"selected":selected})
@@ -1214,61 +1212,81 @@ class SublimeSocketAPI:
 		
 		
 	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
-	def internal_detectViewInstance(self, path):
-		if self.server.viewDict():
-			viewSourceStr = path
-
-			# remove empty and 1 length string pattern.
-			if not viewSourceStr or len(viewSourceStr) is 0:
-				return None
-
-			
-			viewDict = self.server.viewDict()
+	def internal_detectViewInstance(self, name):
+		viewDict = self.server.viewsDict()
+		if viewDict:
 			viewKeys = viewDict.keys()
 
+			viewSearchSource = name
 
-			viewSourceStr = viewSourceStr.replace("\\", "&")
-			viewSourceStr = viewSourceStr.replace("/", "&")
+			# remove empty and 1 length string pattern.
+			if not viewSearchSource or len(viewSearchSource) is 0:
+				return None
 
-			# straight full match in viewSourceStr. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
+
+			viewSearchSource = viewSearchSource.replace("\\", "&")
+			viewSearchSource = viewSearchSource.replace("/", "&")
+
+			# straight full match in viewSearchSource. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
 			for viewKey in viewKeys:
 				# replace path-expression by component with &.
 				viewSearchKey = viewKey.replace("\\", "&")
 				viewSearchKey = viewSearchKey.replace("/", "&")
 
-				if re.findall(viewSourceStr, viewSearchKey):
+				if re.findall(viewSearchSource, viewSearchKey):
 					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
-				
-			# partial match in viewSourceStr. "ccc.d" vs "********* ccc.d ************"
+			
+			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
 				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
 
-				if viewBasename in viewSourceStr:
+				if viewBasename in viewSearchSource:
 					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
+
 
 		# totally, return None and do nothing
 		return None
 
-	def internal_getViewFromViewOrName(self, params, viewParamKey, nameParamKey):
+
+	def internal_detectViewPath(self, view):
+		instances = []
+		viewsDict = self.server.viewsDict()
+		if viewsDict:
+			for path in list(viewsDict):
+				viewInstance = viewsDict[path][SublimeSocketAPISettings.VIEW_SELF]
+				if view == viewInstance:
+					return path
+				else:
+					print("not match.")
+
+				instances.append(viewInstance)
+
+		print("internal_detectViewPath failed to match, ", view, "vs", instances)
+		
+		return None
+
+
+	def internal_getViewAndPathFromViewOrName(self, params, viewParamKey, nameParamKey):
 		view = None
+		path = None
+
 		if viewParamKey in params:
 			view = params[viewParamKey]
-			path = view.file_name()
-
-		elif nameParamKey in params:
-			name = params[nameParamKey]
-			view = self.internal_detectViewInstance(name)
-			if view:
-				path = view.file_name()
-			else:
-				path = None
-				
-		else:
-			view = None
-			path = None
+			path = self.internal_detectViewPath(view)
 			
-		return (view, path)
+				
+		elif nameParamKey in params:
+			# assume the view is in the window. altough active or not.
+			name = params[nameParamKey]
 
+			view = self.internal_detectViewInstance(name)
+			path = self.internal_detectViewPath(view)
+
+
+		if view and path:
+			return (view, path)
+		else:
+			return (None, None)
 
 
 	########## APIs for shortcut ST2-Display ##########
@@ -1287,22 +1305,29 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param."
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param."
 
-		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.APPENDREGION_VIEW, SublimeSocketAPISettings.APPENDREGION_NAME)
-		if view and path:
-				
-			line = params[SublimeSocketAPISettings.APPENDREGION_LINE]
-			message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
-			condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
+		print("appendRegionに来てる")
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.APPENDREGION_VIEW, SublimeSocketAPISettings.APPENDREGION_NAME)
+		
+		line = params[SublimeSocketAPISettings.APPENDREGION_LINE]
+		message = params[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
+		condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
 			
-			resultReason, resultLine, resultMessage, resultCondition = self.checkIfViewExist_appendRegion_Else_notFound(
-				path, 
-				view, 
-				line, 
-				message, 
-				condition,
-				results)
-
+		if view and path:
+			resultReason, resultLine, resultMessage, resultCondition = self.internal_appendRegion(view, line, message, condition)
+			
 			self.setResultsParams(results, self.appendRegion, {"result":resultReason, SublimeSocketAPISettings.APPENDREGION_LINE:resultLine, SublimeSocketAPISettings.APPENDREGION_MESSAGE:resultMessage, SublimeSocketAPISettings.APPENDREGION_CONDITION:resultCondition})
+
+		else:
+			currentParams = {}
+			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_PATH] = path
+			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_LINE] = line
+			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
+			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
+
+			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, currentParams, results)
+			
+			currentParams["result"] = "failed to append region."
+			self.setResultsParams(results, self.appendRegion, currentParams)
 			
 	
 	## emit ss_f_runWithBuffer event
@@ -1372,11 +1397,15 @@ class SublimeSocketAPI:
 		self.setSublimeSocketWindowBasePath(results)
 
 		filePath = self.sublimeSocketWindowBasePath
+
 		if filePath:
-			folderPath = os.path.dirname(filePath)
+			pass
 		else:
-			results[SublimeSocketAPISettings.GETALLFILEPATH_PATHS] = ""#return empty path
-		
+			self.setResultsParams(results, self.getAllFilePath, {"result":"notexist"})
+			return
+
+		folderPath = os.path.dirname(filePath)
+	
 		depth = len(filePath.split("/"))-1
 		
 		basePath_default = "default"
@@ -1467,7 +1496,8 @@ class SublimeSocketAPI:
 
 
 	def cancelCompletion(self, params, results):
-		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.CANCELCOMPLETION_VIEW, SublimeSocketAPISettings.CANCELCOMPLETION_NAME)
+		print("cancelCompletionに来てる")
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CANCELCOMPLETION_VIEW, SublimeSocketAPISettings.CANCELCOMPLETION_NAME)
 		assert view, "cancelCompletion require 'view' or 'name' param."
 
 		# hide completion
@@ -1479,41 +1509,42 @@ class SublimeSocketAPI:
 	def runCompletion(self, params, results):
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		
-		(view, path) = self.internal_getViewFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
+		print("runCompletionに来てる")
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
 		assert view, "runCompletion require 'view' or 'name' param."
 		
-		viewIdentity = view.file_name()
+		print("runCompletion view", view)
+		assert path, "runCompletion need valid 'path' param, this is bug."
 		
-		if viewIdentity:
-			completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
+		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
 
-			formatHead = ""
-			if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
-				formatHead = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD]
+		formatHead = ""
+		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
+			formatHead = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD]
 
-			formatTail = ""
-			if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
-				formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
+		formatTail = ""
+		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL in params:
+			formatTail = params[SublimeSocketAPISettings.RUNCOMPLETION_FORMATTAIL]
+		
+		
+		def transformToFormattedTuple(sourceDict):
+			a = formatHead
+			b = formatTail
+			for key in sourceDict:
+				a = a.replace(key, sourceDict[key])
+				b = b.replace(key, sourceDict[key])
 			
+			return (a, b)
 			
-			def transformToFormattedTuple(sourceDict):
-				a = formatHead
-				b = formatTail
-				for key in sourceDict:
-					a = a.replace(key, sourceDict[key])
-					b = b.replace(key, sourceDict[key])
-				
-				return (a, b)
-				
-			completionStrs = list(map(transformToFormattedTuple, completions))
-			
-			# set completion
-			self.server.updateCompletion(viewIdentity, completionStrs)
+		completionStrs = list(map(transformToFormattedTuple, completions))
+		
+		# set completion
+		self.server.updateCompletion(path, completionStrs)
 
-			# display completions
-			view.run_command("auto_complete")
+		# display completions
+		view.run_command("auto_complete")
 
-			self.setResultsParams(results, self.runCompletion, {"completed":path})
+		self.setResultsParams(results, self.runCompletion, {"completed":path})
 			
 
 	def openPage(self, params, results):
@@ -1559,7 +1590,8 @@ class SublimeSocketAPI:
 
 	def setSublimeSocketWindowBasePath(self, results):
 		self.sublimeSocketWindowBasePath = sublime.active_window().active_view().file_name()
-		
+		print("sublimeSocketWindowBasePath", self.sublimeSocketWindowBasePath)
+
 
 		self.setResultsParams(results, self.setSublimeSocketWindowBasePath, {"set":"ok"})
 		
@@ -1686,16 +1718,6 @@ class SublimeSocketAPI:
 
 	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition, results):
 		# this check should be run in main thread
-		if not viewInstance:
-			params = {}
-			params[SublimeSocketAPISettings.NOVIEWFOUND_VIEW] = view
-			params[SublimeSocketAPISettings.NOVIEWFOUND_LINE] = line
-			params[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
-			params[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
-
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, params, results)
-			return ("not appended", line, message, condition)
-
 		return self.internal_appendRegion(viewInstance, line, message, condition)
 
 	def internal_appendRegion(self, viewInstance, line, message, condition):
@@ -1753,13 +1775,13 @@ class SublimeSocketAPI:
 	def printout(self, message):
 		print("debug_message:", message)
 
-
-		
+	
 	def formattingMessageParameters(self, params, formatKey, outputKey):
 		currentFormat = params[formatKey]
 		for key in params:
 			if key != formatKey:
 				currentParam = params[key]
+				print("key is", key, "currentParam", currentParam)
 				currentFormat = currentFormat.replace(key, currentParam)
 
 		params[outputKey] = currentFormat
@@ -1774,7 +1796,7 @@ class SublimeSocketAPI:
 
 		return path
 
-
+	
 class InsertTextCommand(sublime_plugin.TextCommand):
 	def run(self, edit, string=''):
 		self.view.insert(edit, self.view.size(), string)
