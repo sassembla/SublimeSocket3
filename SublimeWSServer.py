@@ -426,14 +426,15 @@ class SublimeWSServer:
 	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedKey, isViewExist):
 		existOrNot = False
 
-		if viewInstance.file_name():
+		if self.isBuffer(viewInstance):
+			fileName = viewInstance.name()
+			baseName = fileName
+			
+		else:
 			existOrNot = True
 			fileName = viewInstance.file_name()
 			baseName = os.path.basename(fileName)
 			
-		else:
-			fileName = viewInstance.name()
-			baseName = fileName
 
 		return {
 			viewKey : viewInstance,
@@ -473,6 +474,7 @@ class SublimeWSServer:
 				
 		else:
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
+				print("eventName", eventName)
 				self.runRenew(eventParam)
 
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
@@ -542,7 +544,12 @@ class SublimeWSServer:
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
-		
+		if self.isBuffer(viewInstance):
+			if self.isNamed(viewInstance):
+				pass
+			else:
+				return
+			
 		# update or append if exist.
 		viewDict = self.viewsDict()
 
@@ -668,7 +675,6 @@ class SublimeWSServer:
 
 
 
-
 	## put key-value onto KeyValueStore
 	def setKV(self, key, value):
 		self.kvs.setKeyValue(key, value)
@@ -725,7 +731,7 @@ class SublimeWSServer:
 		return str(result)
 
 
-	def isViewBufferOnly(self, view):
+	def isBuffer(self, view):
 		# x
 		# print("add_", view.add_regions())
 		# print("assi", view.assign_syntax())
@@ -862,7 +868,12 @@ class SublimeWSServer:
 
 		return False
 
-
+	def isNamed(self, view):
+		name = view.name()
+		if 0 < len(name):
+			return True
+		else:
+			return False
 
 ## key-value pool
 class KVS:
