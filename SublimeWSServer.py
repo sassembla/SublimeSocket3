@@ -187,9 +187,9 @@ class SublimeWSServer:
 	
 	## store region to viewDict-view in KVS
 	def storeRegionToView(self, view, identity, region, line, message):
-		key = view.file_name()
+		path = self.internal_detectViewPath(view)
 
-		specificViewDict = self.viewsDict()[key]
+		specificViewDict = self.viewsDict()[path]
 
 		regionDict = {}
 		regionDict[SublimeSocketAPISettings.REGION_LINE] = line
@@ -348,12 +348,9 @@ class SublimeWSServer:
 
 	## emit event if params matches the regions that sink in view
 	def containsRegionsInKVS(self, params, results):
-		
-		if self.viewsDict():
-			viewDict = self.viewsDict()
-
+		viewDict = self.viewsDict()
+		if viewDict:
 			
-
 			# specify regions that are selected.
 			viewInstance = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
 			selectedRegionSet = params[SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED]
@@ -426,7 +423,7 @@ class SublimeWSServer:
 	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedKey, isViewExist):
 		existOrNot = False
 
-		if self.isBuffer(viewInstance):
+		if self.isBuffer(viewInstance.file_name()):
 			fileName = viewInstance.name()
 			baseName = fileName
 			
@@ -544,10 +541,11 @@ class SublimeWSServer:
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
-		if self.isBuffer(viewInstance):
+		if self.isBuffer(filePath):
 			if self.isNamed(viewInstance):
 				pass
 			else:
+				# no name buffer view will ignore.
 				return
 			
 		# update or append if exist.
@@ -607,7 +605,9 @@ class SublimeWSServer:
 			currentRegion = sublime.Region(0, bodyView.size())
 
 			body = bodyView.substr(bodyView.word(currentRegion))
-			path = bodyView.file_name()
+
+			path = self.internal_detectViewPath(bodyView)
+			
 			path = path.replace(":","&").replace("\\", "/")
 			# get line num
 			sel = bodyView.sel()[0]
@@ -731,142 +731,12 @@ class SublimeWSServer:
 		return str(result)
 
 
-	def isBuffer(self, view):
-		# x
-		# print("add_", view.add_regions())
-		# print("assi", view.assign_syntax())
-		# print("begi", view.begin_edit())
-
-		# print("buff", view.buffer_id())
-		# print("chan", view.change_count())
-		
-		# x
-		# print("clas", view.classify())
-		# print("clos", view.close())
-		# print("comm", view.command_history())
-
-		# print("em_w", view.em_width())
-		# print("enco", view.encoding()) # このパラメータを基準に、保存されたことがあるかどうかの判断ができる。
-
-		# x		
-		# print("end_", view.end_edit())
-		# print("eras", view.erase())
-		# print("eras", view.erase_regions())
-		# print("eras", view.erase_status())
-		# print("expa", view.expand_by_class())
-		# print("extr", view.extract_completions())
-		# print("extr", view.extract_scope())
-
-		# print("file", view.file_name())
-
-		# 気になる
-		# print("find", view.find())
-		# print("find", view.find_all())
-		# print("find", view.find_all_results())
-		# print("find", view.find_by_class())
-		# print("find", view.find_by_selector())
-
-		# print("fold", view.fold())
-		# print("fold", view.folded_regions())
-		
-		# print("full", view.full_line())
-		
-		# これも気になる。使えるのでは？
-		# print("get_", view.get_regions())# key が必要。
-		
-		# x
-		# print("get_", view.get_status())
-		# print("get_", view.get_symbols())
-		
-		# print("has_", view.has_non_empty_selection_region())
-		# print("id()", view.id())
-
-		# x
-		# print("inde", view.indentation_level())
-		# print("inde", view.indented_region())
-		# print("inde", view.indexed_symbols())
-		# print("inse", view.insert())
-
-		# print("is_d", view.is_dirty())
-
-		# x
-		# print("is_f", view.is_folded())
-
-		# print("is_i", view.is_in_edit())
-		# print("is_l", view.is_loading())
-		# print("is_r", view.is_read_only())
-		# print("is_s", view.is_scratch())
-		# print("is_v", view.is_valid())
-		# print("layo", view.layout_extent())
-		
-		# x
-		# print("layo", view.layout_to_text())
-		# print("line", view.line())
-		# print("line", view.line_endings())
-		# print("line", view.line_height())
-		# print("line", view.lines())
-		# print("matc", view.match_selector())
-		# print("meta", view.meta_info())
-
-		# print("name", view.name())
-		# print("over", view.overwrite_status())
-
-		# x
-		# print("repl", view.replace())
-		# print("reta", view.retarget())
-		# print("rowc", view.rowcol())
-		# print("run_", view.run_command())
-		# print("scop", view.scope_name())
-		# print("scor", view.score_selector())
-
-		# print("sel(", view.sel())
-
-		# x
-		# print("sele", view.selection())
-		# print("set_", view.set_encoding())
-		# print("set_", view.set_line_endings())
-		# print("set_", view.set_name())
-		# print("set_", view.set_overwrite_status())
-		# print("set_", view.set_read_only())
-		# print("set_", view.set_scratch())
-		# print("set_", view.set_status())
-		# print("set_", view.set_syntax_file())
-		# print("set_", view.set_viewport_position())
-
-		# print("sett", view.settings())
-
-		# x
-		# print("sett", view.settings_object())
-		# print("show", view.show())
-		# print("show", view.show_at_center())
-		# print("show", view.show_popup_menu())
-
-		# print("size", view.size())
-
-		# x
-		# print("spli", view.split_by_newlines())
-		# print("subs", view.substr())
-
-		# print("symb", view.symbols())
-
-		# x
-		# print("text", view.text_point())
-		# print("text", view.text_to_layout())
-		# print("unfo", view.unfold())
-		# print("view", view.view_id())
-		# print("view", view.viewport_extent())
-		# print("view", view.viewport_position())
-		# print("visi", view.visible_region())
-
-		# print("wind", view.window())
-
-		# x
-		# print("word", view.word())
-
-		if view.encoding() == "Undefined":
-			return True
-
-		return False
+	def isBuffer(self, path):
+		if path:
+			if os.path.exists(path):
+				return False
+			
+		return True
 
 	def isNamed(self, view):
 		name = view.name()
@@ -874,6 +744,81 @@ class SublimeWSServer:
 			return True
 		else:
 			return False
+
+
+
+	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
+	def internal_detectViewInstance(self, name):
+		viewDict = self.viewsDict()
+		if viewDict:
+			viewKeys = viewDict.keys()
+
+			viewSearchSource = name
+
+			# remove empty and 1 length string pattern.
+			if not viewSearchSource or len(viewSearchSource) is 0:
+				return None
+
+			viewSearchSource = viewSearchSource.replace("\\", "&")
+			viewSearchSource = viewSearchSource.replace("/", "&")
+
+			# straight full match in viewSearchSource. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
+			for viewKey in viewKeys:
+				# replace path-expression by component with &.
+				viewSearchKey = viewKey.replace("\\", "&")
+				viewSearchKey = viewSearchKey.replace("/", "&")
+
+				if re.findall(viewSearchSource, viewSearchKey):
+					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
+			
+			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
+			for viewKey in viewKeys:
+				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
+				if viewBasename in viewSearchSource:
+					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
+
+		
+		# totally, return None and do nothing
+		return None
+
+
+	def internal_detectViewPath(self, view):
+		instances = []
+		viewsDict = self.viewsDict()
+		
+		if viewsDict:
+			for path in list(viewsDict):
+				viewInstance = viewsDict[path][SublimeSocketAPISettings.VIEW_SELF]
+				if view == viewInstance:
+					return path
+
+				instances.append(viewInstance)
+
+		return None
+
+
+	def internal_getViewAndPathFromViewOrName(self, params, viewParamKey, nameParamKey):
+		view = None
+		path = None
+
+		if viewParamKey in params:
+			view = params[viewParamKey]
+			
+			path = self.internal_detectViewPath(view)
+			
+				
+		elif nameParamKey in params:
+			name = params[nameParamKey]
+			
+			view = self.internal_detectViewInstance(name)
+			path = self.internal_detectViewPath(view)
+
+		if view and path:
+			return (view, path)
+		else:
+			return (None, None)
+
+
 
 ## key-value pool
 class KVS:

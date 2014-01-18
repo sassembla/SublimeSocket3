@@ -124,7 +124,7 @@ CREATEBUFFER_CONTENTS = "contents"
 
 
 API_OPENFILE		= "openFile"
-OPENFILE_NAME		= "name"
+OPENFILE_PATH		= "path"
 
 API_CLOSEFILE		= "closeFile"
 CLOSEFILE_NAME		= "name"
