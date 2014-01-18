@@ -1239,7 +1239,7 @@
     "name": "notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
-    "id": "contains region result",
+    "id": "contains region result1",
     "contains": {
         "appendRegion": {
             "result": "appended",
@@ -1248,8 +1248,7 @@
             "message": "test"
         }
     },
-    "description": "not match.",
-    "debug": true
+    "description": "not match."
 }->closeAllBuffer: {
 
 }->resetResults: {
@@ -1265,7 +1264,7 @@
     "name": "testResources/notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
-    "id": "contains region result",
+    "id": "contains region result2",
     "contains": {
         "appendRegion": {
             "result": "appended",
@@ -1290,7 +1289,7 @@
     "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
-    "id": "contains region result",
+    "id": "contains region result3",
     "contains": {
         "appendRegion": {
             "result": "appended",
@@ -1315,10 +1314,11 @@
     "name": "exactlynotopenedfile.txt",
     "condition": "keyword"
 }->assertResult: {
-    "id": "contains region result",
+    "id": "contains region result4",
     "contains": {
         "appendRegion": {
-            "result": "not appended",
+            "result": "failed to append region.",
+            "path": "exactlynotopenedfile.txt",
             "condition": "keyword",
             "line": "1",
             "message": "test"
@@ -1530,7 +1530,7 @@
 			"closed": ["something", "something2"]
 		}
 	},
-	"description": "failed to close.",
+	"description": "failed to close."
 }->resetResults: {
 
 }

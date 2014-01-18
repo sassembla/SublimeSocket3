@@ -471,7 +471,6 @@ class SublimeWSServer:
 				
 		else:
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
-				print("eventName", eventName)
 				self.runRenew(eventParam)
 
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
