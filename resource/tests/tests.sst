@@ -9,9 +9,6 @@
 }
 
 // viewReactorのtargetって意味あんのかなー。無いならsetReactorシリーズの共通ポイント消したい。
-// runWithBufferきもちわるい
-
-
 
 ->openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
 	"path": "notExistFile"
@@ -27,10 +24,10 @@
 }
 
 
-
 ->組み合わせでエラーが出ていたのを解消したもの。viewの切り替え問題を含んでいた。/createBuffer: {
 	"name": "completionTestView.txt"
 }->viewEmit:{
+	"identity": "completionTestView",
 	"name": "completionTestView.txt",
 	"selectors":[
 		{
@@ -115,8 +112,7 @@
 			"completed": "completionTestView2.txt"
 		}
 	},
-	"description": "not match.",
-	"debug": true
+	"description": "not match."
 }->closeAllBuffer: {
 	
 }->resetResults: {
@@ -128,6 +124,7 @@
 ->補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
 	"name": "completionCloseTestView.txt"
 }->viewEmit:{
+	"identity": "completionCloseTestView",
 	"name": "completionCloseTestView.txt",
 	"selectors":[
 		{
@@ -162,8 +159,7 @@
 			"cancelled": "completionCloseTestView.txt"
 		}
 	},
-	"description": "not close.",
-	"debug": true
+	"description": "not close."
 }->closeAllBuffer: {
 
 }->resetResults: {
@@ -177,6 +173,7 @@
 ->存在するファイルのviewに対してselectorを実行する,viewEmit/openFile: {
     "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
 }->viewEmit: {
+	"identity": "viewEmitToSample.txt",
     "name": "sample.txt",
     "selectors": [
         {
@@ -204,6 +201,7 @@
     "selectors": [
         {
             "viewEmit": {
+            	"identity": "deepLayerViewEmit",
                 "name": "sample.txt",
                 "selectors": [
                     {
@@ -216,6 +214,7 @@
         }
     ]
 }->viewEmit: {
+	"identity": "setSelectionToSample.txt",
     "name": "sample.txt",
     "selectors": [
         {
@@ -545,11 +544,6 @@
 	"selectors": [
 		{
 			"showAtLog": {
-				"message": "fu----mm"
-			}
-		},
-		{
-			"showAtLog": {
 				"message": "no view found",
 				"format": "view 0 not found.",
 				"0": "view for replace"
@@ -586,8 +580,7 @@
 			"set": "ok"
 		}
 	},
-	"description": "not match",
-	"debug": true
+	"description": "not match"
 }->closeAllBuffer: {
 
 }->resetResults: {
@@ -595,26 +588,28 @@
 }
 
 
-->現在開いているファイルに対するrunWithBufferのテスト。特定のバッファを開いておいて、reactorをセットして、イベント発行、という形/createBuffer: {
-	"name": "runWithBufferTest.txt"
-}->setEventReactor: {
-    "target": "testTarget",
-    "react": "ss_f_runWithBuffer",
-    "delay": 100,
+->現在開いているファイルに対するviewEmitのテスト。特定のバッファを開いておいて、viewEmit発効/createBuffer: {
+	"name": "viewEmit.txt"
+}->viewEmit: {
+	"identity": "viewEmit",
+	"name": "viewEmit.txt",
+	"delay": 100,
     "selectors": [
         {
             "showAtLog": {
-                "message": "eventEmit over."
+                "message": "dummy",
+                "format": "p:path, r:rowcol, b:body.",
+                "path": "replace",
+                "rowcol": "replace",
+                "body": "replace"
             }
         }
-    ]
-}->runWithBuffer: {
-	
+    ]   
 }->assertResult: {
 	"id": "run with buffer",
 	"contains": {
 		"showAtLog": {
-			"output": "eventEmit over."
+			"output": "p:viewEmit.txt, r:0,0, b:."
 		}
 	},
 	"description": "not match."
@@ -657,39 +652,37 @@
 
 
 
-->特定のviewに対するrunWithBufferのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
+->特定のviewに対するreactorのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
 	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
-}->setEventReactor: {
-    "target": "event_testTarget",
-    "react": "ss_f_runWithBuffer",
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "eventEmit2 over."
-            }
-        }
-    ]
 }->setViewReactor: {
 	"target": "event_testTarget",
     "react": "on_close",
     "selectors": [
         {
-            "runWithBuffer": {
-
+            "viewEmit": {
+            	"identity": "testTargetId",
+            	"selectors": [
+			        {
+			            "showAtLog": {
+			                "message": "eventEmit2 over."
+			            }
+			        }
+			    ]
             }
         }
     ]
-}->closeFile: {// このイベントでreactorを着火する。その際、reactorのtargetは指定する事が出来ないので、全ターゲットに対して実行される。
+}->closeFile: {// このイベントでcloseイベントを発生させる
 	"name": "sample.txt"
 }->assertResult: {
 	"context": "view",
-	"id": "runWithBuffer with specific file",
+	"id": "close then run viewEmit to specific file",
 	"contains": {
-		"runWithBuffer": {
-			"name": "None" //この時点でcloseが走っており、viewの情報は取得出来ない。
+		"showAtLog": {
+			"output": "eventEmit2 over." //この時点でcloseが走っており、viewの情報は取得出来ない。
 		}
 	},
-	"description": "not match."
+	"description": "not match.",
+	"debug": true
 }->resetReactors: {
 
 }->resetResults: {
@@ -1606,66 +1599,66 @@
 
 
 // めんどうくさいダイアログ系
-// ->補完を外部からセット。候補が1つのため、強制的に補完される。/openFile: {
-// 	"path": "completionTestView.txt"
-// }->runCompletion:{
-// 	"name": "completionTestView.txt",
-// 	"completion": [
-// 		{// 一つだと一択のため勝手に入力される
-// 			"HEAD": "DrawLine", 
-// 			"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-// 			"return": "Void",
-// 			"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-// 			"head": "DrawLine"
-// 		}
-// 	],
-// 	"formathead": "HEADparamsTypeDef\treturn",
-// 	"formattail": "headparamsTargetFmt$0"
-// }->assertResult: {
-// 	"id": "completion makes input",
-// 	"contains": {
-// 		"runCompletion": {
-// 			"completed": "completionTestView.txt"
-// 		}
-// 	},
-// 	"description": "not match."
-// }->closeFile: {
+->補完を外部からセット。候補が1つのため、強制的に補完される。/createBuffer: {
+	"name": "completionTestView.txt"
+}->runCompletion:{
+	"name": "completionTestView.txt",
+	"completion": [
+		{// 一つだと一択のため勝手に入力される
+			"HEAD": "DrawLine", 
+			"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
+			"return": "Void",
+			"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
+			"head": "DrawLine"
+		}
+	],
+	"formathead": "HEADparamsTypeDef\treturn",
+	"formattail": "headparamsTargetFmt$0"
+}->assertResult: {
+	"id": "completion makes input",
+	"contains": {
+		"runCompletion": {
+			"completed": "completionTestView.txt"
+		}
+	},
+	"description": "not match."
+}->closeAllBuffer: {
 
-// }
+}
 
-// ->ダイアログを表示/showDialog:{
-//     "message": "here comes daredevil"
-// }->assertResult: {
-//     "id" :"show dialog contains values.",
-//     "contains": {
-//         "showDialog": {
-//             "output": "here comes daredevil"
-//         }
-//     },
-//     "description": "not match."
-// }->resetResults: {
+->ダイアログを表示/showDialog:{
+    "message": "here comes daredevil"
+}->assertResult: {
+    "id" :"show dialog contains values.",
+    "contains": {
+        "showDialog": {
+            "output": "here comes daredevil"
+        }
+    },
+    "description": "not match."
+}->resetResults: {
 
-// }
+}
 
-// ->ダイアログをフォーマット付きで表示/showDialog:{
-//     "message": "formatting",
-//     "format": "0:a1 b1 c1 d1",
-//     "0": "header",
-//     "a1": "the",
-//     "b1": "test",
-//     "c1": "is",
-//     "d1": "over"
-// }->assertResult: {
-//     "id" :"show dialog contains values.",
-//     "contains": {
-//         "showDialog": {
-//             "output": "header:the test is over"
-//         }
-//     },
-//     "description": "not match."
-// }->resetResults: {
+->ダイアログをフォーマット付きで表示/showDialog:{
+    "message": "formatting",
+    "format": "0:a1 b1 c1 d1",
+    "0": "header",
+    "a1": "the",
+    "b1": "test",
+    "c1": "is",
+    "d1": "over"
+}->assertResult: {
+    "id" :"show dialog contains values.",
+    "contains": {
+        "showDialog": {
+            "output": "header:the test is over"
+        }
+    },
+    "description": "not match."
+}->resetResults: {
 
-// }
+}
 
 
 ->終了時のメッセージ/showStatusMessage: {

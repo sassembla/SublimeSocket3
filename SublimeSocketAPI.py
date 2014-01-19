@@ -640,7 +640,6 @@ class SublimeSocketAPI:
 		
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTEXT in params:
 			contextKeyword = params[SublimeSocketAPISettings.ASSERTRESULT_CONTEXT]
-			print("self.testResults", self.testResults)
 			
 			def checkIsResultsOf(currentContext, currentContextKeyword):
 				key = list(currentContext)[0]
@@ -781,10 +780,6 @@ class SublimeSocketAPI:
 				print("start assertResult 'isnotempty' in", identity, resultBodies)
 
 			targetAPIKey = params[SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY]
-			print("targetAPIKey", targetAPIKey)
-
-			# 特定のAPIkeyに対して、値が存在している
-			print("resultBodies", resultBodies)
 			
 			for resultKey in resultBodies:
 				if resultKey[0] == targetAPIKey:
@@ -1143,21 +1138,65 @@ class SublimeSocketAPI:
 
 
 	def viewEmit(self, params, results):
+		assert SublimeSocketAPISettings.VIEWEMIT_IDENTITY in params, "viewEmit require 'identity' param."
 		assert SublimeSocketAPISettings.VIEWEMIT_SELECTORS in params, "viewEmit require 'selectors' param."
 		
-		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
+		identity = params[SublimeSocketAPISettings.VIEWEMIT_IDENTITY]
 
-		# set view param.
-		eventParam = {SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:view}
+		# delay
+		delay = 0
+		if SublimeSocketAPISettings.VIEWEMIT_DELAY in params:
+			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
-		# interpolate "replace from to" automatically
-		params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
-			SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-			SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-		}
+		if self.server.shouldDelay("VIEWEMIT", identity, delay):
+			self.setResultsParams(results, self.viewEmit, {
+					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
+					SublimeSocketAPISettings.VIEWEMIT_NAME:name,
+					"result": "cancelled"
+				}
+			)
 
-		self.runAllSelector(params, eventParam, results)
-		self.setResultsParams(results, self.viewEmit, {"name":path})
+		else:
+			(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
+
+			name = path
+			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
+				name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
+
+
+			currentRegion = sublime.Region(0, view.size())
+			body = view.substr(view.word(currentRegion))
+			modifiedPath = path.replace(":","&").replace("\\", "/")
+
+			# get modifying line num
+			sel = view.sel()[0]
+			(row, col) = view.rowcol(sel.a)
+			rowColStr = str(row)+","+str(col)
+
+			# set view param.
+			eventParam = {
+				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF:view,
+				SublimeSocketAPISettings.VIEWEMIT_BODY:body,
+				SublimeSocketAPISettings.VIEWEMIT_PATH:modifiedPath,
+				SublimeSocketAPISettings.VIEWEMIT_ROWCOL:rowColStr
+			}
+
+			# interpolate "replace from to" automatically
+			params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
+				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF:SublimeSocketAPISettings.VIEWEMIT_VIEWSELF,
+				SublimeSocketAPISettings.VIEWEMIT_BODY:SublimeSocketAPISettings.VIEWEMIT_BODY,
+				SublimeSocketAPISettings.VIEWEMIT_PATH:SublimeSocketAPISettings.VIEWEMIT_PATH,
+				SublimeSocketAPISettings.VIEWEMIT_ROWCOL:SublimeSocketAPISettings.VIEWEMIT_ROWCOL
+			}
+
+			self.runAllSelector(params, eventParam, results)
+
+			self.setResultsParams(results, self.viewEmit, {
+					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
+					SublimeSocketAPISettings.VIEWEMIT_NAME:name,
+					"result": "done"
+				}
+			)
 
 
 	def modifyView(self, params, results):
@@ -1266,26 +1305,6 @@ class SublimeSocketAPI:
 			
 			currentParams["result"] = "failed to append region."
 			self.setResultsParams(results, self.appendRegion, currentParams)
-			
-	
-	## emit ss_f_runWithBuffer event
-	def runWithBuffer(self, params, results):
-		if SublimeSocketAPISettings.RUNWITHBUFFER_VIEW in params:
-			view = params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW]
-
-		else:
-			view = sublime.active_window().active_view()
-			params[SublimeSocketAPISettings.RUNWITHBUFFER_VIEW] = view
-
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER, params, results)
-
-		name = view.name()
-
-		# set name "" -> "None" if None. avoid matching JSON's "null" & Python's "None".
-		if not name:
-			name = "None"
-		
-		self.setResultsParams(results, self.runWithBuffer, {"name":name})
 
 
 	## emit notification mechanism
@@ -1698,7 +1717,7 @@ class SublimeSocketAPI:
 		currentFormat = params[formatKey]
 		for key in params:
 			if key != formatKey:
-				currentParam = params[key]
+				currentParam = str(params[key])
 				currentFormat = currentFormat.replace(key, currentParam)
 
 		params[outputKey] = currentFormat

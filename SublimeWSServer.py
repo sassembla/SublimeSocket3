@@ -459,8 +459,9 @@ class SublimeWSServer:
 				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
 				if target in reactorsDict[eventName]:
 					reactDict = reactorsDict[eventName][target]
-					
-					if self.shouldDelay(reactorsDict, eventName, target):
+					delay = reactorsDict[name][target][SublimeSocketAPISettings.REACTOR_DELAY]
+
+					if self.shouldDelay(eventName, target, delay):
 						pass
 					else:
 						self.api.runAllSelector(reactDict, eventParam, results)
@@ -480,49 +481,53 @@ class SublimeWSServer:
 			if reactorsDict and eventName in reactorsDict:
 				reactorDict = reactorsDict[eventName]
 				for reactorKey in list(reactorDict):
-					reactorParams = reactorDict[reactorKey]
-
 					
-					if self.shouldDelay(reactorsDict, eventName, reactorKey):
+					delay = reactorsDict[eventName][reactorKey][SublimeSocketAPISettings.REACTOR_DELAY]
+					if self.shouldDelay(eventName, reactorKey, delay):
 						pass
+
 					else:
+						reactorParams = reactorDict[reactorKey]
 						self.runReactor(reactorType, reactorParams, eventParam, results)
 
-
+	
 	## should delay = pass or not.
-	def shouldDelay(self, reactorsDict, name, target):
-		currentTime = round(int(time.time()*1000))
-		
-		delay = reactorsDict[name][target][SublimeSocketAPISettings.REACTOR_DELAY]
-		
+	def shouldDelay(self, name, target, delay):
 		if delay is 0:
 			return False
 
-		else:
-			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+		currentTime = round(int(time.time()*1000))
+
+		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+
+		if name in reactorsLogDict and target in reactLog[name]:
 			log = reactorsLogDict[name][target]
-			
 			if log:
 				latest = log[SublimeSocketAPISettings.REACTORSLOG_LATEST]
-				
+
 				if 0 < (delay + latest - currentTime):
-					reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-					self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 					return True
 					
+		else:
+			print("これ行けるのかな、、無理だよな、、")
+			if name in reactorsLogDict:
+				if target in reactorsLogDict[name]:
+					reactorsLogDict[name][target] = {}
 			else:
-				reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-				self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
-				return False
+				reactorsLogDict[name] = {}
+				reactorsLogDict[name][target] = {}
+
+			reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
+			print("無理でした")
+			
+			self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+			return False
 
 		return False
 		
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
-		# イベントによる振り分けとかがまったくなってない、用途の狭まってない物体。
-		print("getKVStoredViewItem", eventName)
-		
 		if viewIdentity in list(self.currentCompletion):
 			completion = self.currentCompletion[viewIdentity]
 			del self.currentCompletion[viewIdentity]
@@ -532,7 +537,6 @@ class SublimeWSServer:
 
 
 	def updateCompletion(self, viewIdentity, completions):
-		print("updateCompletion viewIdentity", viewIdentity)
 		self.currentCompletion[viewIdentity] = completions
 		
 
@@ -583,10 +587,6 @@ class SublimeWSServer:
 				self.foundation_noViewFound(reactors, eventParam, results)
 				break
 
-			if case(SublimeSocketAPISettings.SS_FOUNDATION_RUNWITHBUFFER):
-				self.foundation_runWithBuffer(reactors, eventParam, results)
-				break
-
 
 	def foundation_noViewFound(self, reactDicts, eventParam, results):
 		for target in list(reactDicts):
@@ -595,36 +595,8 @@ class SublimeWSServer:
 			self.api.runAllSelector(reactDict, eventParam, results)
 
 
-	def foundation_runWithBuffer(self, reactDicts, eventParam, results):
-		for currentDict in reactDicts:
-			# get data from view-buffer
 			
 			bodyView = eventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW]
-			
-			currentRegion = sublime.Region(0, bodyView.size())
-
-			body = bodyView.substr(bodyView.word(currentRegion))
-
-			path = self.internal_detectViewPath(bodyView)
-			
-			path = path.replace(":","&").replace("\\", "/")
-			# get line num
-			sel = bodyView.sel()[0]
-			(row, col) = bodyView.rowcol(sel.a)
-			rowColStr = str(row)+","+str(col)
-
-			currentReactDict = reactDicts[currentDict].copy()
-			
-			# append 'body' 'path' param from buffer
-			currentEventParam = {}
-			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW] = bodyView
-			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ID] = str(uuid.uuid4())
-			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_BODY] = body
-			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_PATH] = path
-			currentEventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_ROWCOL] = rowColStr
-
-			self.api.runAllSelector(currentReactDict, currentEventParam, results)
-
 
 	## KVSControl
 	def KVSControl(self, subCommandAndParam):
