@@ -392,7 +392,6 @@ class SublimeWSServer:
 					# append target
 					regionInfo[SublimeSocketAPISettings.REACTOR_TARGET] = target
 					
-					print("なんでわざわざイベント扱いしてるんだろう。selectorじゃダメなのかな。")
 					self.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionInfo, results)
 					
 					if SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG in params:
