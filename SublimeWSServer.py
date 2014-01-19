@@ -459,7 +459,7 @@ class SublimeWSServer:
 				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
 				if target in reactorsDict[eventName]:
 					reactDict = reactorsDict[eventName][target]
-					delay = reactorsDict[name][target][SublimeSocketAPISettings.REACTOR_DELAY]
+					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
 
 					if self.shouldDelay(eventName, target, delay):
 						pass
@@ -500,7 +500,7 @@ class SublimeWSServer:
 
 		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
-		if name in reactorsLogDict and target in reactLog[name]:
+		if name in reactorsLogDict and target in reactorsLogDict[name]:
 			log = reactorsLogDict[name][target]
 			if log:
 				latest = log[SublimeSocketAPISettings.REACTORSLOG_LATEST]
@@ -509,7 +509,6 @@ class SublimeWSServer:
 					return True
 					
 		else:
-			print("これ行けるのかな、、無理だよな、、")
 			if name in reactorsLogDict:
 				if target in reactorsLogDict[name]:
 					reactorsLogDict[name][target] = {}
@@ -594,9 +593,6 @@ class SublimeWSServer:
 			
 			self.api.runAllSelector(reactDict, eventParam, results)
 
-
-			
-			bodyView = eventParam[SublimeSocketAPISettings.F_RUNWITHBUFFER_VIEW]
 
 	## KVSControl
 	def KVSControl(self, subCommandAndParam):
