@@ -510,13 +510,15 @@ class SublimeWSServer:
 		else:
 			if name in reactorsLogDict:
 				if target in reactorsLogDict[name]:
+					pass
+				else:
 					reactorsLogDict[name][target] = {}
 			else:
 				reactorsLogDict[name] = {}
 				reactorsLogDict[name][target] = {}
 
 			reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-			print("無理でした")
+			
 			
 			self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 			return False

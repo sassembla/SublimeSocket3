@@ -8,7 +8,7 @@
 
 }
 
-// viewReactorのtargetって意味あんのかなー。無いならsetReactorシリーズの共通ポイント消したい。
+
 
 ->openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
 	"path": "notExistFile"
@@ -586,6 +586,53 @@
 }->resetResults: {
 
 }
+
+
+
+->delayのチェック。イベントを2件発生させ、delayによって先行したものだけを実行させる/createBuffer: {
+	"name": "delayTarget.txt"
+}->viewEmit: {
+	"identity": "delay",
+	"name": "delayTarget.txt",
+	"delay": 100,
+	"selectors": [
+		{
+            "showAtLog": {
+                "message": "delay1"
+            }
+        }
+	]
+}->viewEmit: {
+	"identity": "delay",
+	"name": "delayTarget.txt",
+	"delay": 100,
+	"selectors": [
+		{
+            "showAtLog": {
+                "message": "delay2"
+            }
+        }
+	]
+}->assertResult: {
+	"id": "only one log by delay-1",
+	"contains": {
+		"showAtLog": {
+			"output": "delay1"
+		}
+	},
+	"description": "not exist"
+}->assertResult: {
+	"id": "only one log by delay-2",
+	"notcontains": {
+		"showAtLog": {
+			"output": "delay2"
+		}
+	},
+	"description": "exist"
+}->closeAllBuffer: {
+	
+}
+
 
 
 ->現在開いているファイルに対するviewEmitのテスト。特定のバッファを開いておいて、viewEmit発効/createBuffer: {

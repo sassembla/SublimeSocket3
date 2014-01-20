@@ -1148,6 +1148,12 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.VIEWEMIT_DELAY in params:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
+		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
+		
+		name = path
+		if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
+				name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
+
 		if self.server.shouldDelay("VIEWEMIT", identity, delay):
 			self.setResultsParams(results, self.viewEmit, {
 					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
@@ -1157,13 +1163,7 @@ class SublimeSocketAPI:
 			)
 
 		else:
-			(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
-
-			name = path
-			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
-				name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
-
-
+			
 			currentRegion = sublime.Region(0, view.size())
 			body = view.substr(view.word(currentRegion))
 			modifiedPath = path.replace(":","&").replace("\\", "/")
