@@ -14,10 +14,8 @@ API_COMMAND_PARAMS_DELIM = ":"	# only first ":" will be evaluated as delimiter /
 
 API_COMMENT_DELIM	= "/"					# comment expression in API. ss@COMMENT/API...
 
-API_PARAM_START		= "("					# ss@(key|value,key2|value2)commandA:,,,
-API_PARAM_END			= ")"					# replace commandA's "key" by "value" of present-results.
-API_PARAM_CONCAT	= "|"
-API_PARAM_DELIM		= ","
+COMMAND_KEYWORD_INJECT	= "<-"
+COMMAND_KEYWORD_DELIM	= ","
 
 
 API_VERSION = "1.4.0"
@@ -128,7 +126,7 @@ REACTOR_TARGET		= "target"
 REACTOR_REACT		= "react"
 REACTOR_SELECTORS	= "selectors"
 REACTOR_DELAY		= "delay"
-REACTOR_REPLACEFROMTO		= "replacefromto"
+REACTOR_INJECT		= "inject"
 
 REACTOR_VIEWKEY_VIEWSELF	= "view"
 REACTOR_VIEWKEY_ID			= "viewId"
@@ -153,10 +151,15 @@ VIEWEMIT_VIEW		= "view"
 VIEWEMIT_IDENTITY	= "identity"
 VIEWEMIT_DELAY		= "delay"
 VIEWEMIT_SELECTORS	= "selectors"
+
 VIEWEMIT_VIEWSELF	= "view"
 VIEWEMIT_BODY		= "body"
 VIEWEMIT_PATH		= "path"
 VIEWEMIT_ROWCOL		= "rowcol"
+
+VIEWEMIT_INJECT		= "inject"
+VIEWEMIT_INJECTKEYS	= [VIEWEMIT_VIEWSELF, VIEWEMIT_BODY, VIEWEMIT_PATH, VIEWEMIT_ROWCOL]
+
 
 
 API_MODIFYVIEW		= "modifyView"

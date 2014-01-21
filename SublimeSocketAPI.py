@@ -96,7 +96,7 @@ class SublimeSocketAPI:
 					print("JSON parse error", e, "source = ", command_params[1])
 					return
 					
-			parseResult = self.runAPI(command, params, client, results)
+			parseResult = self.runAPI(command, params, client, None, results)
 
 			if SublimeSocketAPISettings.PARSERESULT_SWITCH in parseResult:
 				resultKey = list(results)[0]
@@ -114,33 +114,27 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, command, params=None, client=None, results=None):		
+	def runAPI(self, command, params, client=None, injectParams=None, results=None):		
 		# erase comment
 		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
 			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
 			command = splitted[1]
 
+		# remove spaces " "
+		command = command.replace(" ", "")
 
-		# attach bridgedParams and remove.
-		if SublimeSocketAPISettings.API_PARAM_END in command:
-			splitted = command.split(SublimeSocketAPISettings.API_PARAM_END, 1)
-			command = splitted[1]
-			
-			# separate by delim
-			keyValues = splitted[0][1:]# remove SublimeSocketAPISettings.API_PARAM_START
-			keyValuesArray = keyValues.split(SublimeSocketAPISettings.API_PARAM_DELIM)
-
-			for keyAndValue in keyValuesArray:
-				# key|valueKey
-				keyAndValueArray = keyAndValue.split(SublimeSocketAPISettings.API_PARAM_CONCAT)
+		if injectParams:
+			if SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
+				splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
+				command = splitted[0]
 				
-				key = keyAndValueArray[0]
-				value = keyAndValueArray[1]
+				accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
 
-				# replace params with bridgedParams-rule
-				assert key in results, "no-key in results. should use the API that have results."
+				print("command", command, "accepts", accepts, "injectParams", injectParams)
+				for acceptKey in accepts:
+					if acceptKey in injectParams:
+						params[acceptKey] = injectParams[acceptKey]
 
-				params[value] = results[key]
 
   		# python-switch
 		for case in PythonSwitch(command):
@@ -350,19 +344,10 @@ class SublimeSocketAPI:
 				
 			params = selector[command]
 
-			# print "params", params, "command", command
-			currentParams = params.copy()
+			# get inject parameter from inputted param.
+			injectParams = self.injectParams(paramDict, eventParam)
 
-			# replace parameters if key 'replace' exist
-			if paramDict and SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in paramDict:
-				for fromKey in paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO].keys():
-					if fromKey in eventParam:
-						toKey = paramDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO][fromKey]
-						
-						# replace or append
-						currentParams[toKey] = eventParam[fromKey]
-
-			self.runAPI(command, currentParams, None, results)
+			self.runAPI(command, params, None, injectParams, results)
 
 		[runForeachAPI(selector) for selector in paramDict[SublimeSocketAPISettings.REACTOR_SELECTORS]]
 
@@ -1105,7 +1090,7 @@ class SublimeSocketAPI:
 							print("filtering command:", command, "params:", params)
 
 						# execute
-						self.runAPI(command, params, None, results)
+						self.runAPI(command, params, None, None, results)
 						
 						# report
 						currentResults.append({filterName:params})
@@ -1173,23 +1158,38 @@ class SublimeSocketAPI:
 			(row, col) = view.rowcol(sel.a)
 			rowColStr = str(row)+","+str(col)
 
-			# set view param.
-			eventParam = {
-				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF:view,
-				SublimeSocketAPISettings.VIEWEMIT_BODY:body,
-				SublimeSocketAPISettings.VIEWEMIT_PATH:modifiedPath,
-				SublimeSocketAPISettings.VIEWEMIT_ROWCOL:rowColStr
-			}
+			
+			injectParam = {}
+			
+			# set injective, viewEmit's specific param.
+			injectParam[SublimeSocketAPISettings.VIEWEMIT_VIEWSELF] = view
+			injectParam[SublimeSocketAPISettings.VIEWEMIT_BODY] = body
+			injectParam[SublimeSocketAPISettings.VIEWEMIT_PATH] = modifiedPath
+			injectParam[SublimeSocketAPISettings.VIEWEMIT_ROWCOL] = rowColStr
+			
 
-			# interpolate "replace from to" automatically
-			params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
-				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF:SublimeSocketAPISettings.VIEWEMIT_VIEWSELF,
-				SublimeSocketAPISettings.VIEWEMIT_BODY:SublimeSocketAPISettings.VIEWEMIT_BODY,
-				SublimeSocketAPISettings.VIEWEMIT_PATH:SublimeSocketAPISettings.VIEWEMIT_PATH,
-				SublimeSocketAPISettings.VIEWEMIT_ROWCOL:SublimeSocketAPISettings.VIEWEMIT_ROWCOL
-			}
+			# add inject list
+			injectList = {}
+			if SublimeSocketAPISettings.VIEWEMIT_INJECT in params:
+				injectList = params[SublimeSocketAPISettings.VIEWEMIT_INJECT]
+				
+			print("injectList", injectList)
 
-			self.runAllSelector(params, eventParam, results)
+			# append inject key and value if not exist
+			for key in SublimeSocketAPISettings.VIEWEMIT_INJECTKEYS:
+				if key in injectList:
+					pass
+				else:
+					injectList[key] = key
+
+			# from to の設定があって、
+			# その辺の変形をここでやる必要があるわけだが(acceptがあれば値をウケる)
+
+			# update inject list
+			params[SublimeSocketAPISettings.VIEWEMIT_INJECT] = injectList
+
+
+			self.runAllSelector(params, injectParam, results)
 
 			self.setResultsParams(results, self.viewEmit, {
 					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
@@ -1715,11 +1715,13 @@ class SublimeSocketAPI:
 	
 	def formattingMessageParameters(self, params, formatKey, outputKey):
 		currentFormat = params[formatKey]
+
 		for key in params:
 			if key != formatKey:
 				currentParam = str(params[key])
 				currentFormat = currentFormat.replace(key, currentParam)
 
+		
 		params[outputKey] = currentFormat
 		del params[formatKey]
 
@@ -1731,6 +1733,21 @@ class SublimeSocketAPI:
 			path = replace + filePathArray[1]
 
 		return path
+
+	# if inject parameter exist, inject it by information.
+	def injectParams(self, injectInfoDict, injectSourceDict):
+		if SublimeSocketAPISettings.REACTOR_INJECT in injectInfoDict:
+			
+			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT]
+			# set the value of the name as vector.
+			
+			for key in injectDict:
+				injectDict[key] = injectSourceDict[key]
+
+			return injectDict
+
+		return None
+
 
 	
 class InsertTextCommand(sublime_plugin.TextCommand):

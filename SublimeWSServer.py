@@ -83,8 +83,7 @@ class SublimeWSServer:
 	def loadSettings(self, results):
 		settingCommands = sublime.load_settings("SublimeSocket.sublime-settings").get('loadSettings')
 		for command in settingCommands:
-			print("loadSettingsからのrunAPI", results)
-			self.api.runAPI(command, None, None, results)
+			self.api.runAPI(command, None, None, None, results)
 
 	## update specific client's id
 	def updateClientId(self, client, params):
@@ -286,8 +285,8 @@ class SublimeWSServer:
 		reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS] = selectorsArray
 		reactDict[SublimeSocketAPISettings.REACTOR_DELAY] = delay
 
-		if SublimeSocketAPISettings.REACTOR_REPLACEFROMTO in params:
-			reactDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = params[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO]
+		if SublimeSocketAPISettings.REACTOR_INJECT in params:
+			reactDict[SublimeSocketAPISettings.REACTOR_INJECT] = params[SublimeSocketAPISettings.REACTOR_INJECT]
 
 		# already set or not-> spawn dictionary for name.
 		if not reactEventName in reactorsDict:			
@@ -336,7 +335,7 @@ class SublimeWSServer:
 			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
 				# add view param for react.
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
-				reactorDict[SublimeSocketAPISettings.REACTOR_REPLACEFROMTO] = {
+				reactorDict[SublimeSocketAPISettings.REACTOR_INJECT] = {
 					SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
 					SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
 					}
@@ -403,7 +402,7 @@ class SublimeWSServer:
 							messageDict = {}
 							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
 							
-							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict, None, results)
+							self.api.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict, None, None, results)
 							self.api.printout(message)
 							
 				[emitRegionMatchEvent(region) for region in regionIdentitiesList]
