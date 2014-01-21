@@ -135,7 +135,7 @@ class SublimeSocketThread(threading.Thread):
       eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
       results = self._server.api.initResult("view:"+emitIdentity)
-      print("フムーーーコの時点だとidentityあるのでは？", eventParam)
+
       self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
@@ -155,21 +155,6 @@ class SublimeSocketThread(threading.Thread):
       view_file_name = view.file_name()
 
       if view_file_name:
-        eventParam = self._server.generateSublimeViewInfo(
-          view,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED,
-          SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST
-        )
-
-        emitIdentity = str(uuid.uuid4())
-        eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
-
         return self._server.consumeCompletion(view_file_name, eventName)
       
   def currentConnections(self):

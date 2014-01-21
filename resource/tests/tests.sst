@@ -1764,6 +1764,63 @@
 }
 
 
-->終了時のメッセージ/showStatusMessage: {
+// 想定と違って、reduceが同期で機能してない。うーん
+
+// ->多重のviewEmitを実行。viewReactorはinjectが多いので、reactorの不純な上書きを見張る。/openFile: {
+// 	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->setViewReactor: {
+// 	"target": "doubleReact",
+//     "react": "on_selection_modified",
+//     "selectors": [
+//         {
+//             "viewEmit<-identity, view": {
+//                 "target":"doubleReact",
+//                 "selectors": [
+//                     {
+//                         "showAtLog<-body": {
+//                             "format": "hereComes on_selection_modified, body"//削除後なので3行4文字ある
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ]
+// }->modifyView: {
+// 	"name": "sample.txt",
+// 	"reduce": 1
+// }->closeFile: {
+// 	"name": "sample.txt"
+// }->assertResult: {
+// 	"id": "double reactor",
+// 	"context": "view",
+// 	"contains": {
+// 		"showAtLog": {
+// 			"output": "hereComes on_selection_modified, a\nb\n"
+// 		}
+// 	},
+// 	"description": "not match.",
+// 	"debug": true
+// }->resetResults: {
+	
+// }->openFile: {
+// 	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+// }->modifyView: {
+// 	"name": "sample.txt",
+// 	"reduce": 1
+// }->closeFile: {
+// 	"name": "sample.txt"
+// }->assertResult: {
+// 	"id": "double reactor",
+// 	"contains": {
+// 		"showAtLog": {
+// 			"output": "hereComes on_selection_modified, a\nb\n"
+// 		}
+// 	},
+// 	"description": "not match.",
+// 	"debug": true
+// }
+
+
+->終了時のメッセージ/showAtLog: {
     "message": "test over.\n\n"
 }

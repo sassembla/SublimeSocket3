@@ -122,8 +122,8 @@ class SublimeSocketAPI:
 
 		# remove spaces " "
 		command = command.replace(" ", "")
-		print("command", command)
 
+		# calc "<-" inject param.
 		if injectParams:
 			if SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
 				splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
@@ -131,7 +131,6 @@ class SublimeSocketAPI:
 				
 				accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
 
-				print("command", command, "accepts", accepts, "injectParams", injectParams)
 				for acceptKey in accepts:
 					if acceptKey in injectParams:
 						params[acceptKey] = injectParams[acceptKey]
@@ -336,18 +335,16 @@ class SublimeSocketAPI:
 
 	## run each selectors
 	def runAllSelector(self, paramDict, eventParam, results):
-		
 		def runForeachAPI(selector):
 			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
 
 			for commands in selector.keys():
 				command = commands
 				
-			params = selector[command]
+			params = selector[command].copy()
 
 			# get inject parameter from inputted param.
 			injectParams = self.injectParams(paramDict, eventParam)
-
 			self.runAPI(command, params, None, injectParams, results)
 
 		[runForeachAPI(selector) for selector in paramDict[SublimeSocketAPISettings.REACTOR_SELECTORS]]
@@ -1034,7 +1031,6 @@ class SublimeSocketAPI:
 							command = executableDictKey
 							break
 						
-						# print "command", command
 						
 						paramsSource = executableDict[command]
 
@@ -1142,68 +1138,68 @@ class SublimeSocketAPI:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
-		assert view, "failed to detect 'view' param in viewEmit. please check 'view' or 'name' param."
+		if view:
 
-		name = path
-		if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
-				name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
+			name = path
+			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
+					name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
 
-		if not self.server.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
-			self.setResultsParams(results, self.viewEmit, {
-					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
-					SublimeSocketAPISettings.VIEWEMIT_NAME:name,
-					"result": "cancelled"
+			if not self.server.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
+				self.setResultsParams(results, self.viewEmit, {
+						SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
+						SublimeSocketAPISettings.VIEWEMIT_NAME:name,
+						"result": "cancelled"
+					}
+				)
+
+			else:
+				currentRegion = sublime.Region(0, view.size())
+				body = view.substr(view.word(currentRegion))
+				modifiedPath = path.replace(":","&").replace("\\", "/")
+
+				# get modifying line num
+				sel = view.sel()[0]
+				(row, col) = view.rowcol(sel.a)
+				rowColStr = str(row)+","+str(col)
+
+
+
+				# set inject param. viewEmit's specific param.
+				defaultInjectParam = {
+					SublimeSocketAPISettings.VIEWEMIT_VIEWSELF: view,
+					SublimeSocketAPISettings.VIEWEMIT_BODY: body,
+					SublimeSocketAPISettings.VIEWEMIT_PATH: modifiedPath,
+					SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr,
+					SublimeSocketAPISettings.VIEWEMIT_IDENTITY: identity
 				}
-			)
 
-		else:
-			currentRegion = sublime.Region(0, view.size())
-			body = view.substr(view.word(currentRegion))
-			modifiedPath = path.replace(":","&").replace("\\", "/")
+				params = self.insertInjectKeys(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
+				
+				self.runAllSelector(params, defaultInjectParam, results)
 
-			# get modifying line num
-			sel = view.sel()[0]
-			(row, col) = view.rowcol(sel.a)
-			rowColStr = str(row)+","+str(col)
-
-
-
-			# set inject param. viewEmit's specific param.
-			defaultInjectParam = {
-				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF: view,
-				SublimeSocketAPISettings.VIEWEMIT_BODY: body,
-				SublimeSocketAPISettings.VIEWEMIT_PATH: modifiedPath,
-				SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr,
-				SublimeSocketAPISettings.VIEWEMIT_IDENTITY: identity
-			}
-
-			params = self.insertInjectKeys(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
-			
-			self.runAllSelector(params, defaultInjectParam, results)
-
-			self.setResultsParams(results, self.viewEmit, {
-					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
-					SublimeSocketAPISettings.VIEWEMIT_NAME:name,
-					"result": "done"
-				}
-			)
+				self.setResultsParams(results, self.viewEmit, {
+						SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
+						SublimeSocketAPISettings.VIEWEMIT_NAME:name,
+						"result": "done"
+					}
+				)
 
 
 	def modifyView(self, params, results):
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
-		assert view, "modifyView require 'view' or 'name' param."
-		
-		if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
-			view.run_command('insert_text', {'string': params[SublimeSocketAPISettings.MODIFYVIEW_ADD]})
-			
-		if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
-			view.run_command('reduce_text')
+		if view:
+			if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
+				view.run_command('insert_text', {'string': params[SublimeSocketAPISettings.MODIFYVIEW_ADD]})
+				
+			if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
+				view.run_command('reduce_text')
 
 
 	## generate selection to view
 	def setSelection(self, params, results):
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
-		assert view, "setSelection require 'view' or 'name' param."
+		if not view:
+			return
 
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
@@ -1446,21 +1442,20 @@ class SublimeSocketAPI:
 
 
 	def cancelCompletion(self, params, results):
-		print("cancelCompletionに来てる")
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CANCELCOMPLETION_VIEW, SublimeSocketAPISettings.CANCELCOMPLETION_NAME)
-		assert view, "cancelCompletion require 'view' or 'name' param."
+		if view:
+			# hide completion
+			view.run_command("hide_auto_complete")
 
-		# hide completion
-		view.run_command("hide_auto_complete")
-
-		self.setResultsParams(results, self.cancelCompletion, {"cancelled":path})
+			self.setResultsParams(results, self.cancelCompletion, {"cancelled":path})
 
 	
 	def runCompletion(self, params, results):
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
-		assert view, "runCompletion require 'view' or 'name' param."
+		if not view:
+			return
 		
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
 
@@ -1731,16 +1726,17 @@ class SublimeSocketAPI:
 	def injectParams(self, injectInfoDict, injectSourceDict):
 		if SublimeSocketAPISettings.REACTOR_INJECT in injectInfoDict:
 			
-			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT]
+			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT].copy()
 			
 			# set the value of the name as vector.
 			keys = list(injectDict)
-
+			
 			def replaceInject(key):
 				assert key in injectSourceDict, "failed to inject parameter. parameter not found:"+key
 				value = injectSourceDict[key]
 
 				injectTargetKey = injectDict[key]
+				assert type(injectTargetKey) == str, "not str!, bug."
 				
 				injectDict[injectTargetKey] = value
 

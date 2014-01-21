@@ -156,34 +156,30 @@ class SublimeWSServer:
 		collectedViews = []
 		for views in [window.views() for window in sublime.windows()]:
 			for view in views:
-				view_file_name = view.file_name()
+				viewParams = self.generateSublimeViewInfo(
+					view,
+					SublimeSocketAPISettings.VIEW_SELF,
+					SublimeSocketAPISettings.VIEW_ID,
+					SublimeSocketAPISettings.VIEW_BUFFERID,
+					SublimeSocketAPISettings.VIEW_PATH,
+					SublimeSocketAPISettings.VIEW_BASENAME,
+					SublimeSocketAPISettings.VIEW_VNAME,
+					SublimeSocketAPISettings.VIEW_SELECTED,
+					SublimeSocketAPISettings.VIEW_ISEXIST
+				)
 
-				# run if not scratch
-				if view_file_name:
-					viewParams = self.generateSublimeViewInfo(
-						view,
-						SublimeSocketAPISettings.VIEW_SELF,
-						SublimeSocketAPISettings.VIEW_ID,
-						SublimeSocketAPISettings.VIEW_BUFFERID,
-						SublimeSocketAPISettings.VIEW_PATH,
-						SublimeSocketAPISettings.VIEW_BASENAME,
-						SublimeSocketAPISettings.VIEW_VNAME,
-						SublimeSocketAPISettings.VIEW_SELECTED,
-						SublimeSocketAPISettings.VIEW_ISEXIST
-					)
-
-					emitIdentity = str(uuid.uuid4())
-					viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
+				emitIdentity = str(uuid.uuid4())
+				viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 
-					self.fireKVStoredItem(
-						SublimeSocketAPISettings.REACTORTYPE_VIEW,
-						SublimeSocketAPISettings.SS_EVENT_COLLECT, 
-						viewParams,
-						results
-					)
+				self.fireKVStoredItem(
+					SublimeSocketAPISettings.REACTORTYPE_VIEW,
+					SublimeSocketAPISettings.SS_EVENT_COLLECT, 
+					viewParams,
+					results
+				)
 
-					collectedViews.append(view_file_name)
+				collectedViews.append(viewParams[SublimeSocketAPISettings.VIEW_PATH])
 
 		self.api.setResultsParams(results, self.collectViews, {"collected":collectedViews})
 	
@@ -330,10 +326,9 @@ class SublimeWSServer:
 
 
 	def runReactor(self, reactorType, reactorDict, eventParam, results):
-		# reactorTypeで判別、viewの場合は引数の暗黙変換を行う。
 		for case in PythonSwitch(reactorType):
 			if case(SublimeSocketAPISettings.REACTORTYPE_EVENT):
-				# do nothing
+				# do nothing specially.
 				break
 
 			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
@@ -342,7 +337,6 @@ class SublimeWSServer:
 				
 				# default injection
 				reactorDict = self.api.insertInjectKeys(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
-				print("このへんで、eventParamに期待する値が入ってないっぽい", eventParam, "たしかに入ってない。")
 				break
 
 		self.api.runAllSelector(reactorDict, eventParam, results)
@@ -461,6 +455,7 @@ class SublimeWSServer:
 				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
 				if target in reactorsDict[eventName]:
 					reactDict = reactorsDict[eventName][target]
+
 					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
 
 					if not self.isExecutableWithDelay(eventName, target, delay):
@@ -490,6 +485,7 @@ class SublimeWSServer:
 
 					else:
 						reactorParams = reactorDict[reactorKey]
+						print("reactorParams", reactorParams)
 						self.runReactor(reactorType, reactorParams, eventParam, results)
 
 	
