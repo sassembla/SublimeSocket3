@@ -122,6 +122,7 @@ class SublimeSocketAPI:
 
 		# remove spaces " "
 		command = command.replace(" ", "")
+		print("command", command)
 
 		if injectParams:
 			if SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
@@ -1134,12 +1135,13 @@ class SublimeSocketAPI:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
 		(view, path) = self.server.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
-		
+		assert view, "failed to detect 'view' param in viewEmit. please check 'view' or 'name' param."
+
 		name = path
 		if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
 				name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
 
-		if self.server.shouldDelay("VIEWEMIT", identity, delay):
+		if not self.server.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
 			self.setResultsParams(results, self.viewEmit, {
 					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
 					SublimeSocketAPISettings.VIEWEMIT_NAME:name,
@@ -1148,7 +1150,6 @@ class SublimeSocketAPI:
 			)
 
 		else:
-			
 			currentRegion = sublime.Region(0, view.size())
 			body = view.substr(view.word(currentRegion))
 			modifiedPath = path.replace(":","&").replace("\\", "/")
@@ -1158,38 +1159,29 @@ class SublimeSocketAPI:
 			(row, col) = view.rowcol(sel.a)
 			rowColStr = str(row)+","+str(col)
 
-			
-			injectParam = {}
-			
+
+
 			# set injective, viewEmit's specific param.
-			injectParam[SublimeSocketAPISettings.VIEWEMIT_VIEWSELF] = view
-			injectParam[SublimeSocketAPISettings.VIEWEMIT_BODY] = body
-			injectParam[SublimeSocketAPISettings.VIEWEMIT_PATH] = modifiedPath
-			injectParam[SublimeSocketAPISettings.VIEWEMIT_ROWCOL] = rowColStr
-			
+			defaultInjectParam = {
+				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF: view,
+				SublimeSocketAPISettings.VIEWEMIT_BODY: body,
+				SublimeSocketAPISettings.VIEWEMIT_PATH: modifiedPath,
+				SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr
+			}
 
-			# add inject list
-			injectList = {}
 			if SublimeSocketAPISettings.VIEWEMIT_INJECT in params:
-				injectList = params[SublimeSocketAPISettings.VIEWEMIT_INJECT]
+				pass
+			else:
+				params[SublimeSocketAPISettings.VIEWEMIT_INJECT] = {}
 				
-			print("injectList", injectList)
+			# expand injected list. if "inject" exist, add. or not exist "inject", 
+			# if already injected, never overwrite.
+			injectKeyList = [SublimeSocketAPISettings.VIEWEMIT_VIEWSELF, SublimeSocketAPISettings.VIEWEMIT_BODY, SublimeSocketAPISettings.VIEWEMIT_PATH, SublimeSocketAPISettings.VIEWEMIT_ROWCOL]
+			for key in injectKeyList:
+				if not key in params[SublimeSocketAPISettings.VIEWEMIT_INJECT]:
+					params[SublimeSocketAPISettings.VIEWEMIT_INJECT][key] = key
 
-			# append inject key and value if not exist
-			for key in SublimeSocketAPISettings.VIEWEMIT_INJECTKEYS:
-				if key in injectList:
-					pass
-				else:
-					injectList[key] = key
-
-			# from to の設定があって、
-			# その辺の変形をここでやる必要があるわけだが(acceptがあれば値をウケる)
-
-			# update inject list
-			params[SublimeSocketAPISettings.VIEWEMIT_INJECT] = injectList
-
-
-			self.runAllSelector(params, injectParam, results)
+			self.runAllSelector(params, defaultInjectParam, results)
 
 			self.setResultsParams(results, self.viewEmit, {
 					SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
@@ -1739,11 +1731,21 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.REACTOR_INJECT in injectInfoDict:
 			
 			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT]
+			
 			# set the value of the name as vector.
 			
-			for key in injectDict:
-				injectDict[key] = injectSourceDict[key]
+			keys = list(injectDict)
 
+			def replaceInject(key):
+				assert key in injectSourceDict, "failed to inject parameter. parameter not found:"+key
+				value = injectSourceDict[key]
+
+				injectTargetKey = injectDict[key]
+				
+				injectDict[injectTargetKey] = value
+
+			[replaceInject(key) for key in keys]
+			
 			return injectDict
 
 		return None

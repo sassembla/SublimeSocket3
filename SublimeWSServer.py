@@ -335,10 +335,11 @@ class SublimeWSServer:
 			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
 				# add view param for react.
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
+				
 				reactorDict[SublimeSocketAPISettings.REACTOR_INJECT] = {
 					SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
 					SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-					}
+				}
 				break
 
 		self.api.runAllSelector(reactorDict, eventParam, results)
@@ -459,7 +460,7 @@ class SublimeWSServer:
 					reactDict = reactorsDict[eventName][target]
 					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
 
-					if self.shouldDelay(eventName, target, delay):
+					if not self.isExecutableWithDelay(eventName, target, delay):
 						pass
 					else:
 						self.api.runAllSelector(reactDict, eventParam, results)
@@ -481,7 +482,7 @@ class SublimeWSServer:
 				for reactorKey in list(reactorDict):
 					
 					delay = reactorsDict[eventName][reactorKey][SublimeSocketAPISettings.REACTOR_DELAY]
-					if self.shouldDelay(eventName, reactorKey, delay):
+					if not self.isExecutableWithDelay(eventName, reactorKey, delay):
 						pass
 
 					else:
@@ -489,41 +490,42 @@ class SublimeWSServer:
 						self.runReactor(reactorType, reactorParams, eventParam, results)
 
 	
-	## should delay = pass or not.
-	def shouldDelay(self, name, target, delay):
-		if delay is 0:
-			return False
-
+	def isExecutableWithDelay(self, name, target, elapsedWaitDelay):
 		currentTime = round(int(time.time()*1000))
-
 		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
-		if name in reactorsLogDict and target in reactorsLogDict[name]:
-			log = reactorsLogDict[name][target]
-			if log:
-				latest = log[SublimeSocketAPISettings.REACTORSLOG_LATEST]
-
-				if 0 < (delay + latest - currentTime):
-					return True
-					
+		if elapsedWaitDelay == 0:
+			pass
 		else:
-			if name in reactorsLogDict:
-				if target in reactorsLogDict[name]:
-					pass
-				else:
-					reactorsLogDict[name][target] = {}
+			# check should delay or not.
+
+			# delay log is exist.
+			if name in reactorsLogDict and target in reactorsLogDict[name]:
+				delayedExecuteLog = reactorsLogDict[name][target]
+				if SublimeSocketAPISettings.REACTORSLOG_LATEST in delayedExecuteLog:
+					latest = delayedExecuteLog[SublimeSocketAPISettings.REACTORSLOG_LATEST]
+
+					# should delay = not enough time passed.
+					if 0 < (elapsedWaitDelay + latest - currentTime):
+						return False
+
+
+		# update latest time
+
+		# create executed log dict if not exist.
+		if name in reactorsLogDict:
+			if target in reactorsLogDict[name]:
+				pass
 			else:
-				reactorsLogDict[name] = {}
 				reactorsLogDict[name][target] = {}
+		else:
+			reactorsLogDict[name] = {}
+			reactorsLogDict[name][target] = {}
 
-			reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-			
-			
-			self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
-			return False
-
-		return False
+		reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
+		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 		
+		return True
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
