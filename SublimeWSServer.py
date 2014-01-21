@@ -172,6 +172,10 @@ class SublimeWSServer:
 						SublimeSocketAPISettings.VIEW_ISEXIST
 					)
 
+					emitIdentity = str(uuid.uuid4())
+					viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
+
+
 					self.fireKVStoredItem(
 						SublimeSocketAPISettings.REACTORTYPE_VIEW,
 						SublimeSocketAPISettings.SS_EVENT_COLLECT, 
@@ -336,10 +340,9 @@ class SublimeWSServer:
 				# add view param for react.
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				
-				reactorDict[SublimeSocketAPISettings.REACTOR_INJECT] = {
-					SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF:SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
-					SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED:SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED
-				}
+				# default injection
+				reactorDict = self.api.insertInjectKeys(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
+				print("このへんで、eventParamに期待する値が入ってないっぽい", eventParam, "たしかに入ってない。")
 				break
 
 		self.api.runAllSelector(reactorDict, eventParam, results)

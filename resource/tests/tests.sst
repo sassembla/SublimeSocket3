@@ -258,7 +258,7 @@
     "react": "on_selection_modified_by_setselection",
     "selectors": [
         {
-            "viewEmit": {
+            "viewEmit<-view": {
             	"identity": "deepLayerViewEmit",
                 "name": "sample.txt",
                 "selectors": [

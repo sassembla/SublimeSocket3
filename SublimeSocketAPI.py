@@ -833,6 +833,9 @@ class SublimeSocketAPI:
 						SublimeSocketAPISettings.VIEW_ISEXIST
 					)
 
+		emitIdentity = str(uuid.uuid4())
+		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
+
 		self.server.fireKVStoredItem(
 			SublimeSocketAPISettings.REACTORTYPE_VIEW,
 			SublimeSocketAPISettings.SS_EVENT_RENAMED, 
@@ -883,6 +886,10 @@ class SublimeSocketAPI:
 							SublimeSocketAPISettings.VIEW_SELECTED,
 							SublimeSocketAPISettings.VIEW_ISEXIST
 						)
+
+			emitIdentity = str(uuid.uuid4())
+			viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
+
 			
 			self.server.fireKVStoredItem(
 				SublimeSocketAPISettings.REACTORTYPE_VIEW,
@@ -1161,26 +1168,17 @@ class SublimeSocketAPI:
 
 
 
-			# set injective, viewEmit's specific param.
+			# set inject param. viewEmit's specific param.
 			defaultInjectParam = {
 				SublimeSocketAPISettings.VIEWEMIT_VIEWSELF: view,
 				SublimeSocketAPISettings.VIEWEMIT_BODY: body,
 				SublimeSocketAPISettings.VIEWEMIT_PATH: modifiedPath,
-				SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr
+				SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr,
+				SublimeSocketAPISettings.VIEWEMIT_IDENTITY: identity
 			}
 
-			if SublimeSocketAPISettings.VIEWEMIT_INJECT in params:
-				pass
-			else:
-				params[SublimeSocketAPISettings.VIEWEMIT_INJECT] = {}
-				
-			# expand injected list. if "inject" exist, add. or not exist "inject", 
-			# if already injected, never overwrite.
-			injectKeyList = [SublimeSocketAPISettings.VIEWEMIT_VIEWSELF, SublimeSocketAPISettings.VIEWEMIT_BODY, SublimeSocketAPISettings.VIEWEMIT_PATH, SublimeSocketAPISettings.VIEWEMIT_ROWCOL]
-			for key in injectKeyList:
-				if not key in params[SublimeSocketAPISettings.VIEWEMIT_INJECT]:
-					params[SublimeSocketAPISettings.VIEWEMIT_INJECT][key] = key
-
+			params = self.insertInjectKeys(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
+			
 			self.runAllSelector(params, defaultInjectParam, results)
 
 			self.setResultsParams(results, self.viewEmit, {
@@ -1230,6 +1228,9 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.VIEW_VNAME,
 				SublimeSocketAPISettings.VIEW_SELECTED,
 				SublimeSocketAPISettings.VIEW_ISEXIST)
+
+			emitIdentity = str(uuid.uuid4())
+			viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
 			self.setResultsParams(results, self.setSelection, {"selected":selected})
@@ -1733,7 +1734,6 @@ class SublimeSocketAPI:
 			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT]
 			
 			# set the value of the name as vector.
-			
 			keys = list(injectDict)
 
 			def replaceInject(key):
@@ -1744,12 +1744,25 @@ class SublimeSocketAPI:
 				
 				injectDict[injectTargetKey] = value
 
-			[replaceInject(key) for key in keys]
-			
+			[replaceInject(key) for key in keys]			
 			return injectDict
 
 		return None
 
+
+	# expand injected list. if "inject" exist, add. or not exist "inject", 
+	# if already injected, never overwrite.
+	def insertInjectKeys(self, params, injectionInterpolateKeys, injectKeyword):
+		if injectKeyword in params:
+			pass
+		else:
+			params[injectKeyword] = {}
+			
+		for key in injectionInterpolateKeys:
+			if not key in params[injectKeyword]:
+				params[injectKeyword][key] = key
+
+		return params
 
 	
 class InsertTextCommand(sublime_plugin.TextCommand):

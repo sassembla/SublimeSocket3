@@ -130,8 +130,12 @@ class SublimeSocketThread(threading.Thread):
         SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST
       )
+      
+      emitIdentity = str(uuid.uuid4())
+      eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-      results = self._server.api.initResult("view:"+str(uuid.uuid4()))
+      results = self._server.api.initResult("view:"+emitIdentity)
+      print("フムーーーコの時点だとidentityあるのでは？", eventParam)
       self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
@@ -162,6 +166,9 @@ class SublimeSocketThread(threading.Thread):
           SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTED,
           SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST
         )
+
+        emitIdentity = str(uuid.uuid4())
+        eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
         return self._server.consumeCompletion(view_file_name, eventName)
       
