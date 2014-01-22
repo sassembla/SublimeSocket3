@@ -485,7 +485,6 @@ class SublimeWSServer:
 
 					else:
 						reactorParams = reactorDict[reactorKey]
-						print("reactorParams", reactorParams)
 						self.runReactor(reactorType, reactorParams, eventParam, results)
 
 	
