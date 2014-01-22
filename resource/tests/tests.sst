@@ -315,7 +315,7 @@
 	"name": "sample.txt"
 }->assertResult: {
 	"context": "view",
-	"id": "view text increased",
+	"id": "view text increased2",
 	"contains": {
 		"showAtLog": {
 			"output": "increased."

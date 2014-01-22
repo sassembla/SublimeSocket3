@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from . import SublimeWSSettings
 from . import SublimeSocketAPISettings
 
 import os
@@ -25,8 +24,8 @@ class Openpreference(sublime_plugin.TextCommand):
     
     self.generateHTML(
         {
-            SublimeWSSettings.SS_HOST_REPLACE:host,
-            SublimeWSSettings.SS_PORT_REPLACE:port
+            SublimeSocketAPISettings.SS_HOST_REPLACE:host,
+            SublimeSocketAPISettings.SS_PORT_REPLACE:port
         }, 
         "resource/source.html", 
         "tmp/preference.html")
@@ -49,13 +48,13 @@ class Openpreference(sublime_plugin.TextCommand):
         
     # replace host:port
     for key in replaceableDict:
-        if key in SublimeWSSettings.HTML_REPLACEABLE_KEYS:
+        if key in SublimeSocketAPISettings.HTML_REPLACEABLE_KEYS:
             target = key
             value = replaceableDict[key]
             html = html.replace(target, str(value))
 
     # replace version
-    html = html.replace(SublimeWSSettings.SS_VERSION_REPLACE, SublimeSocketAPISettings.API_VERSION)
+    html = html.replace(SublimeSocketAPISettings.SS_VERSION_REPLACE, SublimeSocketAPISettings.API_VERSION)
 
     # generate preference
     with open(preferencePath, mode='w', encoding='utf-8') as htmlFile:
@@ -84,10 +83,10 @@ class Openpreference(sublime_plugin.TextCommand):
 
     self.generateHTML(
         {
-            SublimeWSSettings.SS_HOST_REPLACE:host, 
-            SublimeWSSettings.SS_PORT_REPLACE:port,
-            SublimeWSSettings.SS_TESTSUITE_PATH_REPLACE:testBasePath,
-            SublimeWSSettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
+            SublimeSocketAPISettings.SS_HOST_REPLACE:host, 
+            SublimeSocketAPISettings.SS_PORT_REPLACE:port,
+            SublimeSocketAPISettings.SS_TESTSUITE_PATH_REPLACE:testBasePath,
+            SublimeSocketAPISettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
         },
         "resource/tests/tests.html", 
         "tmp/tests.html")

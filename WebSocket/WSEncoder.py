@@ -1,8 +1,20 @@
 # -*- coding: utf-8 -*-
 import struct, array, math, random
-from . import SublimeWSSettings
 
-class SublimeWSEncoder:
+# Protocole version	see-> http://tools.ietf.org/html/rfc6455
+VERSION = 13
+
+# Operation codes
+OP_CONTINUATION = 0x0
+OP_TEXT = 0x1
+OP_BINARY = 0x2
+OP_CLOSE = 0x8
+OP_PING = 0x9
+OP_PONG = 0xA
+
+OPCODES = (OP_CONTINUATION, OP_TEXT, OP_BINARY, OP_CLOSE, OP_PING, OP_PONG)
+
+class WSEncoder:
 
 	#0                   1                   2                   3
 	#0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -67,7 +79,7 @@ class SublimeWSEncoder:
 	#  @param rsv2 reserved bit for future usage. Do not use. Default is 0.
 	#  @param rsv3 reserved bit for future usage. Do not use. Default is 0.
 	def encode(self, opcode=0x1, data='', fin=1, mask=1, rsv1=0, rsv2=0, rsv3=0):
-		if not opcode in SublimeWSSettings.OPCODES:
+		if not opcode in OPCODES:
 			raise ValueError('Unknow opcode key.')
 
 		if (opcode >= 0x8): # for control frames

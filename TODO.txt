@@ -3,12 +3,11 @@ TODO
 1.5.x
 
 ST2/3　Both target mode launch
-	やる。
+	use six
 
-Write All API Tests
-	やる。こっち先で、あとでPython2対応。
+√	Write All API Tests
 	複合系のAPIはまとめてしまうのがいいような気がする。
-
+	Dobe
 
 1.4.x
 √	Assertion API

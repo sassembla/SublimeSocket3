@@ -1,11 +1,23 @@
 # -*- coding: utf-8 -*-
-from . import SublimeWSSettings
-from . import SublimeSocketAPISettings
-from .SublimeSocketAPI import SublimeSocketAPI
-from .SublimeWSEncoder import SublimeWSEncoder
-from .PythonSwitch import PythonSwitch
+from .. import SublimeSocketAPISettings
 
-class SublimeWSController:
+from .WSEncoder import WSEncoder
+from ..PythonSwitch import PythonSwitch
+
+# Protocole version	see-> http://tools.ietf.org/html/rfc6455
+VERSION = 13
+
+# Operation codes
+OP_CONTINUATION = 0x0
+OP_TEXT = 0x1
+OP_BINARY = 0x2
+OP_CLOSE = 0x8
+OP_PING = 0x9
+OP_PONG = 0xA
+
+OPCODES = (OP_CONTINUATION, OP_TEXT, OP_BINARY, OP_CLOSE, OP_PING, OP_PONG)
+
+class WSController:
 	def __init__(self, client):
 		self.client = client
 
@@ -23,19 +35,19 @@ class SublimeWSController:
 	#  @param data Decoded data, text or binary.
 	def run(self, ctrl, data):
 
-		encoder = SublimeWSEncoder()
+		encoder = WSEncoder()
  		# python-switch
 		for case in PythonSwitch(ctrl['opcode']):
-			if case(SublimeWSSettings.OP_PING):
+			if case(OP_PING):
 				break
 
-			if case(SublimeWSSettings.OP_PONG):
+			if case(OP_PONG):
 				break
 
-			if case(SublimeWSSettings.OP_CLOSE):
+			if case(OP_CLOSE):
 				break
 		
-			if case(SublimeWSSettings.OP_TEXT):
+			if case(OP_TEXT):
 				#check if API or not
 				if (self.isApi(data)):
 					headerAndParam = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)
@@ -47,11 +59,11 @@ class SublimeWSController:
 					print("data is not for sublimesocket. no 'ss@'header. data:", data)
 				break
 
-			if case(SublimeWSSettings.OP_CONTINUATION):
+			if case(OP_CONTINUATION):
 				# print "continuation...(not yet do anything)"
 				break
 
-			if case(SublimeWSSettings.OP_BINARY):
+			if case(OP_BINARY):
 				# print "is binary", data
 				# see msgpack branch
 				break

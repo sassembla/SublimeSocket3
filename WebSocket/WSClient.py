@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
-import sublime, sublime_plugin
-
 
 import threading, hashlib, base64
-from . import SublimeWSSettings
 
-from .SublimeWSDecoder import SublimeWSDecoder
+from .WSDecoder import WSDecoder
+from .WSController import WSController
 
-from .SublimeWSController import SublimeWSController
+VERSION = 13
 
-
-class SublimeWSClient:
+class WSClient:
 	CONNECTION_STATUS = {
 		'CONNECTING': 0x0,
 		'OPEN': 0x1,
@@ -25,7 +22,7 @@ class SublimeWSClient:
 		self.conn = ''
 		self.addr = ''
 		self.setStatus('CLOSED')
-		self.cont = SublimeWSController(self)
+		self.cont = WSController(self)
 		self.clientId = identity
 
 
@@ -127,8 +124,8 @@ class SublimeWSClient:
 		if not 'origin' in headers:
 			raise ValueError('Missing parameter "Origin".')
 
-		if (int(headers['sec-websocket-version']) != SublimeWSSettings.VERSION):
-			raise ValueError('Wrong protocol version %s.' % SublimeWSSettings.VERSION)
+		if (int(headers['sec-websocket-version']) != VERSION):
+			raise ValueError('Wrong protocol version %s.' % SVERSION)
 		
 		accept = base64.b64encode((hashlib.sha1((headers['sec-websocket-key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode('utf-8'))).digest())
 		decodedAccept = accept.decode('utf-8')
@@ -146,8 +143,6 @@ class SublimeWSClient:
 		handshakeMessage = handshakeMessage + '-----------------\r\n'
 		handshakeMessage = handshakeMessage + currentBytes + '\r\n'
 		handshakeMessage = handshakeMessage + '-----------------\r\n'
-		
-		sublime.status_message("handshaking..")
 		
 		bufferdBytes = bytes(currentBytes, 'utf-8')
 		self.send(bufferdBytes)
@@ -167,7 +162,7 @@ class SublimeWSClient:
 
 		else:
 			# generate decoder for this client.
-			decoder = SublimeWSDecoder()
+			decoder = WSDecoder()
 			
 			self.setStatus('OPEN')
 			

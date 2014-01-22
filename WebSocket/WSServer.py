@@ -1,23 +1,33 @@
 # -*- coding: utf-8 -*-
+
+
+# サーバ、WebSocketサーバの実装そのもので、その単一性を使って動いているので、KVSコントロール部分と分離したい。
+# 
+
 import sublime, sublime_plugin
+
 import threading
 import os
-
-import socket, threading, string, time
-from .SublimeWSClient import SublimeWSClient
-from .SublimeSocketAPI import SublimeSocketAPI
-from . import SublimeSocketAPISettings
-
+import socket
+import threading
+import string
+import time
 import json
 import uuid
-
 import re
 
-from .PythonSwitch import PythonSwitch
+from .WSClient import WSClient
+
+from ..SublimeSocketAPI import SublimeSocketAPI
+
+# choice editorApi by platform.
+from ..interface.SublimeText.EditorAPI import EditorAPI
+
+from .. import SublimeSocketAPISettings
+from ..PythonSwitch import PythonSwitch
 
 
-class SublimeWSServer:
-
+class WSServer:
 	def __init__(self):
 		self.clients = {}
 		
@@ -27,9 +37,11 @@ class SublimeWSServer:
 
 		self.listening = False
 		self.kvs = KVS()
-		self.api = SublimeSocketAPI(self)
+		self.editorAPI = EditorAPI()
 
-		self.deletedRegionIdPool = []
+		self.api = SublimeSocketAPI(self, self.editorAPI)
+
+		# python上でないといけない。
 		self.currentCompletion = {}
 
 
@@ -47,7 +59,7 @@ class SublimeWSServer:
 			return 1
 
 		self.socket.listen(1)
-		
+
 		serverStartMessage = 'SublimeSocket WebSocketServing started @ ' + str(host) + ':' + str(port)
 		print('\n', serverStartMessage, "\n")
 		sublime.status_message(serverStartMessage)
@@ -70,7 +82,7 @@ class SublimeWSServer:
 			identity = str(uuid.uuid4())
 
 			# genereate new client
-			client = SublimeWSClient(self, identity)
+			client = WSClient(self, identity)
 			
 			self.clients[identity] = client
 
@@ -156,7 +168,7 @@ class SublimeWSServer:
 		collectedViews = []
 		for views in [window.views() for window in sublime.windows()]:
 			for view in views:
-				viewParams = self.generateSublimeViewInfo(
+				viewParams = self.editorAPI.generateSublimeViewInfo(
 					view,
 					SublimeSocketAPISettings.VIEW_SELF,
 					SublimeSocketAPISettings.VIEW_ID,
@@ -325,24 +337,6 @@ class SublimeWSServer:
 		return reactorsDict
 
 
-	def runReactor(self, reactorType, reactorDict, eventParam, results):
-		for case in PythonSwitch(reactorType):
-			if case(SublimeSocketAPISettings.REACTORTYPE_EVENT):
-				# do nothing specially.
-				break
-
-			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
-				# add view param for react.
-				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
-				
-				# default injection
-				reactorDict = self.api.insertInjectKeys(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
-				break
-
-		self.api.runAllSelector(reactorDict, eventParam, results)
-
-
-
 	## emit event if params matches the regions that sink in view
 	def containsRegionsInKVS(self, params, results):
 		viewDict = self.viewsDict()
@@ -415,31 +409,7 @@ class SublimeWSServer:
 			print("	", client)
 
 
-	## depends on sublime-view method
-	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedKey, isViewExist):
-		existOrNot = False
-
-		if self.isBuffer(viewInstance.file_name()):
-			fileName = viewInstance.name()
-			baseName = fileName
-			
-		else:
-			existOrNot = True
-			fileName = viewInstance.file_name()
-			baseName = os.path.basename(fileName)
-			
-
-		return {
-			viewKey : viewInstance,
-			viewIdKey: viewInstance.id(),
-			viewBufferIdKey: viewInstance.buffer_id(),
-			viewPathKey: fileName,
-			viewBaseNameKey: baseName,
-			viewVNameKey: viewInstance.name(),
-			viewSelectedKey: viewInstance.sel(),
-			isViewExist: existOrNot
-		}
-
+	
 
 	## input to sublime from server.
 	# fire event in KVS, if exist.
@@ -465,7 +435,7 @@ class SublimeWSServer:
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 			if reactorsDict and eventName in reactorsDict:
-				self.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
+				self.api.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
 				
 		else:
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
@@ -485,7 +455,7 @@ class SublimeWSServer:
 
 					else:
 						reactorParams = reactorDict[reactorKey]
-						self.runReactor(reactorType, reactorParams, eventParam, results)
+						self.api.runReactor(reactorType, reactorParams, eventParam, results)
 
 	
 	def isExecutableWithDelay(self, name, target, elapsedWaitDelay):
@@ -543,8 +513,8 @@ class SublimeWSServer:
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
-		if self.isBuffer(filePath):
-			if self.isNamed(viewInstance):
+		if self.editorAPI.isBuffer(filePath):
+			if self.editorAPI.isNamed(viewInstance):
 				pass
 			else:
 				# no name buffer view will ignore.
@@ -579,19 +549,6 @@ class SublimeWSServer:
 		if filePath in viewDict:
 			del viewDict[filePath]
 			self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
-
-	def runFoundationEvent(self, eventName, eventParam, reactors, results):
-		for case in PythonSwitch(eventName):
-			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
-				self.foundation_noViewFound(reactors, eventParam, results)
-				break
-
-
-	def foundation_noViewFound(self, reactDicts, eventParam, results):
-		for target in list(reactDicts):
-			reactDict = reactDicts[target]
-			
-			self.api.runAllSelector(reactDict, eventParam, results)
 
 
 	## KVSControl
@@ -639,9 +596,6 @@ class SublimeWSServer:
 	def updateViewDict(self, viewDict):
 		self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
-
-
-
 	## put key-value onto KeyValueStore
 	def setKV(self, key, value):
 		self.kvs.setKeyValue(key, value)
@@ -652,7 +606,6 @@ class SublimeWSServer:
 		value = self.kvs.get(key)
 		return value
 
-	
 
 	## exist or not. return bool
 	def isExistOnKVS(self, key):
@@ -698,56 +651,6 @@ class SublimeWSServer:
 		return str(result)
 
 
-	def isBuffer(self, path):
-		if path:
-			if os.path.exists(path):
-				return False
-			
-		return True
-
-	def isNamed(self, view):
-		name = view.name()
-		if 0 < len(name):
-			return True
-		else:
-			return False
-
-
-
-	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
-	def internal_detectViewInstance(self, name):
-		viewDict = self.viewsDict()
-		if viewDict:
-			viewKeys = viewDict.keys()
-
-			viewSearchSource = name
-
-			# remove empty and 1 length string pattern.
-			if not viewSearchSource or len(viewSearchSource) is 0:
-				return None
-
-			viewSearchSource = viewSearchSource.replace("\\", "&")
-			viewSearchSource = viewSearchSource.replace("/", "&")
-
-			# straight full match in viewSearchSource. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
-			for viewKey in viewKeys:
-				# replace path-expression by component with &.
-				viewSearchKey = viewKey.replace("\\", "&")
-				viewSearchKey = viewSearchKey.replace("/", "&")
-
-				if re.findall(viewSearchSource, viewSearchKey):
-					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
-			
-			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
-			for viewKey in viewKeys:
-				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
-				if viewBasename in viewSearchSource:
-					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
-
-		
-		# totally, return None and do nothing
-		return None
-
 
 	def internal_detectViewPath(self, view):
 		instances = []
@@ -785,6 +688,39 @@ class SublimeWSServer:
 		else:
 			return (None, None)
 
+
+	## get the target view-s information if params includes "filename.something" or some pathes represents filepath.
+	def internal_detectViewInstance(self, name):
+		viewDict = self.viewsDict()
+		if viewDict:
+			viewKeys = viewDict.keys()
+
+			viewSearchSource = name
+
+			# remove empty and 1 length string pattern.
+			if not viewSearchSource or len(viewSearchSource) is 0:
+				return None
+
+			viewSearchSource = viewSearchSource.replace("\\", "&")
+			viewSearchSource = viewSearchSource.replace("/", "&")
+
+			# straight full match in viewSearchSource. "/aaa/bbb/ccc.d something..." vs "*********** /aaa/bbb/ccc.d ***********"
+			for viewKey in viewKeys:
+				# replace path-expression by component with &.
+				viewSearchKey = viewKey.replace("\\", "&")
+				viewSearchKey = viewSearchKey.replace("/", "&")
+
+				if re.findall(viewSearchSource, viewSearchKey):
+					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
+			
+			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
+			for viewKey in viewKeys:
+				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
+				if viewBasename in viewSearchSource:
+					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
+
+		# totally, return None and do nothing
+		return None
 
 
 ## key-value pool
@@ -836,5 +772,3 @@ class KVS:
 	def clear(self):
 		self.keyValueDict.clear()
 		return True
-
-

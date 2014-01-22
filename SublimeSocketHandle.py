@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sublime, sublime_plugin
 import threading
-from .SublimeWSServer import SublimeWSServer
+from .WebSocket.WSServer import WSServer
 from .OpenPreference import Openpreference
 
 from . import SublimeSocketAPISettings
@@ -103,7 +103,7 @@ class SublimeSocketThread(threading.Thread):
     self._host = host
     self._port = port
 
-    self._server = SublimeWSServer()
+    self._server = WSServer()
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
   def toServer(self, eventName, view):
@@ -119,7 +119,7 @@ class SublimeSocketThread(threading.Thread):
         # print "scratch buffer."
         return
 
-      eventParam = self._server.generateSublimeViewInfo(
+      eventParam = self._server.editorAPI.generateSublimeViewInfo(
         view,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
@@ -238,3 +238,14 @@ class CaptureEditing(sublime_plugin.EventListener):
 
     if thread is not None and thread.is_alive():
       return thread.getReactorDataFromServer(eventName, view)
+
+class InsertTextCommand(sublime_plugin.TextCommand):
+  def run(self, edit, string=''):
+    self.view.insert(edit, self.view.size(), string)
+
+
+class ReduceTextCommand(sublime_plugin.TextCommand):
+  def run(self, edit):
+    region = sublime.Region(self.view.size()-1, self.view.size())
+    self.view.erase(edit, region)
+    
