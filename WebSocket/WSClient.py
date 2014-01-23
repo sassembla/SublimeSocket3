@@ -48,8 +48,7 @@ class WSClient:
 			closingMessage = self.clientId + " left from SublimeSocket. because they send 'no-bytes'"
 
 			print("ss:", closingMessage)
-			sublime.status_message(closingMessage)
-
+			
 			self.close()
 			self.server.deleteClientId(self.clientId)
 			return b''
