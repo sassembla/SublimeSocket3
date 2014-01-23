@@ -13,33 +13,32 @@
 	"name": "testDotAll",
     "patterns": [
     	{
-            "^.*?NullReferenceException: (.*?)\n.*?  at .*? in (.*?):([0-9].*?) \n.*?": {
+            "^.*?NullReferenceException: (.*?)\n.*? in (.*?):([0-9].*?) \n.*?": {
                 "selectors": [
                     {
                         "showAtLog": {
                             "message": "groups[0] groups[1]:groups[2]"
                         }
                     }
-                ]
+                ],
+                "dotall": true
             }
         }
-    ],
-    "dotall": true
-// }->filtering: {
-// 	"name": "testDotAll",
-// 	"source": "System.NullReferenceException: reason\n  at dummy in place:100 \n  at dummy2 in place2:200 \ndummy3"
-// }->assertResult: {
-// 	"id": "testDotAll1",
-// 	"contains": {
-// 		"showAtLog": {
-// 			"output": "reason place:100"
-// 		}
-// 	},
-// 	"description": "not match 1."
+    ]
 }->filtering: {
 	"name": "testDotAll",
-	"source": "System.NullReferenceException: reason2\nsomething\n  at dummy2 in place2:200 \n  at dummy3 in place3:300 \ndummy4",
-    "debug": true
+	"source": "System.NullReferenceException: reason\n  at dummy in place:100 \n  at dummy2 in place2:200 \ndummy3"
+}->assertResult: {
+	"id": "testDotAll1",
+	"contains": {
+		"showAtLog": {
+			"output": "reason place:100"
+		}
+	},
+	"description": "not match 1."
+}->filtering: {
+	"name": "testDotAll",
+	"source": "System.NullReferenceException: reason2\nsomething\n  at dummy2 in place2:200 \n  at dummy3 in place3:300 \ndummy4"
 }->assertResult: {
 	"id": "testDotAll2",
 	"contains": {
@@ -47,8 +46,29 @@
 			"output": "reason2 place2:200"
 		}
 	},
-	"description": "not match 2.",
-	"debug": true
+	"description": "not match 2."
+}->filtering: {
+	"name": "testDotAll",
+	"source": "System.NullReferenceException: reason3\nsomething\nsomething\n  at dummy3 in place3:300 \n  at dummy4 in place4:400 \ndummy5"
+}->assertResult: {
+	"id": "testDotAll3",
+	"contains": {
+		"showAtLog": {
+			"output": "reason3 place3:300"
+		}
+	},
+	"description": "not match 3."
+}->filtering: {
+	"name": "testDotAll",
+	"source": "NullReferenceException: reason4\nsomething\nsomething\n  at dummy4 in place4:400 \n  at dummy5 in place5:500 \ndummy6"
+}->assertResult: {
+	"id": "testDotAll4",
+	"contains": {
+		"showAtLog": {
+			"output": "reason4 place4:400"
+		}
+	},
+	"description": "not match 4."
 }
 
 

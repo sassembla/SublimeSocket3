@@ -217,13 +217,11 @@ class SublimeSocketAPI:
 				break
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
-				# define filter
 				self.defineFilter(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
-				# run filtering
-				self.runFiltering(params, results)
+				self.filtering(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETEVENTREACTOR):
@@ -958,9 +956,7 @@ class SublimeSocketAPI:
 
 		self.server.containsRegionsInKVS(params, results)
 		
-	## Define the filter and check filterPatterns
 	def defineFilter(self, params, results):
-		# check filter name
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
 		# load defined filters
@@ -980,27 +976,27 @@ class SublimeSocketAPI:
 
 		[mustBeSingleDict(currentFilterDict) for currentFilterDict in patterns]
 
-		# key = filterName, value = the match patterns of filter.
 		filterNameAndPatternsArray[filterName] = patterns
-
-		# store anyway.
 		self.server.setKV(SublimeSocketAPISettings.DICT_FILTERS, filterNameAndPatternsArray)
 
 		self.setResultsParams(results, self.defineFilter, {"defined":params})
 		
 
-	## filtering. matching -> run API
-	def runFiltering(self, params, results):
-		assert SublimeSocketAPISettings.FILTER_NAME in params, "filtering require 'filterName' param."
+	def filtering(self, params, results):
+		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'filterName' param."
+		filterName = params[SublimeSocketAPISettings.FILTERING_NAME]
 
-		filterName = params[SublimeSocketAPISettings.FILTER_NAME]
+
+		debug = False
+		if SublimeSocketAPISettings.FILTERING_DEBUG in params:
+			debug = params[SublimeSocketAPISettings.FILTERING_DEBUG]
 
 		# check filterName exists or not
 		if not self.server.isFilterDefined(filterName):
 			print("filterName:"+str(filterName), "is not yet defined.")
 			return
 
-		filterSource = params[SublimeSocketAPISettings.FILTER_SOURCE]
+		filterSource = params[SublimeSocketAPISettings.FILTERING_SOURCE]
 
 		# get filter key-values array
 		filterPatternsArray = self.server.getV(SublimeSocketAPISettings.DICT_FILTERS)[filterName]
@@ -1012,19 +1008,15 @@ class SublimeSocketAPI:
 			for key_executableDictPair in pattern.items():
 				(key, executablesDict) = key_executableDictPair
 
-			debug = False
-			if SublimeSocketAPISettings.FILTER_DEBUG in executablesDict:
-				debug = executablesDict[SublimeSocketAPISettings.FILTER_DEBUG]
-
+			
 			if debug:
 				print("filterName:"+str(filterName))
 				print("pattern:", pattern)
 				print("executablesDict:", executablesDict)
 
 			dotall = False
-			if SublimeSocketAPISettings.FILTER_DOTALL in executablesDict:
-				dotall = executablesDict[SublimeSocketAPISettings.FILTER_DOTALL]
-
+			if SublimeSocketAPISettings.DEFINEFILTER_DOTALL in executablesDict:
+				dotall = executablesDict[SublimeSocketAPISettings.DEFINEFILTER_DOTALL]
 
 			# search
 			if dotall:
@@ -1034,9 +1026,8 @@ class SublimeSocketAPI:
 
 			
 			for searched in searchResult:
-				
 				if searched:
-					executablesArray = executablesDict[SublimeSocketAPISettings.FILTER_SELECTORS]
+					executablesArray = executablesDict[SublimeSocketAPISettings.DEFINEFILTER_SELECTORS]
 					
 					if debug:
 						print("matched defineFilter selectors:", executablesArray)
@@ -1044,8 +1035,8 @@ class SublimeSocketAPI:
 						print("matched group()", searched.group())
 						print("matched groups()", searched.groups())
 					
-						if SublimeSocketAPISettings.FILTER_COMMENT in executablesDict:
-							print("matched defineFilter comment:", executablesDict[SublimeSocketAPISettings.FILTER_COMMENT])
+						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in executablesDict:
+							print("matched defineFilter comment:", executablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
 
 					currentGroupSize = len(searched.groups())
 					
@@ -1132,7 +1123,7 @@ class SublimeSocketAPI:
 		# return succeded signal
 		if 0 < len(currentResults):
 			# set params into results
-			self.setResultsParams(results, self.runFiltering, currentResults)
+			self.setResultsParams(results, self.filtering, currentResults)
 
 
 	## set reactor for reactive-event
