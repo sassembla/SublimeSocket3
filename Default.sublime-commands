@@ -15,11 +15,6 @@
     },
 
     {
-        "caption": "SublimeSocket: status",
-        "command": "statuscheck"
-    },
-
-    {
         "caption": "SublimeSocket: on > test",
         "command": "on_then_test"
     },

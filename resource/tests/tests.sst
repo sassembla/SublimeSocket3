@@ -22,8 +22,6 @@ setTestBeforeAfter: {
 	]
 }
 
-
-
 test>viewEmitで別途injectを使う/createBuffer: {
 	"name": "injectionWithViewEmit.txt"
 }->viewEmit: {
@@ -1005,16 +1003,14 @@ test>filterのパターンを試す/defineFilter: {
 
 
 
-test>メッセージを特定クライアントに配信する。/inputIdentity: {
-    "id": "testMonocastMessage"
-}->monocastMessage: {
-    "target": "testMonocastMessage",
+test>メッセージを特定クライアントに配信する。/monocastMessage: {
+    "target": "sublimesockettest",
     "message": "monocasting"
 }->assertResult: {
     "id": "monocast message for specific client",
     "contains": {
         "monocastMessage": {
-            "target": "testMonocastMessage",
+            "target": "sublimesockettest",
             "message": "monocasting"
         }
     },
@@ -1023,10 +1019,8 @@ test>メッセージを特定クライアントに配信する。/inputIdentity:
 
 
 
-test>フォーマットを使用したmonocast/inputIdentity: {
-    "id": "testMonocastMessageWithFormat"
-}->monocastMessage: {
-    "target": "testMonocastMessageWithFormat",
+test>フォーマットを使用したmonocast/monocastMessage: {
+    "target": "sublimesockettest",
     "message": "monocasting",
     "format": "0:a1 b1 c1 d1",
     "0": "header",
@@ -1038,7 +1032,7 @@ test>フォーマットを使用したmonocast/inputIdentity: {
     "id": "monocast message with format",
     "contains": {
         "monocastMessage": {
-            "target": "testMonocastMessageWithFormat",
+            "target": "sublimesockettest",
             "message": "header:the test is over"
         }
     },
@@ -1047,20 +1041,19 @@ test>フォーマットを使用したmonocast/inputIdentity: {
 
 
 
-test>メッセージを全クライアントに配信する/inputIdentity: {
-    "id": "testBroadcastMessage"
-}->broadcastMessage: {
+test>メッセージを全クライアントに配信する/broadcastMessage: {
     "message": "broadcasting"
 }->assertResult: {
     "id": "broadcast message for every client",
     "contains": {
         "broadcastMessage": {
             "sentTo": [
-                "testBroadcastMessage"
+                "sublimesockettest"
             ]
         }
     },
-    "description": "faild to broadcast."
+    "description": "faild to broadcast.",
+    "debug": true
 }
 
 
@@ -1534,9 +1527,7 @@ test>バージョンの精査、apiVersion majorが高いので、SSをupdateす
 
 
 
-test>適当に匿名のバッファを作り、現在のバッファとして閉じる/resetResults: {
-
-}->createBuffer: {
+test>適当に匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
 	"name": "something"
 }->closeAllBuffer: {
 
@@ -1552,9 +1543,7 @@ test>適当に匿名のバッファを作り、現在のバッファとして閉
 
 
 
-test>適当に複数の匿名のバッファを作り、現在のバッファとして閉じる/resetResults: {
-
-}->createBuffer: {
+test>適当に複数の匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
 	"name": "something"
 }->createBuffer: {
 	"name": "something2"

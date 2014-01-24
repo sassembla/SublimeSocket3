@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import sublime, sublime_plugin
 import threading
-from .WebSocket.WSServer import WSServer
-from .OpenPreference import Openpreference
 
+from .OpenPreference import Openpreference
+from .SublimeSocketServer import SublimeSocketServer
 from . import SublimeSocketAPISettings
 import os
 
 import uuid
 
 
-# WebSocket server's thread
+# SublimeSocket server's thread
 thread = None
 
 class Socketon(sublime_plugin.TextCommand):
@@ -20,25 +20,15 @@ class Socketon(sublime_plugin.TextCommand):
   @classmethod
   def startServer(self):
     global thread
-    print("startServerまだ直してない")
 
-    host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
-    port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
-
-
-    if thread is not None and thread.is_alive():
+    if thread and thread.is_alive():
       if (thread.isServerAlive()):
         alreadyRunningMessage = "SublimeSocket Already Running."
         sublime.status_message(alreadyRunningMessage)
         print("ss:", alreadyRunningMessage)
 
-      else:
-        print("startServer 通ってない")
-        thread.set(host, port)
-        thread.run();
-
     else:
-      thread = SublimeSocketThread(host, port)
+      thread = SublimeSocketThread()
       thread.start()
     
     
@@ -51,7 +41,7 @@ class On_then_openpref(sublime_plugin.TextCommand):
 class Test(sublime_plugin.TextCommand):
   def run(self, edit):
     global thread
-    if thread is not None and thread.is_alive():
+    if thread and thread.is_alive():
       
       Openpreference.openSublimeSocketTest()
     else:
@@ -59,25 +49,18 @@ class Test(sublime_plugin.TextCommand):
       sublime.status_message(notActivatedMessage)
       print("ss:", notActivatedMessage)
 
+
 class On_then_test(sublime_plugin.TextCommand):
    def run(self, edit):
     Socketon.startServer()
     Openpreference.openSublimeSocketTest()
 
-class Statuscheck(sublime_plugin.TextCommand):
-  def run(self, edit):
-    global thread
-    if thread is not None and thread.is_alive():
-      thread.currentConnections()
-    else:
-      notActivatedMessage = "SublimeSocket not yet activated."
-      sublime.status_message(notActivatedMessage)
-      print("ss:", notActivatedMessage)
 
 class Socketoff(sublime_plugin.TextCommand):
   def run(self, edit):
     global thread
-    if thread is not None and thread.is_alive():
+
+    if thread and thread.is_alive():
       if (thread.isServerAlive()):
         thread.tearDownServer()
 
@@ -86,35 +69,26 @@ class Socketoff(sublime_plugin.TextCommand):
       sublime.status_message(notActivatedMessage)
       print("ss:", notActivatedMessage)
       
+
+
+
+
+
 # threading
 class SublimeSocketThread(threading.Thread):
-  def __init__(self, host, port):
+  def __init__(self):
     threading.Thread.__init__(self)
-    
-    self._host = host
-    self._port = port
-
-    print("init??")
-    self._server = WSServer()
+    self.server = None
 
   # call through thread-initialize
   def run(self):
-    print("hahaha!?")
-    result = self._server.start(self._host, self._port)
-    
-    if result is 0:
-      pass
-    else:
-      self.tearDownServer()
+    print("running.")
+    self.server = SublimeSocketServer()
 
-
-    
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
-  def toServer(self, eventName, view):
-    if self._server is None:
-      pass
-    else:
+  def toSublimeSocketServer(self, eventName, view):
+    if self.server:
 
       if not view:
         return
@@ -124,7 +98,7 @@ class SublimeSocketThread(threading.Thread):
         # print "scratch buffer."
         return
 
-      eventParam = self._server.editorAPI.generateSublimeViewInfo(
+      eventParam = self.server.api.editorAPI.generateSublimeViewInfo(
         view,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
@@ -139,15 +113,13 @@ class SublimeSocketThread(threading.Thread):
       emitIdentity = str(uuid.uuid4())
       eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-      results = self._server.api.initResult("view:"+emitIdentity)
+      results = self.server.api.initResult("view:"+emitIdentity)
 
-      self._server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
+      self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
   def getReactorDataFromServer(self, eventName, view):
-    if self._server is None:
-      pass
-    else:
+    if self.server:
       # avoid empty-file
       if view.is_scratch():
         # print "scratch buffer."
@@ -160,21 +132,21 @@ class SublimeSocketThread(threading.Thread):
       view_file_name = view.file_name()
 
       if view_file_name:
-        return self._server.consumeCompletion(view_file_name, eventName)
+        return self.server.consumeCompletion(view_file_name, eventName)
       
-  def currentConnections(self):
-    self._server.showCurrentStatusAndConnections()
-  
   def tearDownServer(self):
-    self._server.tearDown()
-    self._server = None
+    self.server.transferTearDown()
+
+
 
   def isServerAlive(self):
-    if not self._server:
-      return False
-    return True
+    if self.server:
+      return True
+    return False
 
-# event listeners
+
+
+# view listeners
 class CaptureEditing(sublime_plugin.EventListener):
   def __init__(self):
     self.currentViewInfo = {}
@@ -216,8 +188,8 @@ class CaptureEditing(sublime_plugin.EventListener):
   def update(self, eventName, view=None):
     global thread
 
-    if thread is not None and thread.is_alive():
-      thread.toServer(eventName, view)
+    if thread and thread.is_alive():
+      thread.toSublimeSocketServer(eventName, view)
 
 
   def updateViewInfo(self, view):
@@ -241,9 +213,12 @@ class CaptureEditing(sublime_plugin.EventListener):
   def get(self, eventName, view=None):    
     global thread
 
-    if thread is not None and thread.is_alive():
+    if thread and thread.is_alive():
       return thread.getReactorDataFromServer(eventName, view)
 
+
+
+# view contents control
 class InsertTextCommand(sublime_plugin.TextCommand):
   def run(self, edit, string=''):
     self.view.insert(edit, self.view.size(), string)

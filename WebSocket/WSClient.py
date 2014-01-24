@@ -49,8 +49,7 @@ class WSClient:
 
 			print("ss:", closingMessage)
 			
-			self.close()
-			self.server.deleteClientId(self.clientId)
+			self.server.closeClient(self.clientId)
 			return b''
 		return bytes
 

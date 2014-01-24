@@ -8,7 +8,7 @@ import time
 import re
 import uuid
 
-from .WebSocket.WSEncoder import WSEncoder
+
 
 from functools import reduce
 from .PythonSwitch import PythonSwitch
@@ -25,7 +25,6 @@ class SublimeSocketAPI:
 		self.server = server
 
 		self.editorAPI = EditorAPI()
-		self.encoder = WSEncoder()
 
 		self.isTesting = False
 		self.globalResults = []
@@ -73,7 +72,7 @@ class SublimeSocketAPI:
 
 
 	## Parse the API command
-	def parse(self, data, client=None, results=None):
+	def parse(self, data, clientId=None, results=None):
 		
 		# SAMPLE: inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...|>...
 		commands = data.split(SublimeSocketAPISettings.API_CONCAT_DELIM)
@@ -95,19 +94,19 @@ class SublimeSocketAPI:
 					print("JSON parse error", e, "source = ", command_params[1])
 					return
 					
-			self.runAPI(command, params, client, None, results)
+			clientId = self.runAPI(command, params, clientId, None, results)
 		return results
 
 
-	def innerParse(self, data, client=None, results=None):
+	def innerParse(self, data, clientId=None, results=None):
 		currentResults = self.initResult("inner:"+str(uuid.uuid4()))
-		innerResults = self.parse(data, client, currentResults)
+		innerResults = self.parse(data, clientId, currentResults)
 
 		return self.addInnerResult(results, innerResults)
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, command, params, client=None, injectParams=None, results=None):		
+	def runAPI(self, command, params, clientId=None, injectParams=None, results=None):		
 		# erase comment
 		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
 			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
@@ -131,8 +130,12 @@ class SublimeSocketAPI:
 
   		# python-switch
 		for case in PythonSwitch(command):
+			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
+				clientId = self.inputIdentity(clientId, params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_RUNTESTS):
-				self.runTests(params, client, results)
+				self.runTests(params, clientId, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETTESTBEFOREAFTER):
@@ -154,15 +157,10 @@ class SublimeSocketAPI:
 			if case(SublimeSocketAPISettings.API_RUNSETTING):
 				filePath = params[SublimeSocketAPISettings.RUNSETTING_FILEPATH]
 
-				result = self.runSetting(filePath, client, results)
-				if client:
-					buf = self.encoder.text(result, mask=0)
-					client.send(buf)
+				result = self.runSetting(filePath, clientId, results)
+				if clientId:
+					self.server.sendMessage(clientId, result)
 
-				break
-
-			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
-				self.inputIdentity(client, params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
@@ -195,9 +193,7 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_KEYVALUESTORE):
 				result = self.server.KVSControl(params)
-				
-				buf = self.encoder.text(result, mask=0)
-				client.send(buf)
+				self.server.sendMessage(clientId, result)
 				break
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
@@ -209,11 +205,11 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_SETEVENTREACTOR):
-				self.setEventReactor(params, client, results)
+				self.setEventReactor(params, clientId, results)
 				break
 				
 			if case(SublimeSocketAPISettings.API_SETVIEWREACTOR):
-				self.setViewReactor(params, client, results)
+				self.setViewReactor(params, clientId, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_RESETREACTORS):
@@ -298,13 +294,14 @@ class SublimeSocketAPI:
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
-				self.versionVerify(params, client, results)
+				self.versionVerify(params, clientId, results)
 				break
 
 			if case():
 				print("unknown command", command, "/")
 				break
 
+		return clientId
 
 
 	def runReactor(self, reactorType, reactorDict, eventParam, results):
@@ -381,7 +378,7 @@ class SublimeSocketAPI:
 
 
 	## run specific setting.txt file as API
-	def runSetting(self, filePath, client, results):
+	def runSetting(self, filePath, clientId, results):
 		
 		# check contains PREFIX or not
 		filePath = self.getKeywordBasedPath(filePath, 
@@ -410,7 +407,7 @@ class SublimeSocketAPI:
 
 		# parse with specific result
 		currentResults = {}
-		self.innerParse(commands, client, currentResults)
+		self.innerParse(commands, clientId, currentResults)
 
 		self.setResultsParams(results, self.runSetting, {"result":"done"})
 		return "runSettings:"+str(removeCRLF_setting)
@@ -496,15 +493,8 @@ class SublimeSocketAPI:
 		
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 
-		buf = self.encoder.text(str(message), mask=0)
+		clientNames = self.server.broadcastMessage(message)
 		
-		clients = self.server.clients.values()
-
-		clientNames = list(self.server.clients.keys())
-		
-		for client in clients:
-			client.send(buf)
-
 		self.setResultsParams(results, self.broadcastMessage, {"sentTo":clientNames})
 	
 
@@ -521,10 +511,10 @@ class SublimeSocketAPI:
 		target = params[SublimeSocketAPISettings.OUTPUT_TARGET]
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 		
-		if target in self.server.clients:
-			client = self.server.clients[target]
-			buf = self.encoder.text(str(message), mask=0)
-			client.send(buf)
+		
+		result = self.server.sendMessage(target, message)
+
+		if result:
 			self.setResultsParams(results, self.monocastMessage, {SublimeSocketAPISettings.OUTPUT_TARGET:target, SublimeSocketAPISettings.OUTPUT_MESSAGE:message})
 
 		else:
@@ -562,7 +552,7 @@ class SublimeSocketAPI:
 
 
 	## run testus
-	def runTests(self, params, client, results):
+	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
 
@@ -606,7 +596,7 @@ class SublimeSocketAPI:
 				self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testBeforeSelectors}, None, currentTestResults)
 
 			# parse then get results
-			currentTestResults = self.parse(testCase, client, currentTestResults)
+			currentTestResults = self.parse(testCase, clientId, currentTestResults)
 
 			# after block
 			if self.testAfterSelectors:
@@ -633,8 +623,7 @@ class SublimeSocketAPI:
 								failedCount = failedCount + 1
 
 							result = assertResultResult[SublimeSocketAPISettings.ASSERTRESULT_RESULT]
-							buf = self.encoder.text(result, mask=0)
-							client.send(buf);
+							self.server.broadcastMessage(result)
 
 
 			return (passedCount, failedCount)
@@ -652,8 +641,7 @@ class SublimeSocketAPI:
 
 		# count ASSERTRESULT_VALUE_PASS or ASSERTRESULT_VALUE_FAIL
 		totalResultMessage = "TOTAL:" + str(testPassedCount + testFailedCount) + " passed:" + str(testPassedCount) + " failed:" + str(testFailedCount)
-		buf = self.encoder.text(totalResultMessage, mask=0)
-		client.send(buf);
+		self.server.broadcastMessage(totalResultMessage)
 
 
 	def setTestBeforeAfter(self, params, results):
@@ -857,9 +845,14 @@ class SublimeSocketAPI:
 		
 	
 	## input identity to client.
-	def inputIdentity(self, client, params, results):
-		identity = self.server.updateClientId(client, params)
-		self.setResultsParams(results, self.inputIdentity, {"inputIdentity":identity})
+	def inputIdentity(self, clientId, params, results):
+		assert SublimeSocketAPISettings.IDENTITY_ID in params, "updateClientId requre 'id' param"
+		newIdentity = params[SublimeSocketAPISettings.IDENTITY_ID]
+
+		self.server.transfer.updateClientId(clientId, newIdentity)
+		self.setResultsParams(results, self.inputIdentity, {"inputIdentity":newIdentity})
+
+		return newIdentity
 
 	## create buffer then set contents if exist.
 	def createBuffer(self, params, results):
@@ -1170,12 +1163,12 @@ class SublimeSocketAPI:
 
 
 	## set reactor for reactive-event
-	def setEventReactor(self, params, client, results):
+	def setEventReactor(self, params, clientId, results):
 		reactors = self.server.setReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, params)
 		self.setResultsParams(results, self.setEventReactor, {"eventreactors":reactors})
 
 	## set reactor for view
-	def setViewReactor(self, params, client, results):
+	def setViewReactor(self, params, clientId, results):
 		reactors = self.server.setReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, params)
 		self.setResultsParams(results, self.setViewReactor, {"viewreactors":reactors})
 		
@@ -1549,8 +1542,8 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.setSublimeSocketWindowBasePath, {"set":"ok"})
 		
 	## verify SublimeSocket API-version and SublimeSocket version
-	def versionVerify(self, params, client, results):
-		assert client, "versionVerify require 'client' object."
+	def versionVerify(self, params, clientId, results):
+		assert clientId, "versionVerify require 'client' object."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_SOCKETVERSION in params, "versionVerify require 'socketVersion' param."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_APIVERSION in params, "versionVerify require 'apiVersion' param."
 		
@@ -1599,71 +1592,64 @@ class SublimeSocketAPI:
 		# major check
 		if targetMajor < currentMajor:
 			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE
-			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 		elif targetMajor == currentMajor:
 			if targetMinor < currentMinor:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE
-				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 			elif targetMinor == currentMinor:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED
-				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 			else:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
-				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+				self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, clientId)
 				
 		else:
 			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
-			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, client)
+			self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 		self.setResultsParams(results, self.versionVerify, {"result":code})
 
 	## send result to client then exit or continue WebSocket connection.
-	def sendVerifiedResultMessage(self, resultCode, isDryRun, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, client):
+	def sendVerifiedResultMessage(self, resultCode, isDryRun, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, clientId):
 		# python-switch
 		for case in PythonSwitch(resultCode):
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_DIFFERENT_SUBLIMESOCKET):
 				message = "REFUSED/DIFFERENT_SUBLIMESOCKET:	The current running SublimeSocket version = "+str(currentSocketVersion)+", please choose the other version of SublimeSocket. this client requires SublimeSocket "+str(targetSocketVersion)+", see https://github.com/sassembla/SublimeSocket"
-				buf = self.encoder.text(message, mask=0)
-				client.send(buf);
+
+				self.server.sendMessage(clientId, message)
 
 				if not isDryRun:
-					client.close()
-					self.server.deleteClientId(client.clientId)
+					self.server.closeClient(clientId)
 			
 				break
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED):
 				message = "VERIFIED:	The current running SublimeSocket api version = "+currentAPIVersion+", SublimeSocket "+str(currentSocketVersion)
-				buf = self.encoder.text(message, mask=0)
-				client.send(buf)
+				self.server.sendMessage(clientId, message)
 				break
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE):
 				message = "VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", please update this client if possible."
-				buf = self.encoder.text(message, mask=0)
-				client.send(buf);
+				self.server.sendMessage(clientId, message)
 				break
 
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE):
 				message = "REFUSED/SUBLIMESOCKET_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this is out of date. please update SublimeSocket. this client requires SublimeSocket "+str(targetAPIVersion)+", see https://github.com/sassembla/SublimeSocket"
-				buf = self.encoder.text(message, mask=0)
-				client.send(buf);
-
+				self.server.sendMessage(clientId, message)
+				
 				if not isDryRun:
-					client.close()
-					self.server.deleteClientId(client.clientId)
+					self.server.closeClient(clientId)
 
 				break
 
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE):
 				message = "REFUSED/CLIENT_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", required api version is too old. please update this client."
-				buf = self.encoder.text(message, mask=0)
-				client.send(buf);
-
+				self.server.sendMessage(clientId, message)
+				
 				if not isDryRun:
-					client.close()
-					self.server.deleteClientId(client.clientId)
+					self.server.closeClient(clientId)
 					
 				break
 
