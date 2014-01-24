@@ -867,40 +867,40 @@ test>フィルタ定義を行い、フィルタが生成されている/defineFi
 
 
 
-// test>filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
-//     "name": "filter_13/12/04 18:16:49",
-//     "patterns": [
-//         {
-//             "(.*)dummyline": {
-//                 "selectors": [
-//                     {
-//                         "showStatusMessage": {
-//                             "message": "should be 1/2:groups[0] in filterSource[]/."
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ],
-//     "dotall": true
-// }->filtering: {
-//     "name": "filter_13/12/04 18:16:49",
-//     "source": "1\\n2 dummyline",
-//     "debug": false
-// }->assertResult: {
-//     "id": "filter hit values",
-//     "contains": {
-//         "runFiltering": [
-//             {
-//                 "filter_13/12/04 18:16:49": {
-//                     "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-//                 }
-//             }
-//         ]
-//     },
-//     "description": "not match.",
-//     "debug": true
-// }
+test>filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
+    "name": "filter_13/12/04 18:16:49",
+    "patterns": [
+        {
+            "(.*)dummyline": {
+                "selectors": [
+                    {
+                        "showStatusMessage": {
+                            "message": "should be 1/2:groups[0] in filterSource[]/."
+                        }
+                    }
+                ],
+			    "dotall": true
+            }
+        }
+    ]
+}->filtering: {
+    "name": "filter_13/12/04 18:16:49",
+    "source": "1\\n2 dummyline",
+    "debug": false
+}->assertResult: {
+    "id": "filter hit values",
+    "contains": {
+        "filtering": [
+            {
+                "filter_13/12/04 18:16:49": {
+                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
+                }
+            }
+        ]
+    },
+    "description": "not match.",
+    "debug": true
+}
 
 
 
@@ -1052,8 +1052,7 @@ test>メッセージを全クライアントに配信する/broadcastMessage: {
             ]
         }
     },
-    "description": "faild to broadcast.",
-    "debug": true
+    "description": "faild to broadcast."
 }
 
 
