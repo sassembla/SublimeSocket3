@@ -29,24 +29,25 @@ class WSServer:
 		self.sublimeSocketServer = server
 		
 
-	def start(self, host, port):
-		self.host = host
-		self.port = port
+	def spinup(self, params):
+		assert "host" in params and "port" in params, "WenSocketServer require 'host' and 'port' param."
+		
+		self.host = params["host"]
+		self.port = params["port"]
+
 		self.socket = socket.socket()
 
 		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		try:
-			self.socket.bind((host,port))
+			self.socket.bind((self.host, self.port))
 		except socket.error as msg:
-			# print ("error", msg[1])
 			return 1
 
 		self.socket.listen(1)
 
-
-		# spinupと、teardownがある。 beforeとafterでハンドラつけるか。
-		self.sublimeSocketServer.spinupped('SublimeSocket WebSocketServing started @ ' + str(host) + ':' + str(port))
+	
+		self.sublimeSocketServer.spinupped('SublimeSocket WebSocketServing started @ ' + str(self.host) + ':' + str(self.port))
 
 
 		self.listening = True
@@ -81,6 +82,8 @@ class WSServer:
 		
 		# stop receiving
 		self.listening = False
+
+		self.sublimeSocketServer.teardowned('SublimeSocket WebSocketServing closed @ ' + str(self.host) + ':' + str(self.port))
 	
 
 	## update specific client's id
@@ -93,8 +96,7 @@ class WSServer:
 		# update
 		client.clientId = newIdentity
 		self.clients[newIdentity] = client
-
-
+		
 
 	# remove from Client dict
 	def closeClient(self, clientId):

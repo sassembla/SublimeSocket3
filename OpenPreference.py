@@ -18,10 +18,7 @@ class Openpreference(sublime_plugin.TextCommand):
     self.openSublimeSocketPreference()
 
   @classmethod
-  def openSublimeSocketPreference(self):
-    host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
-    port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
-    
+  def openSublimeSocketPreference(self, host, port):
     self.generateHTML(
         {
             SublimeSocketAPISettings.SS_HOST_REPLACE:host,
@@ -71,10 +68,7 @@ class Openpreference(sublime_plugin.TextCommand):
     thread.start()
 
   @classmethod
-  def openSublimeSocketTest(self):
-    host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
-    port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
-    
+  def openSublimeSocketTest(self, host, port):
     testHTMLPath = sublime.load_settings("SublimeSocket.sublime-settings").get('testHtml')
     testSuitePath = sublime.load_settings("SublimeSocket.sublime-settings").get('testSuite')
 

@@ -15,10 +15,12 @@ thread = None
 
 class Socketon(sublime_plugin.TextCommand):
   def run(self, edit):
-    self.startServer()
+    print("未調整、デフォルトをセットしないと。")
+    self.startServer("", [])
+
 
   @classmethod
-  def startServer(self):
+  def startServer(self, transferMethod, args):
     global thread
 
     if thread and thread.is_alive():
@@ -28,8 +30,17 @@ class Socketon(sublime_plugin.TextCommand):
         print("ss:", alreadyRunningMessage)
 
     else:
-      thread = SublimeSocketThread()
+      thread = SublimeSocketThread(transferMethod, args)
       thread.start()
+
+      print("argsに応じてここでもなにかする、というコードを書く事になる。二重になっちゃうのがやだな、、考えよう。")
+      if "WebSocketServer" in transferMethod:
+        host = sublime.load_settings("SublimeSocket.sublime-settings").get("WebSocketServer").get("host")
+        port = sublime.load_settings("SublimeSocket.sublime-settings").get("WebSocketServer").get("port")
+
+        if "runTests" in args:
+          Openpreference.openSublimeSocketTest(host, port)
+
     
     
 class On_then_openpref(sublime_plugin.TextCommand):
@@ -42,7 +53,7 @@ class Test(sublime_plugin.TextCommand):
   def run(self, edit):
     global thread
     if thread and thread.is_alive():
-      
+      print("provisionみたいに、特定のものを走らせる、みたいな仕掛けがいいなあ。と思うけど、ちょっと脳が回ってないので後で考える。")
       Openpreference.openSublimeSocketTest()
     else:
       notActivatedMessage = "SublimeSocket not yet activated."
@@ -52,8 +63,7 @@ class Test(sublime_plugin.TextCommand):
 
 class On_then_test(sublime_plugin.TextCommand):
    def run(self, edit):
-    Socketon.startServer()
-    Openpreference.openSublimeSocketTest()
+    Socketon.startServer("WebSocketServer", ["runTests"])
 
 
 class Socketoff(sublime_plugin.TextCommand):
@@ -76,14 +86,16 @@ class Socketoff(sublime_plugin.TextCommand):
 
 # threading
 class SublimeSocketThread(threading.Thread):
-  def __init__(self):
+  def __init__(self, transferMethod, args):
     threading.Thread.__init__(self)
     self.server = None
+    self.transferMethod = transferMethod
+    self.args = args
 
   # call through thread-initialize
   def run(self):
-    print("running.")
-    self.server = SublimeSocketServer()
+    self.server = SublimeSocketServer(self.transferMethod, self.args)
+    
 
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.

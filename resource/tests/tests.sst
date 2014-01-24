@@ -898,8 +898,7 @@ test>filteringのテスト。フィルタをセット、改行指定ありで、
             }
         ]
     },
-    "description": "not match.",
-    "debug": true
+    "description": "not match."
 }
 
 
