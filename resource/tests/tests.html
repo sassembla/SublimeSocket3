@@ -53,6 +53,8 @@
                 _WS.writeLog('<span class="label label-important">' + e.data + '</span>');
             } else if (result.indexOf("TOTAL:") == 0) {
                 _WS.writeLog('<span class="label label-info">' + e.data + '</span>');
+            } else if (result.indexOf("reload") == 0) {
+                window.location.reload();
             }
         },
 

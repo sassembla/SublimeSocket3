@@ -1,5 +1,5 @@
 
-#API for Input to ST2/3 through WebSocket
+#SublimeSocket API 
 
 
 SS_HOST_REPLACE					= "SUBLIMESOCKET_HOST"
@@ -24,6 +24,9 @@ API_CONCAT_DELIM			= "->"	# concat commands. every commands run in sequential.
 API_COMMAND_PARAMS_DELIM	= ":"	# only first ":" will be evaluated as delimiter / each commnand.
 
 API_COMMENT_DELIM			= "/"	# comment expression in API. ss@COMMENT/API...
+
+API_TESTCASE_DELIM			= "test>"	# test commands delim.
+
 
 COMMAND_KEYWORD_INJECT		= "<-"
 COMMAND_KEYWORD_DELIM		= ","
@@ -55,8 +58,6 @@ SS_FOUNDATION_VIEWEMIT		= "ss_f_viewemit"
 REACTABLE_EVENT_ON_QUERY_COMPLETIONS = "on_query_completions"
 
 
-
-
 # internal APIs/
 API_I_SHOWSTATUSMESSAGE		= "showStatusMessage"
 SHOWSTATUSMESSAGE_MESSAGE	= "message"
@@ -85,8 +86,12 @@ VERIFICATION_CODE_REFUSED_CLIENT_UPDATE				= -2
 API_RUNTESTS		= "runTests"
 RUNTESTS_PATH		= "path"
 
-PARSERESULT_SWITCH	= "switch"
-PARSERESULT_NONE	= "none"
+
+API_SETTESTBEFOREAFTER	= "setTestBeforeAfter"
+SETTESTBEFOREAFTER_BEFORESELECTORS = "beforeselectors"
+SETTESTBEFOREAFTER_AFTERSELECTORS = "afterselectors"
+SETTESTBEFOREAFTER_SELECTORS = "selectors"
+
 
 API_ASSERTRESULT			= "assertResult"
 ASSERTRESULT_CONTEXT		= "context"
@@ -99,8 +104,8 @@ ASSERTRESULT_DESCRIPTION	= "description"
 ASSERTRESULT_DEBUG			= "debug"
 ASSERTRESULT_VALUE_PASS		= "Pass:"
 ASSERTRESULT_VALUE_FAIL		= "Fail:"
-
-API_RESETRESULTS		= "resetResults"
+ASSERTRESULT_RESULT			= "result"
+ASSERTRESULT_PASSEDORFAILED = "passedOrFailed"
 
 
 API_COUNTUP		= "countUp"
@@ -313,6 +318,9 @@ VIEW_BASENAME			= "basename"
 VIEW_VNAME				= "vname"
 VIEW_SELECTED			= "selected"
 VIEW_ISEXIST			= "isExist"
+
+
+DICT_COMPLETIONS		= "DICT_COMPLETIONS"
 
 
 # definition of sublime's view events

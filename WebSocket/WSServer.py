@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-# サーバ、WebSocketサーバの実装そのもので、その単一性を使って動いているので、KVSコントロール部分と分離したい。
-# 
-
-import sublime, sublime_plugin
-
 import threading
 import os
 import socket
@@ -19,9 +13,7 @@ import re
 from .WSClient import WSClient
 
 from ..SublimeSocketAPI import SublimeSocketAPI
-
-# choice editorApi by platform.
-from ..interface.SublimeText.EditorAPI import EditorAPI
+from ..KVS import KVS
 
 from .. import SublimeSocketAPISettings
 from ..PythonSwitch import PythonSwitch
@@ -36,14 +28,9 @@ class WSServer:
 		self.port = ''
 
 		self.listening = False
+		
 		self.kvs = KVS()
-		self.editorAPI = EditorAPI()
-
-		self.api = SublimeSocketAPI(self, self.editorAPI)
-
-		# python上でないといけない。
-		self.currentCompletion = {}
-
+		self.api = SublimeSocketAPI(self)
 
 	def start(self, host, port):
 		self.host = host
@@ -62,7 +49,7 @@ class WSServer:
 
 		serverStartMessage = 'SublimeSocket WebSocketServing started @ ' + str(host) + ':' + str(port)
 		print('\n', serverStartMessage, "\n")
-		sublime.status_message(serverStartMessage)
+		self.api.editorAPI.statusMessage(serverStartMessage)
 
 
 		# initialize API-results buffer for load-settings.
@@ -93,9 +80,10 @@ class WSServer:
 
 	## load settings and run in mainThread
 	def loadSettings(self, results):
-		settingCommands = sublime.load_settings("SublimeSocket.sublime-settings").get('loadSettings')
+		settingCommands = self.api.editorAPI.loadSettings("SublimeSocket.sublime-settings", "loadSettings")
 		for command in settingCommands:
 			self.api.runAPI(command, None, None, None, results)
+
 
 	## update specific client's id
 	def updateClientId(self, client, params):
@@ -152,7 +140,7 @@ class WSServer:
 		
 		serverTearDownMessage = 'SublimeSocket WebSocketServing tearDown @ ' + str(self.host) + ':' + str(self.port)
 		print('\n', serverTearDownMessage, "\n")
-		sublime.status_message(serverTearDownMessage)
+		self.api.editorAPI.statusMessage(serverTearDownMessage)
 
 
 	## return the filter has been defined or not
@@ -166,9 +154,9 @@ class WSServer:
 	## collect current views
 	def collectViews(self, results):
 		collectedViews = []
-		for views in [window.views() for window in sublime.windows()]:
+		for views in [window.views() for window in self.api.editorAPI.windows()]:
 			for view in views:
-				viewParams = self.editorAPI.generateSublimeViewInfo(
+				viewParams = self.api.editorAPI.generateSublimeViewInfo(
 					view,
 					SublimeSocketAPISettings.VIEW_SELF,
 					SublimeSocketAPISettings.VIEW_ID,
@@ -497,24 +485,29 @@ class WSServer:
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
-		if viewIdentity in list(self.currentCompletion):
-			completion = self.currentCompletion[viewIdentity]
-			del self.currentCompletion[viewIdentity]
+		completions = self.completionsDict()
+		if viewIdentity in list(completions):
+			completion = completions[viewIdentity]
+
+			self.deleteCompletion(viewIdentity)
 			return completion
 
 		return None
 
 
 	def updateCompletion(self, viewIdentity, completions):
-		self.currentCompletion[viewIdentity] = completions
+		completions = self.completionsDict()
+		completions[viewIdentity] = completions
+		self.updateCompletionsDict(completions)
+
 		
 
 	def runRenew(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
 		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
-		if self.editorAPI.isBuffer(filePath):
-			if self.editorAPI.isNamed(viewInstance):
+		if self.api.editorAPI.isBuffer(filePath):
+			if self.api.editorAPI.isNamed(viewInstance):
 				pass
 			else:
 				# no name buffer view will ignore.
@@ -548,8 +541,7 @@ class WSServer:
 		# delete
 		if filePath in viewDict:
 			del viewDict[filePath]
-			self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
-
+			self.updateViewDict(viewDict)
 
 	## KVSControl
 	def KVSControl(self, subCommandAndParam):
@@ -590,11 +582,31 @@ class WSServer:
 
 		if viewsDict:
 			return viewsDict
-		else:
-			return {}
+		
+		return {}
+
 
 	def updateViewDict(self, viewDict):
 		self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
+
+
+	def completionsDict(self):
+		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
+		if completionsDict:
+			return completionsDict
+
+		return {}
+
+
+	def deleteCompletion(self, identity):
+		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
+		del completionsDict[identity]
+		self.updateCompletionsDict(completionsDict)
+
+
+	def updateCompletionsDict(self, completionsDict):
+		self.setKV(SublimeSocketAPISettings.DICT_COMPLETIONS, completionsDict)
+
 
 	## put key-value onto KeyValueStore
 	def setKV(self, key, value):
@@ -723,52 +735,3 @@ class WSServer:
 		return None
 
 
-## key-value pool
-class KVS:
-	def __init__(self):
-		self.keyValueDict = {}
-
-
-	## empty or not
-	def isEmpty(self):
-		if 0 == len(self.keyValueDict):
-			return True
-		else:
-			return False
-
-		
-	## set (override if exist already)
-	def setKeyValue(self, key, value):
-		if key in self.keyValueDict:
-			# print "overwritten:", key, "as:", value
-			pass
-
-		self.keyValueDict[key] = value
-		return self.keyValueDict[key]
-
-
-	## get value for key
-	def get(self, key):
-		if key in self.keyValueDict:
-			return self.keyValueDict[key]
-
-
-	## get all key-value
-	def items(self):
-		return self.keyValueDict.items()
-
-
-	## remove key-value
-	def remove(self, key):
-		if self.get(key):
-			del self.keyValueDict[key]
-			return True
-		else:
-			print("no '", key, "' key exists in KVS.")
-			return False
-
-
-	## remove all keys and values
-	def clear(self):
-		self.keyValueDict.clear()
-		return True

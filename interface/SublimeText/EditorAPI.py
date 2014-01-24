@@ -46,6 +46,10 @@ class EditorAPI:
 	def packagePath(self):
 		return sublime.packages_path() 
 
+
+	def loadSettings(self, mainKey, subKey):
+		return sublime.load_settings(mainKey).get(subKey)
+
 	def runAfterDelay(self, execution, delay):
 		sublime.set_timeout(execution, delay)
 

@@ -20,6 +20,7 @@ class Socketon(sublime_plugin.TextCommand):
   @classmethod
   def startServer(self):
     global thread
+    print("startServerまだ直してない")
 
     host = sublime.load_settings("SublimeSocket.sublime-settings").get('host')
     port = sublime.load_settings("SublimeSocket.sublime-settings").get('port')
@@ -32,12 +33,14 @@ class Socketon(sublime_plugin.TextCommand):
         print("ss:", alreadyRunningMessage)
 
       else:
+        print("startServer 通ってない")
         thread.set(host, port)
         thread.run();
 
     else:
       thread = SublimeSocketThread(host, port)
       thread.start()
+    
     
 class On_then_openpref(sublime_plugin.TextCommand):
   def run(self, edit):
@@ -87,10 +90,16 @@ class Socketoff(sublime_plugin.TextCommand):
 class SublimeSocketThread(threading.Thread):
   def __init__(self, host, port):
     threading.Thread.__init__(self)
-    self.set(host, port)
+    
+    self._host = host
+    self._port = port
+
+    print("init??")
+    self._server = WSServer()
 
   # call through thread-initialize
   def run(self):
+    print("hahaha!?")
     result = self._server.start(self._host, self._port)
     
     if result is 0:
@@ -99,11 +108,7 @@ class SublimeSocketThread(threading.Thread):
       self.tearDownServer()
 
 
-  def set(self, host, port):
-    self._host = host
-    self._port = port
-
-    self._server = WSServer()
+    
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
   def toServer(self, eventName, view):
