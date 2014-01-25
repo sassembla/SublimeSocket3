@@ -28,13 +28,14 @@ class WSServer:
 
 		self.sublimeSocketServer = server
 		
-
-	def spinup(self, params):
-		assert "host" in params and "port" in params, "WenSocketServer require 'host' and 'port' param."
-		
+	def setup(self, params):
+		assert "host" in params and "port" in params, "WebSocketServer require 'host' and 'port' param."
 		self.host = params["host"]
 		self.port = params["port"]
 
+
+	def spinup(self):
+		assert self.host and self.port, "WebSocketServer require set 'host' and 'port' param."
 		self.socket = socket.socket()
 
 		self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -42,11 +43,11 @@ class WSServer:
 		try:
 			self.socket.bind((self.host, self.port))
 		except socket.error as msg:
-			return 1
+			reason = 'SublimeSocket WebSocketServing faild to spinup @ ' + str(self.host) + ':' + str(self.port) + " by " + str(msg)
+			self.sublimeSocketServer.spinupFailed(reason)
+			return
 
 		self.socket.listen(1)
-
-	
 		self.sublimeSocketServer.spinupped('SublimeSocket WebSocketServing started @ ' + str(self.host) + ':' + str(self.port))
 
 
@@ -54,8 +55,9 @@ class WSServer:
 		while self.listening:
 			(conn, addr) = self.socket.accept()
 
-			if self.listening is None:
-				return 0
+			print("わかんない、必要かなこれ。")
+			# if self.listening is None:
+			# 	return 0
 			
 			identity = str(uuid.uuid4())
 
@@ -65,17 +67,18 @@ class WSServer:
 			self.clients[identity] = client
 
 			threading.Thread(target = client.handle, args = (conn,addr)).start()
-				
-		return 0
-		
+			
+		msg = 'SublimeSocket WebSocketServing closed @ ' + str(self.host) + ':' + str(self.port)
+		self.sublimeSocketServer.teardowned(msg)		
 
 	## tearDown the server
 	def tearDown(self):
+		# close all WebSocket clients
 		for clientId in self.clients:
 			client = self.clients[clientId]
 			client.close()
 
-		self.clients = None
+		self.clients = []
 
 		# no mean?
 		self.socket.close()
@@ -83,8 +86,6 @@ class WSServer:
 		# stop receiving
 		self.listening = False
 
-		self.sublimeSocketServer.teardowned('SublimeSocket WebSocketServing closed @ ' + str(self.host) + ':' + str(self.port))
-	
 
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
@@ -106,7 +107,7 @@ class WSServer:
 		if clientId in self.clients:
 			del self.clients[clientId]
 		else:
-			print("ss: server don't know about client:", clientId)
+			print("ss: server doesn't know about this client:", clientId)
 	
 
 	## show current status & connectionIds

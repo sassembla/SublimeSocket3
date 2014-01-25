@@ -10,26 +10,44 @@ from .KVS import KVS
 
 # choose transfer method.
 from .WebSocket.WSServer import WSServer
+from .PythonSwitch import PythonSwitch
 
 
 class SublimeSocketServer:
-	def __init__(self, transferMethod, args):
+	def __init__(self):
 
 		self.api = SublimeSocketAPI(self)
 		self.kvs = KVS()
 
-		# choose WebSocket server
-		params = self.api.editorAPI.loadSettings(transferMethod)
+		self.transfer = None
 
-		self.transfer = WSServer(self)
-		result = self.transfer.spinup(params)
-		print("起動に失敗した場合、すでにport使われてるとかだわ。")
-		#   self.tearDownServer()
+	def setTransfer(self, transferMethod, params):
+		
+		if self.transfer:
+			print("すでに起動した状態で。", transferMethod, params)
+			pass
+
+		else:
+			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
+				
+				for case in PythonSwitch(transferMethod):
+					if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+						self.transfer = WSServer(self)
+						self.transfer.setup(params)
+						break
+
+
+	def startTransfer(self):
+		self.transfer.spinup()
+
+		
+	def spinupFailed(self, message):
+		print('\n', message, "\n")
+		self.api.editorAPI.statusMessage(message)
 
 
 	def spinupped(self, message):
 		print('\n', message, "\n")
-		
 		self.api.editorAPI.statusMessage(message)
 
 		# initialize API-results buffer for load-settings.
@@ -38,7 +56,9 @@ class SublimeSocketServer:
 		# load settings
 		self.loadSettings(results)
 
-
+	def teardowned(self, message):
+		print('\n', message, "\n")
+		self.api.editorAPI.statusMessage(message)
 
 
 	## load settings and run in mainThread
@@ -69,16 +89,14 @@ class SublimeSocketServer:
 	## tearDown the transfer
 	def transferTearDown(self):
 		self.transfer.tearDown()
-		
-		serverTearDownMessage = 'SublimeSocket WebSocketServing tearDown @ ' + str(self.host) + ':' + str(self.port)
-		print('\n', serverTearDownMessage, "\n")
-		self.api.editorAPI.statusMessage(serverTearDownMessage)
-
 
 
 	def kill(self):
-		print("未完成のkill機構")
+		print("未完成のkill機構、SublimeSocketServer自体のkill")
 		self.kvs.clear()
+
+
+
 
 
 	# メッセージ系

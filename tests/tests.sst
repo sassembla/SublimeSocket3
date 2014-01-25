@@ -1,229 +1,228 @@
-// testSuite for SublimeSocket API.
-
-setTestBeforeAfter: {
-	"beforeselectors": [
-		{
-			"showStatusMessage": {
-				"message": "test start"
-			}
-		},
-		{
-			"resetReactors": {
-
-			}
-		}
-	],
-	"afterselectors": [
-		{
-			"closeAllBuffer": {
-
-			}
-		}
-	]
+testSuite for SublimeSocketAPI./setTestBeforeAfter: {
+    "beforeselectors": [
+        {
+            "showStatusMessage": {
+                "message": "test start"
+            }
+        },
+        {
+            "resetReactors": {
+                
+            }
+        }
+    ],
+    "afterselectors": [
+        {
+            "closeAllBuffer": {
+                
+            }
+        }
+    ]
 }
 
 
 
 test>viewEmitで別途injectを使う/createBuffer: {
-	"name": "injectionWithViewEmit.txt"
+    "name": "injectionWithViewEmit.txt"
 }->viewEmit: {
-	"identity": "injectionWithViewEmit",
-	"name": "injectionWithViewEmit.txt",
-	"inject": {
-		"path": "message"
-	},
-	"selectors": [
-		{
-			"showAtLog<-message": {
-
-			}
-		}
-	]
+    "identity": "injectionWithViewEmit",
+    "name": "injectionWithViewEmit.txt",
+    "inject": {
+        "path": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+                
+            }
+        }
+    ]
 }->assertResult: {
-	"id": "inject message param from viewEmit's path param.",
-	"contains": {
-		"showAtLog": {
-			"output": "injectionWithViewEmit.txt"
-		}
-	},
-	"description": "not match."
+    "id": "inject message param from viewEmit's path param.",
+    "contains": {
+        "showAtLog": {
+            "output": "injectionWithViewEmit.txt"
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>parameterInjectの上書き内容に関するaccept制約のテスト。bodyに関する値だけを受け取るので、pathの値が変化したい。/createBuffer: {
-	"name": "view2.txt"
+    "name": "view2.txt"
 }->viewEmit: {
-	"identity": "viewForInjectContents",
-	"name": "view2.txt",
-	"selectors": [
-		{
-			"showAtLog<-body": {
-				"message": "",
-				"format": "path body."
-			}
-		}
-	]
+    "identity": "viewForInjectContents",
+    "name": "view2.txt",
+    "selectors": [
+        {
+            "showAtLog<-body": {
+                "message": "",
+                "format": "path body."
+            }
+        }
+    ]
 }->assertResult: {
-	"id": "no path replacement",
-	"contains": {
-		"showAtLog": {
-			"output": "path ."
-		}
-	},
-	"description": "not match."
+    "id": "no path replacement",
+    "contains": {
+        "showAtLog": {
+            "output": "path ."
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
-	"path": "notExistFile"
+    "path": "notExistFile"
 }->assertResult: {
-	"id": "cannot open not exist file",
-	"contains": {
-		"openFile": {
+    "id": "cannot open not exist file",
+    "contains": {
+        "openFile": {
             "result": "file notExistFile is not exist.",
             "path": "notExistFile"
         }
-	},
-	"description": "not match."
+    },
+    "description": "not match."
 }
 
 
 
 test>組み合わせでエラーが出ていたのを解消したもの。viewの切り替え問題を含んでいた。/createBuffer: {
-	"name": "completionTestView.txt"
-}->viewEmit:{
-	"identity": "completionTestView",
-	"name": "completionTestView.txt",
-	"selectors":[
-		{
-			"runCompletion<-view":{
-				"completion": [
-					{// 一つだと一択のため勝手に入力される
-						"HEAD": "DrawLine", 
-						"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-						"return": "Void",
-						"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-						"head": "DrawLine"
-					}
-				],
-				"formathead": "HEADparamsTypeDef\treturn",
-				"formattail": "headparamsTargetFmt$0"
-			}
-		}
-	]
+    "name": "completionTestView.txt"
+}->viewEmit: {
+    "identity": "completionTestView",
+    "name": "completionTestView.txt",
+    "selectors": [
+        {
+            "要素が一つだと一択のため勝手に入力される/runCompletion<-view": {
+                "completion": [
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    }
+                ],
+                "formathead": "HEADparamsTypeDef\treturn",
+                "formattail": "headparamsTargetFmt$0"
+            }
+        }
+    ]
 }->setViewReactor: {
-	"target": "someone",
-	"react": "ss_v_increased",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "increased."
-			}
-		}
-	]
+    "target": "someone",
+    "react": "ss_v_increased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "increased."
+            }
+        }
+    ]
 }->openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->modifyView: {
-	"name": "sample.txt",
-	"add": "1"
+    "name": "sample.txt",
+    "add": "1"
 }->assertResult: {
-	"context": "view",
-	"id": "view text increased",
-	"contains": {
-		"showAtLog": {
-			"output": "increased."
-		}
-	},
-	"description": "not match."
+    "context": "view",
+    "id": "view text increased",
+    "contains": {
+        "showAtLog": {
+            "output": "increased."
+        }
+    },
+    "description": "not match."
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }
 
 
 
 test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。/createBuffer: {
-	"name": "completionTestView2.txt"
-}->runCompletion:{
-	"name": "completionTestView2.txt",
-	"completion": [
-		{// 2つだと勝手に入力されない
-			"HEAD": "DrawLine", 
-			"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-			"return": "Void",
-			"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-			"head": "DrawLine"
-		},
-		{
-			"HEAD": "DrawLine", 
-			"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-			"return": "Void",
-			"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-			"head": "DrawLine"
-		}
-	],
-	"formathead": "HEADparamsTypeDef\treturn",
-	"formattail": "headparamsTargetFmt$0"
+    "name": "completionTestView2.txt"
+}->runCompletion: {
+    "name": "completionTestView2.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0"
 }->assertResult: {
-	"id": "runCompletion includes 2 completion",
-	"contains": {
-		"runCompletion": {
-			"completed": "completionTestView2.txt"
-		}
-	},
-	"description": "not match."
+    "id": "runCompletion includes 2 completion",
+    "contains": {
+        "runCompletion": {
+            "completed": "completionTestView2.txt"
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
-	"name": "completionCloseTestView.txt"
-}->viewEmit:{
-	"identity": "completionCloseTestView",
-	"name": "completionCloseTestView.txt",
-	"selectors":[
-		{
-			"runCompletion<-view":{
-				"completion": [
-					{// 2つだと勝手に入力されない
-						"HEAD": "DrawLine", 
-						"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-						"return": "Void",
-						"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-						"head": "DrawLine"
-					},
-					{
-						"HEAD": "DrawLine", 
-						"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-						"return": "Void",
-						"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-						"head": "DrawLine"
-					}
-				],
-				"formathead": "HEADparamsTypeDef\treturn",
-				"formattail": "headparamsTargetFmt$0"
-			}
-		}
-	]
+    "name": "completionCloseTestView.txt"
+}->viewEmit: {
+    "identity": "completionCloseTestView",
+    "name": "completionCloseTestView.txt",
+    "selectors": [
+        {
+            "runCompletion<-view": {
+                "completion": [
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    },
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    }
+                ],
+                "formathead": "HEADparamsTypeDef\treturn",
+                "formattail": "headparamsTargetFmt$0"
+            }
+        }
+    ]
 }->cancelCompletion: {
-	"name": "completionCloseTestView.txt"
+    "name": "completionCloseTestView.txt"
 }->assertResult: {
-	"id": "completion window close",
-	"contains": {
-		"cancelCompletion": {
-			"cancelled": "completionCloseTestView.txt"
-		}
-	},
-	"description": "not close."
+    "id": "completion window close",
+    "contains": {
+        "cancelCompletion": {
+            "cancelled": "completionCloseTestView.txt"
+        }
+    },
+    "description": "not close."
 }
 
 
 
-test>存在するファイルのviewに対してselectorを実行する,viewEmit/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+test>存在するファイルのviewに対してselectorを実行する,
+viewEmit/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->viewEmit: {
-	"identity": "viewEmitToSample.txt",
+    "identity": "viewEmitToSample.txt",
     "name": "sample.txt",
     "selectors": [
         {
@@ -234,22 +233,21 @@ test>存在するファイルのviewに対してselectorを実行する,viewEmit
     ]
 }->assertResult: {
     "id": "view emit api test",
-    "isnotempty": "viewEmit",// 絶対パスが入ってしまうため、存在のみ。
+    "isnotempty": "viewEmit",
     "description": "not match."
 }
 
 
 
-
 test>deepなレイヤーのviewEmitを実行してみる/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setViewReactor: {
     "target": "viewEmitTest",
     "react": "on_selection_modified_by_setselection",
     "selectors": [
         {
             "viewEmit<-view": {
-            	"identity": "deepLayerViewEmit",
+                "identity": "deepLayerViewEmit",
                 "name": "sample.txt",
                 "selectors": [
                     {
@@ -262,7 +260,7 @@ test>deepなレイヤーのviewEmitを実行してみる/openFile: {
         }
     ]
 }->viewEmit: {
-	"identity": "setSelectionToSample.txt",
+    "identity": "setSelectionToSample.txt",
     "name": "sample.txt",
     "selectors": [
         {
@@ -281,71 +279,72 @@ test>deepなレイヤーのviewEmitを実行してみる/openFile: {
     },
     "description": "not match."
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }
 
 
 
-test>そのビューの文字列が増えたら、ss_v_increased イベントがでる/setViewReactor: {
-	"target": "someone",
-	"react": "ss_v_increased",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "increased."
-			}
-		}
-	]
+test>そのビューの文字列が増えたら、ss_v_increasedイベントがでる/setViewReactor: {
+    "target": "someone",
+    "react": "ss_v_increased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "increased."
+            }
+        }
+    ]
 }->openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->modifyView: {
-	"name": "sample.txt",
-	"add": "1"
+    "name": "sample.txt",
+    "add": "1"
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }->assertResult: {
-	"context": "view",
-	"id": "view text increased2",
-	"contains": {
-		"showAtLog": {
-			"output": "increased."
-		}
-	},
-	"description": "not match."
+    "context": "view",
+    "id": "view text increased2",
+    "contains": {
+        "showAtLog": {
+            "output": "increased."
+        }
+    },
+    "description": "not match."
 }
 
 
 
-test>そのビューの文字列が減ったら、ss_v_decreased イベントがでる/setViewReactor: {
-	"target": "someone",
-	"react": "ss_v_decreased",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "decreased."
-			}
-		}
-	]
+test>そのビューの文字列が減ったら、ss_v_decreasedイベントがでる/setViewReactor: {
+    "target": "someone",
+    "react": "ss_v_decreased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "decreased."
+            }
+        }
+    ]
 }->openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->modifyView: {
-	"name": "sample.txt",
-	"add": "1"
+    "name": "sample.txt",
+    "add": "1"
 }->modifyView: {
-	"name": "sample.txt",
-	"reduce": 1
+    "name": "sample.txt",
+    "reduce": 1
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }->assertResult: {
-	"context": "view",
-	"id": "view text decreased",
-	"contains": {
-		"showAtLog": {
-			"output": "decreased."
-		}
-	},
-	"description": "not match."
+    "context": "view",
+    "id": "view text decreased",
+    "contains": {
+        "showAtLog": {
+            "output": "decreased."
+        }
+    },
+    "description": "not match."
 }
+
 
 
 test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
@@ -365,9 +364,8 @@ test>存在しないファイルのパスを指定して、getAllFilePathがnote
 
 
 
-
 test>basePathを足がかりに特定のファイルが含まれるフォルダより下のすべてのファイルパスを取得する/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->getAllFilePath: {
     "anchor": "sample.txt",
     "limit": 1
@@ -376,114 +374,113 @@ test>basePathを足がかりに特定のファイルが含まれるフォルダ�
     "isnotempty": "getAllFilePath",
     "description": "not match."
 }->closeFile: {
-	"name": "sample.txt"
-}
-
-
-
-
-test>countUp: {
-	"label": "testCount",
-	"default": 0
-}->assertResult: {
-	"id": "count up",
-	"contains": {
-		"countUp": {
-			"label": "testCount",
-			"count": 0
-		}
-	},
-	"description": "not match."
-}->resetCounts: {
-	
+    "name": "sample.txt"
 }
 
 
 
 test>countUp: {
-	"label": "testCount2",
-	"default": 0
-}->countUp: {
-	"label": "testCount2",
-	"default": 0
+    "label": "testCount",
+    "default": 0
 }->assertResult: {
-	"id": "count up",
-	"contains": {
-		"countUp": {
-			"label": "testCount2",
-			"count": 1
-		}
-	},
-	"description": "not match."
+    "id": "count up",
+    "contains": {
+        "countUp": {
+            "label": "testCount",
+            "count": 0
+        }
+    },
+    "description": "not match."
 }->resetCounts: {
-	
+    
 }
 
 
 
 test>countUp: {
-	"label": "testCount2",
-	"default": 0
+    "label": "testCount2",
+    "default": 0
 }->countUp: {
-	"label": "testCount2",
-	"default": 0
-}->resetCounts: {
-
-}->countUp: {
-	"label": "testCount2",
-	"default": -1
+    "label": "testCount2",
+    "default": 0
 }->assertResult: {
-	"id": "reset count",
-	"contains": {
-		"countUp": {
-			"label": "testCount2",
-			"count": -1
-		}
-	},
-	"description": "not match."
+    "id": "count up",
+    "contains": {
+        "countUp": {
+            "label": "testCount2",
+            "count": 1
+        }
+    },
+    "description": "not match."
+}->resetCounts: {
+    
+}
+
+
+
+test>countUp: {
+    "label": "testCount2",
+    "default": 0
+}->countUp: {
+    "label": "testCount2",
+    "default": 0
+}->resetCounts: {
+    
+}->countUp: {
+    "label": "testCount2",
+    "default": -1
+}->assertResult: {
+    "id": "reset count",
+    "contains": {
+        "countUp": {
+            "label": "testCount2",
+            "count": -1
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>setSelectionを連続で発生させて、delayがあるのでタイミング内では一度しか発生しない。/createBuffer: {
-	"name": "dummy.txt"
-}->setViewReactor: {
-	"target": "delayTest",
-	"react": "on_selection_modified_by_setselection",
-	"selectors": [
-		{
-			"countUp": {
-				"label": "setSelectionCount",
-				"default": 0
-			}
-		}
-	],
-	"delay": 100 // ここでのdelayが機能していれば、イベントはdelayされ、countUpが実行されないはず。
+    "name": "dummy.txt"
+}->ここでのdelayが機能していれば、イベントはdelayされ、countUpが実行されないはず。/setViewReactor: {
+    "target": "delayTest",
+    "react": "on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "countUp": {
+                "label": "setSelectionCount",
+                "default": 0
+            }
+        }
+    ],
+    "delay": 100
 }->setSelection: {
-	"name": "dummy.txt",
-	"from": 0,
-	"to": 0
+    "name": "dummy.txt",
+    "from": 0,
+    "to": 0
 }->setSelection: {
-	"name": "dummy.txt",
-	"from": 0,
-	"to": 0
+    "name": "dummy.txt",
+    "from": 0,
+    "to": 0
 }->assertResult: {
-	"id": "reactor reacts only once",
-	"notcontains": {// 1にはなっていない筈
-		"countUp": {
-			"label": "setSelectionCount",
-			"count": 1
-		}
-	},
-	"description": "not 0."
+    "id": "reactor reacts only once",
+    "notcontains": {
+        "countUp": {
+            "label": "setSelectionCount",
+            "count": 1
+        }
+    },
+    "description": "not 0."
 }->resetCounts: {
-
+    
 }
 
 
 
 test>setSelectionで選択範囲を作成する/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setSelection: {
     "name": "sample.txt",
     "from": 0,
@@ -497,7 +494,7 @@ test>setSelectionで選択範囲を作成する/openFile: {
     },
     "description": "not match."
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }
 
 
@@ -524,7 +521,7 @@ test>setSelectionでcontainsRegionsを引き起こす/setViewReactor: {
         }
     ]
 }->openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
@@ -543,39 +540,39 @@ test>setSelectionでcontainsRegionsを引き起こす/setViewReactor: {
     },
     "description": "no showAtLog found."
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }
 
 
 
 test>ファイルが存在するviewを集める。一つ以上のファイルパスがあるはず/openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->collectViews: {
-
+    
 }->assertResult: {
-	"id": "exist file's views is here.",
-	"isnotempty": "collectViews",
-	"description": "not match."
+    "id": "exist file's views is here.",
+    "isnotempty": "collectViews",
+    "description": "not match."
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }
 
 
 
 test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
-	"target": "noViewFoundEvent",
-	"react": "ss_f_noViewFound",
-	"inject": {
-		"path": "0"
-	},
-	"selectors": [
-		{
-			"showAtLog<-0": {
-				"message": "no view found",
-				"format": "view 0 not found."
-			}
-		}
-	]
+    "target": "noViewFoundEvent",
+    "react": "ss_f_noViewFound",
+    "inject": {
+        "path": "0"
+    },
+    "selectors": [
+        {
+            "showAtLog<-0": {
+                "message": "no view found",
+                "format": "view 0 not found."
+            }
+        }
+    ]
 }->appendRegion: {
     "line": "1",
     "message": "test",
@@ -594,71 +591,71 @@ test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
 
 
 test>SublimeSocketとしての現在のbasePathを指定する/createBuffer: {
-	"name": "setSublimeSocketWindowBasePathTest.txt"
+    "name": "setSublimeSocketWindowBasePathTest.txt"
 }->setSublimeSocketWindowBasePath: {
-
+    
 }->assertResult: {
-	"id": "set basePath",
-	"contains": {
-		"setSublimeSocketWindowBasePath": {
-			"set": "ok"
-		}
-	},
-	"description": "not match"
+    "id": "set basePath",
+    "contains": {
+        "setSublimeSocketWindowBasePath": {
+            "set": "ok"
+        }
+    },
+    "description": "not match"
 }
 
 
 
 test>delayのチェック。イベントを2件発生させ、delayによって先行したものだけを実行させる/createBuffer: {
-	"name": "delayTarget.txt"
+    "name": "delayTarget.txt"
 }->viewEmit: {
-	"identity": "delay",
-	"name": "delayTarget.txt",
-	"delay": 100,
-	"selectors": [
-		{
+    "identity": "delay",
+    "name": "delayTarget.txt",
+    "delay": 100,
+    "selectors": [
+        {
             "showAtLog": {
                 "message": "delay1"
             }
         }
-	]
+    ]
 }->viewEmit: {
-	"identity": "delay",
-	"name": "delayTarget.txt",
-	"delay": 100,
-	"selectors": [
-		{
+    "identity": "delay",
+    "name": "delayTarget.txt",
+    "delay": 100,
+    "selectors": [
+        {
             "showAtLog": {
                 "message": "delay2"
             }
         }
-	]
+    ]
 }->assertResult: {
-	"id": "only one log by delay-1",
-	"contains": {
-		"showAtLog": {
-			"output": "delay1"
-		}
-	},
-	"description": "not exist"
+    "id": "only one log by delay-1",
+    "contains": {
+        "showAtLog": {
+            "output": "delay1"
+        }
+    },
+    "description": "not exist"
 }->assertResult: {
-	"id": "only one log by delay-2",
-	"notcontains": {
-		"showAtLog": {
-			"output": "delay2"
-		}
-	},
-	"description": "exist"
+    "id": "only one log by delay-2",
+    "notcontains": {
+        "showAtLog": {
+            "output": "delay2"
+        }
+    },
+    "description": "exist"
 }
 
 
 
 test>現在開いているファイルに対するviewEmitのテスト。特定のバッファを開いておいて、viewEmit発効/createBuffer: {
-	"name": "viewEmit.txt"
+    "name": "viewEmit.txt"
 }->viewEmit: {
-	"identity": "theViewEmit",
-	"name": "viewEmit.txt",
-	"delay": 100,
+    "identity": "theViewEmit",
+    "name": "viewEmit.txt",
+    "delay": 100,
     "selectors": [
         {
             "showAtLog<-path, rowcol, body": {
@@ -666,88 +663,88 @@ test>現在開いているファイルに対するviewEmitのテスト。特定�
                 "format": "p:path, r:rowcol, b:body."
             }
         }
-    ]   
+    ]
 }->assertResult: {
-	"id": "viewEmit!",
-	"contains": {
-		"showAtLog": {
-			"output": "p:viewEmit.txt, r:0,0, b:."
-		}
-	},
-	"description": "not match."
+    "id": "viewEmit!",
+    "contains": {
+        "showAtLog": {
+            "output": "p:viewEmit.txt, r:0,0, b:."
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>eventEmitのテスト/setEventReactor: {
-	"target": "event_EmitTestTarget",
-	"react": "event_EmitTestEvent",
-	"selectors": [
-		{
-			"showAtLog": {
-				"message": "testing for eventEmit"
-			}
-		}
-	]
+    "target": "event_EmitTestTarget",
+    "react": "event_EmitTestEvent",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "testing for eventEmit"
+            }
+        }
+    ]
 }->eventEmit: {
-	"target": "event_EmitTestTarget",
-	"event": "event_EmitTestEvent"
+    "target": "event_EmitTestTarget",
+    "event": "event_EmitTestEvent"
 }->assertResult: {
-	"id": "eventEmit has emitted result",
-	"contains": {
-		"showAtLog": {
-			"output": "testing for eventEmit"
-		}
-	},
-	"description": "not match"
+    "id": "eventEmit has emitted result",
+    "contains": {
+        "showAtLog": {
+            "output": "testing for eventEmit"
+        }
+    },
+    "description": "not match"
 }
 
 
 
 test>特定のviewに対するreactorのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setViewReactor: {
-	"target": "event_testTarget",
+    "target": "event_testTarget",
     "react": "on_close",
     "selectors": [
         {
             "viewEmit<-view": {
-            	"identity": "testTargetId",
-            	"selectors": [
-			        {
-			            "showAtLog": {
-			                "message": "eventEmit2 over."
-			            }
-			        }
-			    ]
+                "identity": "testTargetId",
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "eventEmit2 over."
+                        }
+                    }
+                ]
             }
         }
     ]
-}->closeFile: {// このイベントでcloseイベントを発生させる
-	"name": "sample.txt"
+}->このイベントでcloseイベントを発生させる/closeFile: {
+    "name": "sample.txt"
 }->assertResult: {
-	"context": "view",
-	"id": "close then run viewEmit to specific file",
-	"contains": {
-		"showAtLog": {
-			"output": "eventEmit2 over." //この時点でcloseが走っており、viewの情報は取得出来ない。
-		}
-	},
-	"description": "not match."
+    "context": "view",
+    "id": "close then run viewEmit to specific file",
+    "contains": {
+        "showAtLog": {
+            "output": "eventEmit2 over."
+        }
+    },
+    "description": "not match."
 }
 
 
 
 test>Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample2.txt"
 }->assertResult: {
-	"id": "read collect data",
-	"contains": {
-		"readFileData": {
-			"data": "sample2.txt"
-		}
-	},
-	"description": "not match."
+    "id": "read collect data",
+    "contains": {
+        "readFileData": {
+            "data": "sample2.txt"
+        }
+    },
+    "description": "not match."
 }
 
 
@@ -881,7 +878,7 @@ test>filteringのテスト。フィルタをセット、改行指定ありで、
                         }
                     }
                 ],
-			    "dotall": true
+                "dotall": true
             }
         }
     ]
@@ -941,9 +938,9 @@ test>filteringのテスト。フィルタをセット、改行指定無しで、
 
 
 test>filterのパターンを試す/defineFilter: {
-	"name": "testDotAll",
+    "name": "testDotAll",
     "patterns": [
-    	{
+        {
             "^.*?NullReferenceException: (.*?)\n.*? in (.*?):([0-9].*?) \n.*?": {
                 "selectors": [
                     {
@@ -957,49 +954,49 @@ test>filterのパターンを試す/defineFilter: {
         }
     ]
 }->filtering: {
-	"name": "testDotAll",
-	"source": "System.NullReferenceException: reason\n  at dummy in place:100 \n  at dummy2 in place2:200 \ndummy3"
+    "name": "testDotAll",
+    "source": "System.NullReferenceException: reason\n  at dummy in place:100 \n  at dummy2 in place2:200 \ndummy3"
 }->assertResult: {
-	"id": "testDotAll1",
-	"contains": {
-		"showAtLog": {
-			"output": "reason place:100"
-		}
-	},
-	"description": "not match 1."
+    "id": "testDotAll1",
+    "contains": {
+        "showAtLog": {
+            "output": "reason place:100"
+        }
+    },
+    "description": "not match 1."
 }->filtering: {
-	"name": "testDotAll",
-	"source": "System.NullReferenceException: reason2\nsomething\n  at dummy2 in place2:200 \n  at dummy3 in place3:300 \ndummy4"
+    "name": "testDotAll",
+    "source": "System.NullReferenceException: reason2\nsomething\n  at dummy2 in place2:200 \n  at dummy3 in place3:300 \ndummy4"
 }->assertResult: {
-	"id": "testDotAll2",
-	"contains": {
-		"showAtLog": {
-			"output": "reason2 place2:200"
-		}
-	},
-	"description": "not match 2."
+    "id": "testDotAll2",
+    "contains": {
+        "showAtLog": {
+            "output": "reason2 place2:200"
+        }
+    },
+    "description": "not match 2."
 }->filtering: {
-	"name": "testDotAll",
-	"source": "System.NullReferenceException: reason3\nsomething\nsomething\n  at dummy3 in place3:300 \n  at dummy4 in place4:400 \ndummy5"
+    "name": "testDotAll",
+    "source": "System.NullReferenceException: reason3\nsomething\nsomething\n  at dummy3 in place3:300 \n  at dummy4 in place4:400 \ndummy5"
 }->assertResult: {
-	"id": "testDotAll3",
-	"contains": {
-		"showAtLog": {
-			"output": "reason3 place3:300"
-		}
-	},
-	"description": "not match 3."
+    "id": "testDotAll3",
+    "contains": {
+        "showAtLog": {
+            "output": "reason3 place3:300"
+        }
+    },
+    "description": "not match 3."
 }->filtering: {
-	"name": "testDotAll",
-	"source": "NullReferenceException: reason4\nsomething\nsomething\n  at dummy4 in place4:400 \n  at dummy5 in place5:500 \ndummy6"
+    "name": "testDotAll",
+    "source": "NullReferenceException: reason4\nsomething\nsomething\n  at dummy4 in place4:400 \n  at dummy5 in place5:500 \ndummy6"
 }->assertResult: {
-	"id": "testDotAll4",
-	"contains": {
-		"showAtLog": {
-			"output": "reason4 place4:400"
-		}
-	},
-	"description": "not match 4."
+    "id": "testDotAll4",
+    "contains": {
+        "showAtLog": {
+            "output": "reason4 place4:400"
+        }
+    },
+    "description": "not match 4."
 }
 
 
@@ -1058,13 +1055,15 @@ test>メッセージを全クライアントに配信する/broadcastMessage: {
 
 
 
-test>reactorをリセットする/resetReactors:{
-
-}->assertResult:{
+test>reactorをリセットする/resetReactors: {
+    
+}->assertResult: {
     "id": "reset all reactors",
     "contains": {
         "resetReactors": {
-            "deletedReactors": {}
+            "deletedReactors": {
+                
+            }
         }
     },
     "description": "not match"
@@ -1072,8 +1071,8 @@ test>reactorをリセットする/resetReactors:{
 
 
 
-test>reactorをセットする/resetReactors:{
-
+test>reactorをセットする/resetReactors: {
+    
 }->setEventReactor: {
     "target": "testTarget",
     "react": "testEvent",
@@ -1136,9 +1135,8 @@ test>delayが存在するsetEventReactorを実行、即時実行される/setEve
 
 
 
-
-test>複数件の同名のevent-target reactorをセットして、上書きされる。/resetReactors:{
-
+test>複数件の同名のevent-targetreactorをセットして、上書きされる。/resetReactors: {
+    
 }->setEventReactor: {
     "target": "testTarget",
     "react": "event_testEvent",
@@ -1162,8 +1160,8 @@ test>複数件の同名のevent-target reactorをセットして、上書きさ�
         }
     ]
 }->eventEmit: {
-	"target": "testTarget",
-	"event": "event_testEvent"
+    "target": "testTarget",
+    "event": "event_testEvent"
 }->assertResult: {
     "id": "reactor is set part2-1",
     "notcontains": {
@@ -1173,9 +1171,9 @@ test>複数件の同名のevent-target reactorをセットして、上書きさ�
     },
     "description": "not match. 1"
 }->assertResult: {
-	"id": "reactor is set part2-2",
+    "id": "reactor is set part2-2",
     "contains": {
-       "showAtLog": {
+        "showAtLog": {
             "output": "eventEmit over.2"
         }
     },
@@ -1184,8 +1182,8 @@ test>複数件の同名のevent-target reactorをセットして、上書きさ�
 
 
 
-test>複数件の同名のevent-別のtarget reactorをセットして、増加する/resetReactors:{
-
+test>複数件の同名のevent-別のtargetreactorをセットして、増加する/resetReactors: {
+    
 }->setEventReactor: {
     "target": "testTarget",
     "react": "testEvent",
@@ -1242,6 +1240,7 @@ test>複数件の同名のevent-別のtarget reactorをセットして、増加�
 }
 
 
+
 test>Clientのidentityをセットする/inputIdentity: {
     "id": "test"
 }->assertResult: {
@@ -1271,23 +1270,23 @@ test>設定の実行が実行されきったかどうか/runSetting: {
 
 
 test>適当な名前のファイルを開き、その名前を指定し、regionを追加する/createBuffer: {
-	"name": "currentViewAppendRegionTest.txt"
+    "name": "currentViewAppendRegionTest.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
     "condition": "keyword",
     "name": "currentViewAppendRegionTest.txt"
 }->assertResult: {
-	"id": "add region to current file",
-	"contains": {
-		"appendRegion": {
-			"condition": "keyword", 
-			"message": "test", 
-			"result": "appended", 
-			"line": "1"
-		}
-	},
-	"description": "not match."
+    "id": "add region to current file",
+    "contains": {
+        "appendRegion": {
+            "condition": "keyword",
+            "message": "test",
+            "result": "appended",
+            "line": "1"
+        }
+    },
+    "description": "not match."
 }
 
 
@@ -1335,12 +1334,13 @@ test>適当な名前のファイルを開き、regionを追加する。pathの�
 }
 
 
+
 test>適当な名前のファイルを開き、regionを追加する。pathの全部分マッチ。追加後のidが入っていればOK。/createBuffer: {
     "name": "notexistfile.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt",
+    "name": "SUBLIMESOCKET_PATH:tests/testResources/notexistfile.txt",
     "condition": "keyword"
 }->assertResult: {
     "id": "contains region result3",
@@ -1354,6 +1354,7 @@ test>適当な名前のファイルを開き、regionを追加する。pathの�
     },
     "description": "not match."
 }
+
 
 
 test>適当な名前のファイルを開き、regionの追加に失敗(noViewFoundを起こす)/createBuffer: {
@@ -1395,20 +1396,20 @@ test>eraseのテスト。複数のファイルを開き、複数のregionを追�
     "name": "notexistfileB.txt"
 }->eraseAllRegion: {
     
-}->assertResult: {
+}->本当はpathを書きたいが、環境固有になってしまうのでダメ。/assertResult: {
     "id": "eraseAllRegion, two file and each 1 regions will become empty",
-    "isnotempty": "eraseAllRegion",// 本当はpathを書きたいが、環境固有になってしまうのでダメ。
+    "isnotempty": "eraseAllRegion",
     "description": "not all is empty."
 }->closeFile: {
-	"name": "notexistfileA.txt"
+    "name": "notexistfileA.txt"
 }->closeFile: {
-	"name": "notexistfileB.txt"
+    "name": "notexistfileB.txt"
 }
 
 
 
 test>eraseのテスト。適当な名前のファイルを開き、regionを追加する。消した個数が合っていればOK/createBuffer: {
-    "name": "SUBLIMESOCKET_PATH:resource/tests/testResources/notexistfile.txt"
+    "name": "SUBLIMESOCKET_PATH:tests/testResources/notexistfile.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
@@ -1425,24 +1426,24 @@ test>eraseのテスト。適当な名前のファイルを開き、regionを追�
 
 
 test>eraseのテスト、特定のviewのregionすべてを削除する。2件あるかどうかチェックしたいがassertionが面倒なので有無のみチェック/createBuffer: {
-	"name": "fileA.txt"
+    "name": "fileA.txt"
 }->appendRegion: {
-	"line": "1",
+    "line": "1",
     "message": "test",
     "condition": "keyword",
     "name": "fileA.txt"
 }->createBuffer: {
-	"name": "fileB.txt"
+    "name": "fileB.txt"
 }->appendRegion: {
-	"line": "1",
+    "line": "1",
     "message": "test",
     "condition": "keyword",
     "name": "fileB.txt"
 }->eraseAllRegion: {
-	"path": "fileA.txt"
+    "path": "fileA.txt"
 }->assertResult: {
-	"id": "erase specific view regions",
-	"isnotempty": "eraseAllRegion",
+    "id": "erase specific view regions",
+    "isnotempty": "eraseAllRegion",
     "description": "empty."
 }
 
@@ -1463,8 +1464,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 
 
 
-test>バージョンの精査、apiVersion majorが一致、minorが一致、verifyの突破/versionVerify:
-{
+test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "1.4.0"
 }->assertResult: {
@@ -1479,8 +1479,7 @@ test>バージョンの精査、apiVersion majorが一致、minorが一致、ver
 
 
 
-test>バージョンの精査、apiVersion majorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify:
-{
+test>バージョンの精査、apiVersionmajorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "1.100.0",
     "dryrun": true
@@ -1495,8 +1494,8 @@ test>バージョンの精査、apiVersion majorが一致、minorが高いので
 }
 
 
-test>バージョンの精査、apiVersion majorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify:
-{
+
+test>バージョンの精査、apiVersionmajorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "0.0.0",
     "dryrun": true
@@ -1511,8 +1510,9 @@ test>バージョンの精査、apiVersion majorが低いので、クライア�
 }
 
 
-test>バージョンの精査、apiVersion majorが高いので、SSをupdateするアドレスを渡して切断/versionVerify:{
-   "socketVersion": 3,
+
+test>バージョンの精査、apiVersionmajorが高いので、SSをupdateするアドレスを渡して切断/versionVerify: {
+    "socketVersion": 3,
     "apiVersion": "2.0.0",
     "dryrun": true
 }->assertResult: {
@@ -1528,46 +1528,52 @@ test>バージョンの精査、apiVersion majorが高いので、SSをupdateす
 
 
 test>適当に匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
-	"name": "something"
+    "name": "something"
 }->closeAllBuffer: {
-
+    
 }->assertResult: {
-	"id": "close all buffer succeeded",
-	"contains": {
-		"closeAllBuffer": {
-			"closed": ["something"]
-		}
-	},
-	"description": "failed to close."
+    "id": "close all buffer succeeded",
+    "contains": {
+        "closeAllBuffer": {
+            "closed": [
+                "something"
+            ]
+        }
+    },
+    "description": "failed to close."
 }
 
 
 
 test>適当に複数の匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
-	"name": "something"
+    "name": "something"
 }->createBuffer: {
-	"name": "something2"
+    "name": "something2"
 }->closeAllBuffer: {
-
+    
 }->assertResult: {
-	"id": "close all buffer succeeded2",
-	"contains": {
-		"closeAllBuffer": {
-			"closed": ["something", "something2"]
-		}
-	},
-	"description": "failed to close."
+    "id": "close all buffer succeeded2",
+    "contains": {
+        "closeAllBuffer": {
+            "closed": [
+                "something",
+                "something2"
+            ]
+        }
+    },
+    "description": "failed to close."
 }
 
 
+
 test>特定の名称のファイルのバッファを作成、内容を入力する。/createBuffer: {
-	"name": "test"
+    "name": "test"
 }->assertResult: {
     "id": "creates valid name and contents",
     "contains": {
         "createBuffer": {
-        	"result": "buffer test created.",
-        	"name": "test"
+            "result": "buffer test created.",
+            "name": "test"
         }
     },
     "description": "not contains."
@@ -1576,13 +1582,13 @@ test>特定の名称のファイルのバッファを作成、内容を入力す
 
 
 test>存在するファイルを開く/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->assertResult: {
     "id": "open exist file",
     "contains": {
         "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-            "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+            "result": "file SUBLIMESOCKET_PATH:tests/testResources/sample.txt is opened.",
+            "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
         }
     },
     "description": "not contains."
@@ -1591,20 +1597,19 @@ test>存在するファイルを開く/openFile: {
 
 
 test>存在するファイルを開く、閉じる、を二回繰り返し、閉じる順序と内容を確認する。/openFile: {
-    "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->openFile: {
-	"path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample2.txt"
 }->closeFile: {
-	"name": "sample.txt"
+    "name": "sample.txt"
 }->closeFile: {
-	"name": "sample2.txt"
-}
-->assertResult: {
+    "name": "sample2.txt"
+}->assertResult: {
     "id": "open exist file",
     "contains": {
         "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt is opened.",
-            "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample.txt"
+            "result": "file SUBLIMESOCKET_PATH:tests/testResources/sample.txt is opened.",
+            "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
         }
     },
     "description": "not contains."
@@ -1612,8 +1617,8 @@ test>存在するファイルを開く、閉じる、を二回繰り返し、閉
     "id": "open exist file2",
     "contains": {
         "openFile": {
-            "result": "file SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt is opened.",
-            "path": "SUBLIMESOCKET_PATH:resource/tests/testResources/sample2.txt"
+            "result": "file SUBLIMESOCKET_PATH:tests/testResources/sample2.txt is opened.",
+            "path": "SUBLIMESOCKET_PATH:tests/testResources/sample2.txt"
         }
     },
     "description": "not contains."
@@ -1621,38 +1626,37 @@ test>存在するファイルを開く、閉じる、を二回繰り返し、閉
 
 
 
-// めんどうくさいダイアログ系
 test>補完を外部からセット。候補が1つのため、強制的に補完される。/createBuffer: {
-	"name": "completionTestView.txt"
-}->runCompletion:{
-	"name": "completionTestView.txt",
-	"completion": [
-		{// 一つだと一択のため勝手に入力される
-			"HEAD": "DrawLine", 
-			"paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})", 
-			"return": "Void",
-			"paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)", 
-			"head": "DrawLine"
-		}
-	],
-	"formathead": "HEADparamsTypeDef\treturn",
-	"formattail": "headparamsTargetFmt$0"
+    "name": "completionTestView.txt"
+}->一つだと一択のため勝手に入力される/runCompletion: {
+    "name": "completionTestView.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0"
 }->assertResult: {
-	"id": "completion makes input",
-	"contains": {
-		"runCompletion": {
-			"completed": "completionTestView.txt"
-		}
-	},
-	"description": "not match."
+    "id": "completion makes input",
+    "contains": {
+        "runCompletion": {
+            "completed": "completionTestView.txt"
+        }
+    },
+    "description": "not match."
 }
 
 
 
-test>ダイアログを表示/showDialog:{
+test>ダイアログを表示/showDialog: {
     "message": "here comes daredevil"
 }->assertResult: {
-    "id" :"show dialog contains values.",
+    "id": "show dialog contains values.",
     "contains": {
         "showDialog": {
             "output": "here comes daredevil"
@@ -1663,7 +1667,7 @@ test>ダイアログを表示/showDialog:{
 
 
 
-test>ダイアログをフォーマット付きで表示/showDialog:{
+test>ダイアログをフォーマット付きで表示/showDialog: {
     "message": "formatting",
     "format": "0:a1 b1 c1 d1",
     "0": "header",
@@ -1672,7 +1676,7 @@ test>ダイアログをフォーマット付きで表示/showDialog:{
     "c1": "is",
     "d1": "over"
 }->assertResult: {
-    "id" :"show dialog contains values.",
+    "id": "show dialog contains values.",
     "contains": {
         "showDialog": {
             "output": "header:the test is over"
@@ -1680,5 +1684,3 @@ test>ダイアログをフォーマット付きで表示/showDialog:{
     },
     "description": "not match."
 }
-
-

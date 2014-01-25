@@ -5,25 +5,10 @@
     },
     
     {
-        "caption": "SublimeSocket: on > open preference",
-        "command": "on_then_openpref"
-    },
-
-    {
-        "caption": "SublimeSocket: open preference",
-        "command": "openpreference"
-    },
-
-    {
         "caption": "SublimeSocket: on > test",
         "command": "on_then_test"
     },
-
-    {
-        "caption": "SublimeSocket: test",
-        "command": "test"
-    },
-
+    
     {
         "caption": "SublimeSocket: off",
         "command": "socketoff"

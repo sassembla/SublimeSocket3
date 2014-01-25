@@ -6,8 +6,7 @@
 		"port" : 8823
 	},
 
-	"testHtml" : "tests.html",
-	"testSuite": "tests.sst",
+	"testSuiteFilePath": "tests/tests.sst",
 
 	"preference browser" : "Safari.app",
 

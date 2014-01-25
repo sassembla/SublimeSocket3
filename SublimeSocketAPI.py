@@ -8,8 +8,6 @@ import time
 import re
 import uuid
 
-
-
 from functools import reduce
 from .PythonSwitch import PythonSwitch
 
@@ -17,7 +15,6 @@ from .PythonSwitch import PythonSwitch
 from .interface.SublimeText.EditorAPI import EditorAPI
 from . import SublimeSocketAPISettings
 
-MY_PLUGIN_PATHNAME = os.path.split(os.path.dirname(os.path.realpath(__file__)))[1]
 
 ## API Parse the action
 class SublimeSocketAPI:
@@ -383,7 +380,7 @@ class SublimeSocketAPI:
 		# check contains PREFIX or not
 		filePath = self.getKeywordBasedPath(filePath, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			self.editorAPI.packagePath()+ "/"+MY_PLUGIN_PATHNAME+"/")
+			self.editorAPI.packagePath()+ "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
 		print("ss: runSetting:", filePath)
 		
@@ -445,7 +442,7 @@ class SublimeSocketAPI:
 				# check contains PREFIX or not
 				val = self.getKeywordBasedPath(val, 
 					SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-					self.editorAPI.packagePath() + "/"+MY_PLUGIN_PATHNAME+"/")
+					self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
 				if " " in val:
 					val = "\"" + val + "\""
@@ -559,7 +556,7 @@ class SublimeSocketAPI:
 		# check contains PREFIX of path or not
 		filePath = self.getKeywordBasedPath(filePath, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			self.editorAPI.packagePath() + "/"+MY_PLUGIN_PATHNAME+"/")
+			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 		
 		settingFile = open(filePath, 'r', encoding='utf8')
 		
@@ -915,7 +912,7 @@ class SublimeSocketAPI:
 
 		name = self.getKeywordBasedPath(name, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			self.editorAPI.packagePath() + "/"+MY_PLUGIN_PATHNAME+"/")
+			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
 		if self.editorAPI.isBuffer(name):
 			message = "file " + original_path + " is not exist."
@@ -1357,7 +1354,7 @@ class SublimeSocketAPI:
 			if SublimeSocketAPISettings.NOTIFY_DEBUG in params:
 				debug = params[SublimeSocketAPISettings.NOTIFY_DEBUG]
 			
-			exe = "\"" + self.editorAPI.packagePath() + "/"+MY_PLUGIN_PATHNAME+"/tool/notification/MacNotifier.sh\""
+			exe = "\"" + self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/tool/notification/MacNotifier.sh\""
 			exeArray = ["-t", title, "-m", message, "-replaceunderscore", "", ]
 
 			shellParams = {
@@ -1462,7 +1459,7 @@ class SublimeSocketAPI:
 
 		path = self.getKeywordBasedPath(path, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			self.editorAPI.packagePath() + "/"+MY_PLUGIN_PATHNAME+"/")
+			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
 		currentFile = open(path, 'r')
 		data = currentFile.read()
