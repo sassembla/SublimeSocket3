@@ -46,6 +46,10 @@ class WSDecoder:
 		# decode first byte
 		b = client.read(1)
 
+		# recv error raised in client.
+		if not b:
+			return (None, None)
+
 		if not len(b):
 			# raise ValueError(1011, 'Reading first byte failed.')
 			return (None, None)

@@ -890,7 +890,7 @@ class SublimeSocketAPI:
 		emitIdentity = str(uuid.uuid4())
 		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-		self.server.fireKVStoredItem(
+		self.server.fireReactor(
 			SublimeSocketAPISettings.REACTORTYPE_VIEW,
 			SublimeSocketAPISettings.SS_EVENT_RENAMED, 
 			viewParams,
@@ -945,7 +945,7 @@ class SublimeSocketAPI:
 			viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 			
-			self.server.fireKVStoredItem(
+			self.server.fireReactor(
 				SublimeSocketAPISettings.REACTORTYPE_VIEW,
 				SublimeSocketAPISettings.SS_EVENT_LOADING, 
 				viewParams,
@@ -993,10 +993,7 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
 		# load defined filters
-		filterNameAndPatternsArray = {}
-
-		if self.server.isExistOnKVS(SublimeSocketAPISettings.DICT_FILTERS):
-			filterNameAndPatternsArray = self.server.getV(SublimeSocketAPISettings.DICT_FILTERS)
+		filterNameAndPatternsArray = self.server.filtersDict()
 
 		filterName = params[SublimeSocketAPISettings.DEFINEFILTER_NAME]
 
@@ -1010,7 +1007,7 @@ class SublimeSocketAPI:
 		[mustBeSingleDict(currentFilterDict) for currentFilterDict in patterns]
 
 		filterNameAndPatternsArray[filterName] = patterns
-		self.server.setKV(SublimeSocketAPISettings.DICT_FILTERS, filterNameAndPatternsArray)
+		self.server.updateFiltersDict(filterNameAndPatternsArray)
 
 		self.setResultsParams(results, self.defineFilter, {"defined":params})
 		
@@ -1024,15 +1021,20 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.FILTERING_DEBUG in params:
 			debug = params[SublimeSocketAPISettings.FILTERING_DEBUG]
 
-		# check filterName exists or not
-		if not self.server.isFilterDefined(filterName):
+
+
+		filtersDict = self.server.filtersDict()
+		if filterName in filtersDict:
+			pass
+
+		else:
 			print("filterName:"+str(filterName), "is not yet defined.")
 			return
 
 		filterSource = params[SublimeSocketAPISettings.FILTERING_SOURCE]
 
 		# get filter key-values array
-		filterPatternsArray = self.server.getV(SublimeSocketAPISettings.DICT_FILTERS)[filterName]
+		filterPatternsArray = filtersDict[filterName]
 
 		# print "filterPatternsArray", filterPatternsArray
 		currentResults = []
@@ -1274,7 +1276,7 @@ class SublimeSocketAPI:
 			emitIdentity = str(uuid.uuid4())
 			viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+			self.server.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
 			self.setResultsParams(results, self.setSelection, {"selected":selected})
 
 
@@ -1333,7 +1335,7 @@ class SublimeSocketAPI:
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
 
-			self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, currentParams, results)
+			self.server.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, currentParams, results)
 			
 			currentParams["result"] = "failed to append region."
 			self.setResultsParams(results, self.appendRegion, currentParams)
@@ -1478,7 +1480,7 @@ class SublimeSocketAPI:
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
-		self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
+		self.server.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
 		self.setResultsParams(results, 
 			self.eventEmit, 
 			{SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})

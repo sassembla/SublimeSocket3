@@ -15,38 +15,46 @@ from .PythonSwitch import PythonSwitch
 
 class SublimeSocketServer:
 	def __init__(self):
-
 		self.api = SublimeSocketAPI(self)
 		self.kvs = KVS()
 
 		self.transfer = None
-
-	def setTransfer(self, transferMethod, params):
-		
-		if self.transfer:
-			print("すでに起動した状態で。", transferMethod, params)
-			pass
-
-		else:
-			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
-				
-				for case in PythonSwitch(transferMethod):
-					if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
-						self.transfer = WSServer(self)
-						self.transfer.setup(params)
-						break
+		self.reserveRestart = None
 
 
-	def startTransfer(self):
-		self.transfer.spinup()
+	
+	# control server self.
 
-		
-	def spinupFailed(self, message):
+	def resetServer(self):
+		self.refreshKVS()
+		self.teardownTransfer()
+
+	def teardownServer(self):
+		self.resetServer()
+		# teardowned will call.
+	
+	def refreshKVS(self):
+		print("refresh機構、未完成。KVSだけをリセットしてる。")
+		self.kvs.clear()
+
+	def transferTeardowned(self, message):
+		print("ss:", message, "\n")
+		self.api.editorAPI.statusMessage(message)
+
+		self.transfer = None
+
+		# run when restert reserved.
+		if self.reserveRestart:
+			self.setupTransfer(*self.reserveRestart)
+
+			self.spinupTransfer()
+			self.reserveRestart = None
+
+	def transferSpinupFailed(self, message):
 		print('\n', message, "\n")
 		self.api.editorAPI.statusMessage(message)
 
-
-	def spinupped(self, message):
+	def transferSpinupped(self, message):
 		print('\n', message, "\n")
 		self.api.editorAPI.statusMessage(message)
 
@@ -56,27 +64,11 @@ class SublimeSocketServer:
 		# load settings
 		self.loadSettings(results)
 
-	def teardowned(self, message):
-		print('\n', message, "\n")
-		self.api.editorAPI.statusMessage(message)
 
+	# main API incoming method.
+	def transferInputted(self, data, clientId):
+		apiData = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)[1]
 
-	## load settings and run in mainThread
-	def loadSettings(self, results):
-		settingCommands = self.api.editorAPI.loadSettings("loadSettings")
-		for command in settingCommands:
-			self.api.runAPI(command, None, None, None, results)
-
-
-
-	def callSublimeServer(self, data, clientId):
-		headerAndParam = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)
-
-		self.callAPI(headerAndParam[1], clientId)
-
-
-	## api 
-	def callAPI(self, apiData, clientId):
 		# gen result id of toplevel
 		resultIdentity = "callAPI:"+str(uuid.uuid4())
 	
@@ -85,39 +77,63 @@ class SublimeSocketServer:
 
 
 
+	# control transfer.
 
-	## tearDown the transfer
-	def transferTearDown(self):
-		self.transfer.tearDown()
+	def setupTransfer(self, transferMethod, params):
+		if self.transfer:
+			print("ss: SublimeSocket already running.", self.transfer.info())
+			
+		else:
+			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
+				
+				for case in PythonSwitch(transferMethod):
+					if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+						self.transfer = WSServer(self)
+						self.transfer.setup(params)
+						break
+
+		self.currentTransferMethod = transferMethod
 
 
-	def kill(self):
-		print("未完成のkill機構、SublimeSocketServer自体のkill")
-		self.kvs.clear()
+	def spinupTransfer(self):
+		if self.transfer:
+			self.transfer.spinup()
+
+	def restartTransfer(self):
+		if self.transfer:
+			# reserve restart
+			self.reserveRestart = self.transfer.currentArgs()
+			self.teardownTransfer()
+		else:
+			self.transferSpinupFailed("no transfer running.")
+
+
+	def teardownTransfer(self):
+		if self.transfer:
+			self.transfer.teardown()
+		else:
+			self.transferTeardowned("no transfer running.")
+
+
+
+	def loadSettings(self, results):
+		settingCommands = self.api.editorAPI.loadSettings("loadSettings")
+		for command in settingCommands:
+			self.api.runAPI(command, None, None, None, results)
+
+	
 
 
 
 
 
-	# メッセージ系
+	# message series
 	def sendMessage(self, targetId, message):
 		return self.transfer.sendMessage(targetId, message)
 
 	def broadcastMessage(self, message):
 		return self.transfer.broadcastMessage(message)
 
-	def closeClient(self, targetId):
-		self.transfer.closeClient(targetId)
-
-	# フィルタ系
-
-	## return the filter has been defined or not
-	def isFilterDefined(self, filterName):
-		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_FILTERS):
-			filterDict = self.kvs.get(SublimeSocketAPISettings.DICT_FILTERS)
-			if filterName in filterDict:
-				return True
-		return False
 
 
 
@@ -125,23 +141,7 @@ class SublimeSocketServer:
 
 
 
-
-
-	# ビュー系
-
-
-	## return view dict
-	def viewsDict(self):
-		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS)
-
-		if viewsDict:
-			return viewsDict
-		
-		return {}
-
-	def updateViewDict(self, viewDict):
-		self.setKV(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
-
+	# view series
 
 	def internal_detectViewPath(self, view):
 		instances = []
@@ -235,7 +235,7 @@ class SublimeSocketServer:
 				viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 
-				self.fireKVStoredItem(
+				self.fireReactor(
 					SublimeSocketAPISettings.REACTORTYPE_VIEW,
 					SublimeSocketAPISettings.SS_EVENT_COLLECT, 
 					viewParams,
@@ -290,34 +290,7 @@ class SublimeSocketServer:
 
 
 
-
-
-
-
-
-
-	# KVS系
-
-	## put key-value onto KeyValueStore
-	def setKV(self, key, value):
-		self.kvs.setKeyValue(key, value)
-
-
-	## return None or object
-	def getV(self, key):
-		value = self.kvs.get(key)
-		return value
-
-
-	## exist or not. return bool
-	def isExistOnKVS(self, key):
-		if self.kvs.get(key):
-			# print "isExistOnKVS true", self.kvs.get(key)
-			return True
-			
-		else:
-			# print "isExistOnKVS false", self.kvs.get(key)
-			return False
+	# KVS series
 
 	## return all key-value as string
 	def showAll(self):
@@ -332,7 +305,6 @@ class SublimeSocketServer:
 		
 		return "".join(printKV)
 
-
 	## return single key-value as string
 	def showValue(self, key):
 		if not self.kvs.get(key):
@@ -341,67 +313,56 @@ class SublimeSocketServer:
 		kv = key + " : " + str(self.kvs.get(key))
 		return str(kv)
 
-
 	## clear all KVS contents
 	def clear(self):
 		self.kvs.clear()
 		return str(True)
 		
-
 	def remove(self, key):
 		result = self.kvs.remove(key)
 		return str(result)
 
-	# fire event in KVS, if exist.
-	def fireKVStoredItem(self, reactorType, eventName, eventParam, results):
-		reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
-		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
 
-		# run when the event occured adopt. start with specific "user-defined" event identity that defined as REACTIVE_PREFIX_USERDEFINED_EVENT.
-		if eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT):
-			# if exist, continue
-			if reactorsDict and eventName in reactorsDict:
-				
-				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
-				if target in reactorsDict[eventName]:
-					reactDict = reactorsDict[eventName][target]
+	# view and KVS
+	def viewsDict(self):
+		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS)
 
-					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
+		if viewsDict:
+			return viewsDict
+		
+		return {}
 
-					if not self.isExecutableWithDelay(eventName, target, delay):
-						pass
-					else:
-						self.api.runAllSelector(reactDict, eventParam, results)
-
-		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
-			if reactorsDict and eventName in reactorsDict:
-				self.api.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
-				
-		else:
-			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
-				self.runRenew(eventParam)
-
-			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
-				self.runDeletion(eventParam)
-
-			# if reactor exist, run all selectors. not depends on "target".
-			if reactorsDict and eventName in reactorsDict:
-				reactorDict = reactorsDict[eventName]
-				for reactorKey in list(reactorDict):
-					
-					delay = reactorsDict[eventName][reactorKey][SublimeSocketAPISettings.REACTOR_DELAY]
-					if not self.isExecutableWithDelay(eventName, reactorKey, delay):
-						pass
-
-					else:
-						reactorParams = reactorDict[reactorKey]
-						self.api.runReactor(reactorType, reactorParams, eventParam, results)
+	def updateViewDict(self, viewDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
 
-	## KVSControl
+	# reactor and KVS
+	def reactorsDict(self):
+		reactorsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REACTORS)
+
+		if reactorsDict:
+			return reactorsDict
+
+		return {}
+
+	def updateReactorsDict(self, reactorsDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
+
+
+	# reactorsLog and KVS
+	def reactorsLogDict(self):
+		reactorsLogDict = self.kvs.get(SublimeSocketAPISettings.DICT_REACTORSLOG)
+
+		if reactorsLogDict:
+			return reactorsLogDict
+
+		return {}
+
+	def updateReactorsLogDict(self, reactorsLogDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+
+
 	def KVSControl(self, subCommandAndParam):
-		print("KVSControl, 使ってないなら消したい。")
-
 		if 1 < len(subCommandAndParam):
 			return "KVSControl: too many subCommands. please set only one subCommand."
 
@@ -432,13 +393,10 @@ class SublimeSocketServer:
 					print("unknown KVS subcommand")
 					break
 
+	
 
 
-
-
-
-
-	# region系
+	# region series
 
 	## store region to viewDict-view in KVS
 	def storeRegionToView(self, view, identity, region, line, message):
@@ -457,7 +415,6 @@ class SublimeSocketServer:
 			specificViewDict[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS] = {}
 
 		specificViewDict[SublimeSocketAPISettings.SUBDICT_REGIONS][identity] = regionDict
-
 
 	
 	## emit event if params matches the regions that sink in view
@@ -506,7 +463,7 @@ class SublimeSocketServer:
 					# append target
 					regionInfo[SublimeSocketAPISettings.REACTOR_TARGET] = target
 					
-					self.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionInfo, results)
+					self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionInfo, results)
 					
 					if SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG in params:
 						debug = params[SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG]
@@ -521,6 +478,7 @@ class SublimeSocketServer:
 							self.api.printout(message)
 							
 				[emitRegionMatchEvent(region) for region in regionIdentitiesList]
+
 
 	## delete all regions in all view 
 	def deleteAllRegionsInAllView(self, targetViewPath=None):
@@ -576,15 +534,7 @@ class SublimeSocketServer:
 
 
 
-
-
-
-
-
-
-	# reactor系
-
-
+	# reactor series
 
 	## set reactor to KVS
 	def setReactor(self, reactorType, params):
@@ -592,15 +542,8 @@ class SublimeSocketServer:
 		assert SublimeSocketAPISettings.REACTOR_REACT in params, "setXReactor require 'react' param."
 		assert SublimeSocketAPISettings.REACTOR_SELECTORS in params, "setXReactor require 'selectors' param."
 
-		reactorsDict = {}
-		reactorsLogDict = {}
-
-		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORS):
-			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
-
-		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORSLOG):
-			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
-
+		reactorsDict = self.reactorsDict()
+		reactorsLogDict = self.reactorsLogDict()
 
 		target = params[SublimeSocketAPISettings.REACTOR_TARGET]
 		reactEventName = params[SublimeSocketAPISettings.REACTOR_REACT]
@@ -631,42 +574,132 @@ class SublimeSocketServer:
 		reactorsLogDict[reactEventName][target] = {}
 
 
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+		self.updateReactorsDict(reactorsDict)
+		self.updateReactorsLogDict(reactorsLogDict)
 			
 
 		return reactorsDict
 
 
 	def removeAllReactors(self):
-		reactorsDict = {}
-		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORS):
-			reactorsDict = self.getV(SublimeSocketAPISettings.DICT_REACTORS)
+		reactorsDict = self.reactorsDict()
+		deletedReactorsDict = reactorsDict.copy()
 
-		reactorsLogDict = {}
-		if self.isExistOnKVS(SublimeSocketAPISettings.DICT_REACTORSLOG):
-			reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
-
-		deletedReactorsDict = reactorsDict
-
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORS, {})
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, {})
-
-		return reactorsDict
+		self.updateReactorsDict({})
+		self.updateReactorsLogDict({})
+		
+		return deletedReactorsDict
 
 
+	def fireReactor(self, reactorType, eventName, eventParam, results):
+		reactorsDict = self.reactorsDict()
+		reactorsLogDict = self.reactorsLogDict()
+
+		# run when the event occured adopt. start with specific "user-defined" event identity that defined as REACTIVE_PREFIX_USERDEFINED_EVENT.
+		if eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT):
+			# if exist, continue
+			if reactorsDict and eventName in reactorsDict:
+				
+				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
+				if target in reactorsDict[eventName]:
+					reactDict = reactorsDict[eventName][target]
+
+					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
+
+					if not self.isExecutableWithDelay(eventName, target, delay):
+						pass
+					else:
+						self.api.runAllSelector(reactDict, eventParam, results)
+
+		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
+			if reactorsDict and eventName in reactorsDict:
+				self.api.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
+				
+		else:
+			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
+				self.runRenew(eventParam)
+
+			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_DEL:
+				self.runDeletion(eventParam)
+
+			# if reactor exist, run all selectors. not depends on "target".
+			if reactorsDict and eventName in reactorsDict:
+				reactorDict = reactorsDict[eventName]
+				for reactorKey in list(reactorDict):
+					
+					delay = reactorsDict[eventName][reactorKey][SublimeSocketAPISettings.REACTOR_DELAY]
+					if not self.isExecutableWithDelay(eventName, reactorKey, delay):
+						pass
+
+					else:
+						reactorParams = reactorDict[reactorKey]
+						self.api.runReactor(reactorType, reactorParams, eventParam, results)
 
 
+
+	# completion series
+
+	def completionsDict(self):
+		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
+		if completionsDict:
+			return completionsDict
+
+		return {}
+
+
+	def deleteCompletion(self, identity):
+		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
+		del completionsDict[identity]
+		self.updateCompletionsDict(completionsDict)
+
+
+	def updateCompletionsDict(self, completionsDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_COMPLETIONS, completionsDict)
+
+
+	## return completion then delete.
+	def consumeCompletion(self, viewIdentity, eventName):
+		completions = self.completionsDict()
+		if viewIdentity in list(completions):
+			completion = completions[viewIdentity]
+
+			self.deleteCompletion(viewIdentity)
+			return completion
+
+		return None
+
+	def updateCompletion(self, viewIdentity, completions):
+		completions = self.completionsDict()
+		completions[viewIdentity] = completions
+		self.updateCompletionsDict(completions)
+
+
+
+
+
+
+
+	# filter series
+
+	def updateFiltersDict(self, filtersDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_FILTERS, filtersDict)
+
+	def filtersDict(self):
+		filtersDict = self.kvs.get(SublimeSocketAPISettings.DICT_FILTERS)
+
+		if filtersDict:
+			return filtersDict
+
+		return {}
+		
 
 
 
 	# 未定義、チェック系
 
-
-
 	def isExecutableWithDelay(self, name, target, elapsedWaitDelay):
 		currentTime = round(int(time.time()*1000))
-		reactorsLogDict = self.getV(SublimeSocketAPISettings.DICT_REACTORSLOG)
+		reactorsLogDict = self.reactorsLogDict()
 
 		if elapsedWaitDelay == 0:
 			pass
@@ -697,56 +730,8 @@ class SublimeSocketServer:
 			reactorsLogDict[name][target] = {}
 
 		reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-		self.setKV(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
+		self.updateReactorsLogDict(reactorsLogDict)
 		
 		return True
-
-
-
-
-
-
-
-
-	# 補完系
-	def completionsDict(self):
-		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
-		if completionsDict:
-			return completionsDict
-
-		return {}
-
-
-	def deleteCompletion(self, identity):
-		completionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_COMPLETIONS)
-		del completionsDict[identity]
-		self.updateCompletionsDict(completionsDict)
-
-
-	def updateCompletionsDict(self, completionsDict):
-		self.setKV(SublimeSocketAPISettings.DICT_COMPLETIONS, completionsDict)
-
-
-	## return completion then delete.
-	def consumeCompletion(self, viewIdentity, eventName):
-		completions = self.completionsDict()
-		if viewIdentity in list(completions):
-			completion = completions[viewIdentity]
-
-			self.deleteCompletion(viewIdentity)
-			return completion
-
-		return None
-
-
-	def updateCompletion(self, viewIdentity, completions):
-		completions = self.completionsDict()
-		completions[viewIdentity] = completions
-		self.updateCompletionsDict(completions)
-
-
-
-
-
 
 

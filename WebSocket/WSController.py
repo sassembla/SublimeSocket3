@@ -51,7 +51,7 @@ class WSController:
 				#check if API or not
 				if (self.isApi(data)):
 					
-					self.client.server.callSublimeServer(data, self.client.clientId)
+					self.client.server.call(data, self.client.clientId)
 
 				else:
 					print("data is not for sublimesocket. no 'ss@'header. data:", data)

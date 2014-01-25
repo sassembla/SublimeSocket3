@@ -12,21 +12,39 @@ import uuid
 # SublimeSocket server's thread
 thread = None
 
-class Socketon(sublime_plugin.TextCommand):
+
+# states are below.
+# not active -> active <-> serving <-> transfering
+
+#                   serving:on
+#                   serving:off
+#                   serving:restart
+# 
+#                              transfer:restart
+#                              transfer:change
+#                              transfer:close
+
+class Socket_on(sublime_plugin.TextCommand):
   def run(self, edit):
-    print("WebSocketServerがデフォルト")
     self.startServer("WebSocketServer", [])
+
+
+  @classmethod
+  def restartServer(self):
+    global thread
+    if thread and thread.is_alive():
+      thread.restartServer()
+
+    else:
+      notActivatedMessage = "SublimeSocket not yet activated."
+      sublime.status_message(notActivatedMessage)
+      print("ss:", notActivatedMessage)
 
 
   @classmethod
   def startServer(self, transferMethod, args):
     global thread
     if thread and thread.is_alive():
-      
-      alreadyRunningMessage = "SublimeSocket Already Running."
-      sublime.status_message(alreadyRunningMessage)
-      print("ss:", alreadyRunningMessage)
-
       thread.setupThread(transferMethod, args)
 
     else:
@@ -34,18 +52,20 @@ class Socketon(sublime_plugin.TextCommand):
       thread.start()
 
 
-class On_then_test(sublime_plugin.TextCommand):
+class Socket_on_then_test(sublime_plugin.TextCommand):
   def run(self, edit):
-    Socketon.startServer("WebSocketServer", ["runTests"])
+    Socket_on.startServer("WebSocketServer", ["runTests"])
 
+class Socket_restart(sublime_plugin.TextCommand):
+  def run(self, edit):
+    Socket_on.restartServer()
 
-class Socketoff(sublime_plugin.TextCommand):
+class Socket_off(sublime_plugin.TextCommand):
   def run(self, edit):
     global thread
 
     if thread and thread.is_alive():
-      if (thread.isServerAlive()):
-        thread.tearDownServer()
+      thread.teardownServer()
 
     else:
       notActivatedMessage = "SublimeSocket not yet activated."
@@ -65,19 +85,26 @@ class SublimeSocketThread(threading.Thread):
 
   # called by thread.start
   def run(self):
-    self.server.startTransfer()
+    self.server.spinupTransfer()
 
 
   def setupThread(self, transferMethod, args):
+    
     if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
       params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
-      self.server.setTransfer(transferMethod, params)
+      
+      self.server.setupTransfer(transferMethod, params)
 
     if "runTests" in args:
       testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
       params["testSuiteFilePath"] = testSuiteFilePath
       
       Openhtml.openSublimeSocketTest(params)
+
+
+  def restartServer(self):
+    # restart means reset @ SublimeSocketServer.
+    self.server.resetServer()
 
 
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
@@ -109,7 +136,7 @@ class SublimeSocketThread(threading.Thread):
 
       results = self.server.api.initResult("view:"+emitIdentity)
 
-      self.server.fireKVStoredItem(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
+      self.server.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
 
 
   def getReactorDataFromServer(self, eventName, view):
@@ -128,8 +155,9 @@ class SublimeSocketThread(threading.Thread):
       if view_file_name:
         return self.server.consumeCompletion(view_file_name, eventName)
       
-  def tearDownServer(self):
-    self.server.transferTearDown()
+  def teardownServer(self):
+    # close the SublimeSocketServer and this thread.
+    self.server.teardownServer()
 
 
 

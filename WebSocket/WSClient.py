@@ -42,16 +42,17 @@ class WSClient:
 	## Real socket bytes reception
 	#  @param bufsize Buffer size to return.
 	def receive(self, bufsize):
-		bytes = self.conn.recv(bufsize)
+		try:
+			bytes = self.conn.recv(bufsize)
+		except:
+			bytes = None
 
-		if not bytes:
-			closingMessage = self.clientId + " left from SublimeSocket. because they send 'no-bytes'"
+		if bytes:
+			return bytes
 
-			print("ss:", closingMessage)
-			
-			self.server.closeClient(self.clientId)
-			return b''
-		return bytes
+		# recv error.
+		return None
+
 
 	## Try to read an amount bytes
 	#  @param bufsize Buffer size to fill.
@@ -61,6 +62,10 @@ class WSClient:
 
 		while remaining and self.hasStatus('OPEN'):
 			preBytes = self.receive(remaining)
+
+			# recv error raised.
+			if not preBytes:
+				return None
 
 			bytes = bytes + preBytes
 			remaining = bufsize - len(preBytes)
@@ -168,6 +173,9 @@ class WSClient:
 				(ctrl, data) = decoder.decode(self)
 				if ctrl and data:
 					self.cont.run(ctrl, data)
+
+				if not ctrl:
+					self.server.thisClientIsDead(self.clientId)
 				
 	## Send an unicast frame
 	#  @param bytes Bytes to send.

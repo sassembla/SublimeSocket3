@@ -12,11 +12,16 @@ from .WSClient import WSClient
 from .WSEncoder import WSEncoder
 
 from ..PythonSwitch import PythonSwitch
+from .. import SublimeSocketAPISettings
 
 
 class WSServer:
 	def __init__(self, server):
+		self.methodName = SublimeSocketAPISettings.WEBSOCKET_SERVER
 		self.clients = {}
+		
+		self.args = None
+
 		
 		self.socket = ''
 		self.host = ''
@@ -27,9 +32,20 @@ class WSServer:
 		self.encoder = WSEncoder()
 
 		self.sublimeSocketServer = server
-		
+
+	def info(self):
+		return 'SublimeSocket WebSocketServing running @ ' + str(self.host) + ':' + str(self.port)
+
+	def currentArgs(self):
+		return (self.methodName, self.args)
+
+
 	def setup(self, params):
 		assert "host" in params and "port" in params, "WebSocketServer require 'host' and 'port' param."
+		
+		# set for restart.
+		self.args = params
+
 		self.host = params["host"]
 		self.port = params["port"]
 
@@ -44,47 +60,50 @@ class WSServer:
 			self.socket.bind((self.host, self.port))
 		except socket.error as msg:
 			reason = 'SublimeSocket WebSocketServing faild to spinup @ ' + str(self.host) + ':' + str(self.port) + " by " + str(msg)
-			self.sublimeSocketServer.spinupFailed(reason)
+			self.sublimeSocketServer.transferSpinupFailed(reason)
 			return
 
 		self.socket.listen(1)
-		self.sublimeSocketServer.spinupped('SublimeSocket WebSocketServing started @ ' + str(self.host) + ':' + str(self.port))
+		self.sublimeSocketServer.transferSpinupped('SublimeSocket WebSocketServing started @ ' + str(self.host) + ':' + str(self.port))
 
 
 		self.listening = True
 		while self.listening:
-			(conn, addr) = self.socket.accept()
+			try:
+				# when teardown, causes close then "Software caused connection abort"
+				(conn, addr) = self.socket.accept()
 
-			print("わかんない、必要かなこれ。")
-			# if self.listening is None:
-			# 	return 0
-			
-			identity = str(uuid.uuid4())
+				identity = str(uuid.uuid4())
 
-			# genereate new client
-			client = WSClient(self, identity)
-			
-			self.clients[identity] = client
+				# genereate new client
+				client = WSClient(self, identity)
+				
+				self.clients[identity] = client
 
-			threading.Thread(target = client.handle, args = (conn,addr)).start()
+				threading.Thread(target = client.handle, args = (conn,addr)).start()
+			except socket.error as msg:
+				print("WebSocketServer closed.", msg)
 			
 		msg = 'SublimeSocket WebSocketServing closed @ ' + str(self.host) + ':' + str(self.port)
-		self.sublimeSocketServer.teardowned(msg)		
+		self.sublimeSocketServer.transferTeardowned(msg)		
 
-	## tearDown the server
-	def tearDown(self):
+	## teardown the server
+	def teardown(self):
 		# close all WebSocket clients
-		for clientId in self.clients:
+		clientsList = self.clients.copy()
+		
+		for clientId in clientsList:
 			client = self.clients[clientId]
 			client.close()
 
 		self.clients = []
 
-		# no mean?
-		self.socket.close()
-		
 		# stop receiving
 		self.listening = False
+
+		# force close. may cause "[Errno 53] Software caused connection abort".
+		self.socket.close()
+
 
 
 	## update specific client's id
@@ -97,6 +116,10 @@ class WSServer:
 		# update
 		client.clientId = newIdentity
 		self.clients[newIdentity] = client
+
+
+	def thisClientIsDead(self, clientId):
+		self.closeClient(clientId)
 		
 
 	# remove from Client dict
@@ -119,8 +142,8 @@ class WSServer:
 			print("	", client)
 
 
-	def callSublimeServer(self, data, clientId):
-		self.sublimeSocketServer.callSublimeServer(data, clientId)
+	def call(self, data, clientId):
+		self.sublimeSocketServer.transferInputted(data, clientId)
 
 
 	def sendMessage(self, targetId, message):
