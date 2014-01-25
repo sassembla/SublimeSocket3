@@ -47,8 +47,8 @@ class EditorAPI:
 		return sublime.packages_path() 
 
 
-	def loadSettings(self, mainKey, subKey):
-		return sublime.load_settings(mainKey).get(subKey)
+	def loadSettings(self, key):
+		return sublime.load_settings("SublimeSocket.sublime-settings").get(key)
 
 	def runAfterDelay(self, execution, delay):
 		sublime.set_timeout(execution, delay)

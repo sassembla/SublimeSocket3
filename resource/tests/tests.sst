@@ -1,4 +1,4 @@
-// testSuite for SublimeSocketAsset API.
+// testSuite for SublimeSocket API.
 
 setTestBeforeAfter: {
 	"beforeselectors": [
@@ -21,6 +21,8 @@ setTestBeforeAfter: {
 		}
 	]
 }
+
+
 
 test>viewEmitで別途injectを使う/createBuffer: {
 	"name": "injectionWithViewEmit.txt"

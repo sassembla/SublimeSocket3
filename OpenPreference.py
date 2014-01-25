@@ -13,6 +13,7 @@ import glob
 import string
 
 MY_PLUGIN_PATHNAME = os.path.split(os.path.dirname(os.path.realpath(__file__)))[1]
+
 class Openpreference(sublime_plugin.TextCommand):
   def run (self, edit) :
     self.openSublimeSocketPreference()
@@ -26,7 +27,28 @@ class Openpreference(sublime_plugin.TextCommand):
         }, 
         "resource/source.html", 
         "tmp/preference.html")
-    
+
+  @classmethod
+  def openSublimeSocketTest(self, host, port):
+    testHTMLPath = sublime.load_settings("SublimeSocket.sublime-settings").get('testHtml')
+    testSuitePath = sublime.load_settings("SublimeSocket.sublime-settings").get('testSuite')
+
+    # get current Plugin's resource/tests path.
+    testBasePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+"resource/tests"
+
+    self.generateHTML(
+        {
+            SublimeSocketAPISettings.SS_HOST_REPLACE:host, 
+            SublimeSocketAPISettings.SS_PORT_REPLACE:port,
+            SublimeSocketAPISettings.SS_TESTSUITE_PATH_REPLACE:testBasePath,
+            SublimeSocketAPISettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
+        },
+        "resource/tests/tests.html", 
+        "tmp/tests.html")
+
+
+
+
   @classmethod
   def generateHTML(self, replaceableDict, sourcePath, outputPath):
     # create path of Preference.html
@@ -60,30 +82,14 @@ class Openpreference(sublime_plugin.TextCommand):
     # set Target-App to open Preference.html
     targetAppPath = sublime.load_settings("SublimeSocket.sublime-settings").get('preference browser')
 
-    # compose coomand
+    # compose command
     command = "open" + " " + "-a" + " " + targetAppPath + " \"" + preferencePath + "\""
 
     # run on the other thread
     thread = BuildThread(command)
     thread.start()
 
-  @classmethod
-  def openSublimeSocketTest(self, host, port):
-    testHTMLPath = sublime.load_settings("SublimeSocket.sublime-settings").get('testHtml')
-    testSuitePath = sublime.load_settings("SublimeSocket.sublime-settings").get('testSuite')
 
-    # get current Plugin's resource/tests path.
-    testBasePath = sublime.packages_path() + "/"+MY_PLUGIN_PATHNAME+"/"+"resource/tests"
-
-    self.generateHTML(
-        {
-            SublimeSocketAPISettings.SS_HOST_REPLACE:host, 
-            SublimeSocketAPISettings.SS_PORT_REPLACE:port,
-            SublimeSocketAPISettings.SS_TESTSUITE_PATH_REPLACE:testBasePath,
-            SublimeSocketAPISettings.SS_TESTSUITE_FILENAME_REPLACE:testSuitePath
-        },
-        "resource/tests/tests.html", 
-        "tmp/tests.html")
 
 
 class BuildThread(threading.Thread):

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sublime, sublime_plugin
 import uuid
 import re
 import time
@@ -17,24 +16,13 @@ class SublimeSocketServer:
 	def __init__(self, transferMethod, args):
 
 		self.api = SublimeSocketAPI(self)
-
 		self.kvs = KVS()
 
-
-		print("transferMethod", transferMethod, "args", args)
-		
 		# choose WebSocket server
-		
-
-		host = sublime.load_settings("SublimeSocket.sublime-settings").get("WebSocketServer").get("host")
-		port = sublime.load_settings("SublimeSocket.sublime-settings").get("WebSocketServer").get("port")
-		params = {"host":host, "port":port}
-
+		params = self.api.editorAPI.loadSettings(transferMethod)
 
 		self.transfer = WSServer(self)
 		result = self.transfer.spinup(params)
-
-		
 		print("起動に失敗した場合、すでにport使われてるとかだわ。")
 		#   self.tearDownServer()
 
@@ -55,7 +43,7 @@ class SublimeSocketServer:
 
 	## load settings and run in mainThread
 	def loadSettings(self, results):
-		settingCommands = self.api.editorAPI.loadSettings("SublimeSocket.sublime-settings", "loadSettings")
+		settingCommands = self.api.editorAPI.loadSettings("loadSettings")
 		for command in settingCommands:
 			self.api.runAPI(command, None, None, None, results)
 
