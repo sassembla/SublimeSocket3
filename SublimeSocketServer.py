@@ -165,7 +165,7 @@ class SublimeSocketServer:
 		
 		return {}
 
-	def updateViewDict(self, viewDict):
+	def updateViewsDict(self, viewDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
 
 

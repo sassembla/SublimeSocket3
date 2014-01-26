@@ -1313,7 +1313,7 @@ class SublimeSocketAPI:
 			self.editorAPI.addRegionToView(view, identity, regions, condition, "sublime.DRAW_OUTLINED")
 			
 			# store region
-			self.storeRegionToView(view, identity, regions[0], line, message)
+			self.storeRegionToViewsDict(view, path, identity, regions[0], line, message)
 
 
 			self.setResultsParams(results, self.appendRegion, {"result":"appended", 
@@ -1876,7 +1876,7 @@ class SublimeSocketAPI:
 
 		# add
 		viewDict[filePath] = viewInfo
-		self.server.updateViewDict(viewDict)
+		self.server.updateViewsDict(viewDict)
 
 	def runDeletion(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
@@ -1887,29 +1887,33 @@ class SublimeSocketAPI:
 		# delete
 		if filePath in viewDict:
 			del viewDict[filePath]
-			self.server.updateViewDict(viewDict)
+			self.server.updateViewsDict(viewDict)
 
 
 
 	# region series
 
 	## store region to viewDict-view in KVS
-	def storeRegionToView(self, view, identity, region, line, message):
-		path = self.internal_detectViewPath(view)
-
-		specificViewDict = self.server.viewsDict()[path]
+	def storeRegionToViewsDict(self, view, path, identity, region, line, message):
+		viewsDict = self.server.viewsDict()
+		specificViewDict = viewsDict[path]
 
 		regionDict = {}
 		regionDict[SublimeSocketAPISettings.REGION_LINE] = line
 		regionDict[SublimeSocketAPISettings.REGION_MESSAGE] = message
 		regionDict[SublimeSocketAPISettings.REGION_SELF] = region
 		
-		# generate SUBDICT_REGIONS if not exist yet.
-		if not SublimeSocketAPISettings.SUBDICT_REGIONS in specificViewDict:
+		
+		if SublimeSocketAPISettings.SUBDICT_REGIONS in specificViewDict:
+			pass
+			
+		# generate SUBDICT_REGIONS if not exist yet.	
+		else:
 			specificViewDict[SublimeSocketAPISettings.SUBDICT_REGIONS] = {}
 			specificViewDict[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS] = {}
 
 		specificViewDict[SublimeSocketAPISettings.SUBDICT_REGIONS][identity] = regionDict
+		self.server.updateViewsDict(viewsDict)
 
 	
 	## emit event if params matches the regions that sink in view
