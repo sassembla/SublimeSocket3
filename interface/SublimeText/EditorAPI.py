@@ -81,6 +81,9 @@ class EditorAPI:
 			color = sublime.DRAW_OUTLINED
 			view.add_regions(identity, regions, condition, 'dot', color)
 
+	def convertRegionToTuple(self, region):
+		return (region.a, region.b)
+
 	def removeRegionFromView(self, view, regionIdentity):
 		view.erase_regions(regionIdentity)
 
@@ -112,6 +115,9 @@ class EditorAPI:
 	def addSelectionToView(self, view, pt):
 		view.sel().add(pt)
 		
+	def isRegionContained(self, region, targetRegion):
+		return targetRegion.contains(region)
+
 	def bodyOfView(self, view):
 		currentRegion = sublime.Region(0, view.size())
 		return view.substr(view.word(currentRegion))

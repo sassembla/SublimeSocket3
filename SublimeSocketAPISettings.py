@@ -77,8 +77,6 @@ SHOWSTATUSMESSAGE_MESSAGE	= "message"
 
 # /internal APIs
 
-# region identifier prefix
-REGION_UUID_PREFIX			= "ss_"
 
 
 # public APIs
@@ -269,7 +267,7 @@ APPENDREGION_MESSAGE	= "message"
 APPENDREGION_CONDITION 	= "condition"
 
 API_ERASEALLREGION		= "eraseAllRegion"
-ERASEALLREGION_PATH		= "path"
+ERASEALLREGION_NAME		= "name"
 
 API_RUNWITHBUFFER		= "runWithBuffer"
 RUNWITHBUFFER_VIEW		= "view"
@@ -313,21 +311,6 @@ RUNCOMPLETION_ID			= "id"
 API_SETSUBLIMESOCKETWINDOWBASEPATH = "setSublimeSocketWindowBasePath"
 
 
-#Dictionaries for collection of "Views", "filters", "events"
-DICT_VIEWS				= "DICT_VIEWS"
-
-VIEW_SELF				= "view"
-VIEW_PATH				= "path"
-VIEW_ID					= "viewId"
-VIEW_BUFFERID			= "bufferId"
-VIEW_BASENAME			= "basename"
-VIEW_VNAME				= "vname"
-VIEW_SELECTED			= "selected"
-VIEW_ISEXIST			= "isExist"
-
-
-DICT_COMPLETIONS		= "DICT_COMPLETIONS"
-
 
 # definition of sublime's view events
 REACTABLE_VIEW_ON_NEW				= "on_new"
@@ -348,20 +331,38 @@ VIEW_EVENTS_DEL			= [REACTABLE_VIEW_ON_CLOSE] #list of acceptable-view del event
 VIEW_EVENTS_REACTIVE	= [REACTABLE_VIEW_ON_QUERY_COMPLETIONS, REACTABLE_VIEW_SS_V_DECREASED, REACTABLE_VIEW_SS_V_INCREASED]
 
 
+DICT_VIEWS				= "DICT_VIEWS"
+VIEW_SELF				= "view"
+VIEW_PATH				= "path"
+VIEW_ID					= "viewId"
+VIEW_BUFFERID			= "bufferId"
+VIEW_BASENAME			= "basename"
+VIEW_VNAME				= "vname"
+VIEW_SELECTED			= "selected"
+VIEW_ISEXIST			= "isExist"
+
+
+DICT_COMPLETIONS		= "DICT_COMPLETIONS"
+
+
 DICT_FILTERS		= "DICT_FILTERS"
 
+
 DICT_REACTORS		= "DICT_REACTORS"
+
+
 DICT_REACTORSLOG	= "DICT_REACTORS_LOG"
 REACTORSLOG_LATEST	= "latest"
 
 
-SUBDICT_REGIONS		= "SUBDICT_REGIONS"
+DICT_REGIONS		= "DICT_REGIONS"
 REGION_IDENTITY		= "identity"
-REGION_SELF			= "region"
-REGION_EVENT		= "event"
+REGION_FROM			= "from"
+REGION_TO			= "to"
 REGION_MESSAGE		= "message"
 REGION_LINE			= "line"
 
-SUBARRAY_DELETED_REGIONS	= "SUBARRAY_DELETED_REGIONS"
 
+# region identifier prefix
+REGION_UUID_PREFIX			= "ss_"
 

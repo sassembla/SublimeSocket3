@@ -165,9 +165,40 @@ class SublimeSocketServer:
 		
 		return {}
 
-	def updateViewsDict(self, viewDict):
-		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewDict)
+	def updateViewsDict(self, viewsDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewsDict)
 
+
+
+	# regions and KVS
+	def storeRegion(self, path, identity, regionDict):
+		regionsDict = self.regionsDict()
+		
+		if path in regionsDict:
+			pass
+	
+		# generate if not exist yet.	
+		else:
+			regionsDict[path] = {}
+			regionsDict[path][identity] = []
+
+		# add regionDict as new item of list.
+		regionsDict[path][identity].append(regionDict)
+
+		self.updateRegionsDict(regionsDict)
+
+		regionsDict = self.regionsDict()
+
+	def regionsDict(self):
+		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
+
+		if regionsDict:
+			return regionsDict
+
+		return {}
+
+	def updateRegionsDict(self, regionsDict):
+		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REGIONS, regionsDict)
 
 
 

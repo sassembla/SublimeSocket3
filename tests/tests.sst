@@ -1425,30 +1425,51 @@ test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregi
 
 
 
-test>eraseのテスト、特定のviewのregionすべてを削除する。2件あるかどうかチェックしたいがassertionが面倒なので有無のみチェック/createBuffer: {
-    "name": "fileA.txt"
+test>eraseのテスト、特定のviewのregionすべてを削除する。/createBuffer: {
+    "name": "notexistFileC.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
     "condition": "keyword",
-    "name": "fileA.txt"
-}->createBuffer: {
-    "name": "fileB.txt"
+    "name": "notexistFileC.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
     "condition": "keyword",
-    "name": "fileB.txt"
+    "name": "notexistFileC.txt"
 }->eraseAllRegion: {
-    "path": "fileA.txt"
+    "name": "notexistFileC.txt"
 }->assertResult: {
     "id": "erase specific view regions",
     "contains": {
         "eraseAllRegion": {
-            "erasedIdentities": {"fileA.txt": ["ss_(0, 0)"]}
+            "erasedIdentities": {"notexistFileC.txt": ["ss_(0, 0)"]}
         }
     },
-    "description": "empty."
+    "description": "empty.",
+    "debug": true
+}
+
+
+
+
+test>eraseのテスト、存在しないビューのregionを削除しようとして、何も起こらない。/createBuffer: {
+    "name": "someBuffer.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "condition": "keyword",
+    "name": "someBuffer.txt"
+}->eraseAllRegion: {
+    "name": "notExistFile.txt"
+}->assertResult: {
+    "id": "nothing happen",
+    "contains": {
+        "eraseAllRegion": {
+            "erasedIdentities": {}
+        }
+    },
+    "description": "not match."
 }
 
 

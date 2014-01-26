@@ -981,8 +981,13 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param."
 		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param."
 		assert SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED in params, "containsRegions requires 'selected' param."
+		
+		view = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
+		target = params[SublimeSocketAPISettings.CONTAINSREGIONS_TARGET]
+		emit = params[SublimeSocketAPISettings.CONTAINSREGIONS_EMIT]
+		selected = params[SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED]
 
-		self.containsRegionsInKVS(params, results)
+		self.containsRegionsInView(view, target, emit, selected, results)
 		
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1313,8 +1318,9 @@ class SublimeSocketAPI:
 			self.editorAPI.addRegionToView(view, identity, regions, condition, "sublime.DRAW_OUTLINED")
 			
 			# store region
-			self.storeRegionToViewsDict(view, path, identity, regions[0], line, message)
-
+			regionFrom, regionTo = self.editorAPI.convertRegionToTuple(regions[0])
+			 
+			self.storeRegionToServer(path, identity, line, message, regionFrom, regionTo)
 
 			self.setResultsParams(results, self.appendRegion, {"result":"appended", 
 				SublimeSocketAPISettings.APPENDREGION_LINE:line, 
@@ -1660,14 +1666,43 @@ class SublimeSocketAPI:
 
 	## erase all regions of view/condition
 	def eraseAllRegion(self, params, results):
-		if SublimeSocketAPISettings.ERASEALLREGION_PATH in params:
-			targetViewPath = params[SublimeSocketAPISettings.ERASEALLREGION_PATH]
-
-			deletes = self.deleteAllRegionsInAllView(targetViewPath)
-		else:
-			deletes = self.deleteAllRegionsInAllView()
 		
-		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
+		regionsDict = self.server.regionsDict()
+		if regionsDict:
+			deletes = {}
+			deleteTargetPaths = []
+
+			# if target view specified and it exist, should erase specified view's regions only.
+			if SublimeSocketAPISettings.ERASEALLREGION_NAME in params:
+				(view, path) = self.internal_getViewAndPathFromViewOrName(params, None, SublimeSocketAPISettings.ERASEALLREGION_NAME)
+				
+				if path in regionsDict:
+					deleteTargetPaths.append(path)
+
+				# if not found, do nothing.
+				else:
+					pass
+
+			else:
+				deleteTargetPaths = list(regionsDict)
+
+		
+			def eraseAllRegions(path):
+				targetRegionsDict = regionsDict[path]
+				
+				deletedRegionIdentities = []
+				for regionIdentity in targetRegionsDict:
+					view = self.internal_detectViewInstance(path)
+					self.editorAPI.removeRegionFromView(view, regionIdentity)
+
+					deletedRegionIdentities.append(regionIdentity)
+				
+				if deletedRegionIdentities:
+					deletes[path] = deletedRegionIdentities
+
+			[eraseAllRegions(path) for path in deleteTargetPaths]
+			
+			self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 	
 	def formattingMessageParameters(self, params, formatKey, outputKey):
@@ -1763,13 +1798,13 @@ class SublimeSocketAPI:
 		view = None
 		path = None
 
-		if viewParamKey in params:
+		if viewParamKey and viewParamKey in params:
 			view = params[viewParamKey]
 			
 			path = self.internal_detectViewPath(view)
 			
 				
-		elif nameParamKey in params:
+		elif nameParamKey and nameParamKey in params:
 			name = params[nameParamKey]
 			
 			view = self.internal_detectViewInstance(name)
@@ -1879,156 +1914,62 @@ class SublimeSocketAPI:
 		self.server.updateViewsDict(viewDict)
 
 	def runDeletion(self, eventParam):
-		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
-		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
+		view = eventParam[SublimeSocketAPISettings.VIEW_SELF]
+		path = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
-		viewDict = self.server.viewsDict()
+		viewsDict = self.server.viewsDict()
+		regionsDict = self.server.regionsDict()
 
 		# delete
-		if filePath in viewDict:
-			del viewDict[filePath]
-			self.server.updateViewsDict(viewDict)
+		if path in viewsDict:
+			del viewsDict[path]
+			self.server.updateViewsDict(viewsDict)
+
+		if path in regionsDict:
+			del regionsDict[path]
+			self.server.updateReactorsDict(regionsDict)
+
 
 
 
 	# region series
 
 	## store region to viewDict-view in KVS
-	def storeRegionToViewsDict(self, view, path, identity, region, line, message):
-		viewsDict = self.server.viewsDict()
-		specificViewDict = viewsDict[path]
-
+	def storeRegionToServer(self, path, identity, line, message, regionFrom, regionTo):
+		
 		regionDict = {}
 		regionDict[SublimeSocketAPISettings.REGION_LINE] = line
+		regionDict[SublimeSocketAPISettings.REGION_FROM] = regionFrom
+		regionDict[SublimeSocketAPISettings.REGION_TO] = regionTo
 		regionDict[SublimeSocketAPISettings.REGION_MESSAGE] = message
-		regionDict[SublimeSocketAPISettings.REGION_SELF] = region
 		
-		
-		if SublimeSocketAPISettings.SUBDICT_REGIONS in specificViewDict:
-			pass
-			
-		# generate SUBDICT_REGIONS if not exist yet.	
-		else:
-			specificViewDict[SublimeSocketAPISettings.SUBDICT_REGIONS] = {}
-			specificViewDict[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS] = {}
-
-		specificViewDict[SublimeSocketAPISettings.SUBDICT_REGIONS][identity] = regionDict
-		self.server.updateViewsDict(viewsDict)
-
+		self.server.storeRegion(path, identity, regionDict)
 	
 	## emit event if params matches the regions that sink in view
-	def containsRegionsInKVS(self, params, results):
-		viewDict = self.server.viewsDict()
-		if viewDict:
+	def containsRegionsInView(self, view, target, emit, selectedRegionSet, results):
+		regionsDict = self.server.regionsDict()
+
+		path = self.internal_detectViewPath(view)
+
+		if path in regionsDict:
+			regionsDictOfThisView = regionsDict[path]
 			
-			# specify regions that are selected.
-			view = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
-			selectedRegionSet = params[SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED]
+			# search each region identity
+			def isRegionMatchInDict(regionDictIdentity):
+				for regionDict in regionsDictOfThisView[regionDictIdentity]:
+					# generete region from identity-key.
+					regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
+					regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
+					region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-			path = self.internal_detectViewPath(view)
+					if self.editorAPI.isRegionContained(region, selectedRegionSet):
+						# append target
+						regionDict[SublimeSocketAPISettings.REACTOR_TARGET] = target
+						
+						self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionDict, results)
+
+			[isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
 			
-			# return if view not exist(include ST's console)
-			if not path in viewDict:
-				return
-
-			
-			viewInfoDict = viewDict[path]
-			if SublimeSocketAPISettings.SUBDICT_REGIONS in viewInfoDict:
-				regionsDicts = viewInfoDict[SublimeSocketAPISettings.SUBDICT_REGIONS]
-				
-				
-				# identity
-				def isRegionMatchInDict(dictKey):
-					currentRegion = regionsDicts[dictKey][SublimeSocketAPISettings.REGION_SELF]
-					
-					if selectedRegionSet.contains(currentRegion):
-						return dictKey
-					else:
-						pass
-					
-				regionIdentitiesListWithNone = [isRegionMatchInDict(key) for key in regionsDicts.keys()]
-				
-				# collect if exist
-				regionIdentitiesList = [val for val in regionIdentitiesListWithNone if val]
-				
-				target = params[SublimeSocketAPISettings.CONTAINSREGIONS_TARGET]
-				emit = params[SublimeSocketAPISettings.CONTAINSREGIONS_EMIT]
-				
-				# emit event of regions
-				def emitRegionMatchEvent(key):
-
-					regionInfo = regionsDicts[key]
-
-					# append target
-					regionInfo[SublimeSocketAPISettings.REACTOR_TARGET] = target
-					
-					self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionInfo, results)
-					
-					if SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG in params:
-						debug = params[SublimeSocketAPISettings.CONTAINSREGIONS_DEBUG]
-
-						if debug:
-							message = regionInfo[SublimeSocketAPISettings.APPENDREGION_MESSAGE]
-
-							messageDict = {}
-							messageDict[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE] = message
-							
-							self.runAPI(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE, messageDict, None, None, results)
-							self.printout(message)
-							
-				[emitRegionMatchEvent(region) for region in regionIdentitiesList]
-
-
-	## delete all regions in all view 
-	def deleteAllRegionsInAllView(self, targetViewPath=None):
-		deletes = {}
-
-		# delete from viewDict on KVS
-		viewDict = self.server.viewsDict()
-		if not viewDict:
-			return deletes
-
-		def eraseAllRegionsAtViewDict(viewDictValue):
-		
-			if SublimeSocketAPISettings.SUBDICT_REGIONS in viewDictValue:
-				
-				view = viewDictValue[SublimeSocketAPISettings.VIEW_SELF]
-					
-
-				regionsDict = viewDictValue[SublimeSocketAPISettings.SUBDICT_REGIONS]
-				path = self.internal_detectViewPath(view)
-
-				# if target limitation exist, should erase specified view's region only.
-				if targetViewPath:
-					if path:
-						if not path in targetViewPath:
-							return
-					else:
-						return
-
-				
-				currentDeletesList = []
-				
-				if regionsDict:
-					for regionIdentity in regionsDict.keys():
-						self.editorAPI.removeRegionFromView(view, regionIdentity)
-						currentDeletesList.append(regionIdentity)
-
-						viewDictValue[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS][regionIdentity] = 1
-				
-					deletedRegions = viewDictValue[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS]
-
-					for deletedRegionIdentity in deletedRegions.keys(): 
-						if deletedRegionIdentity in regionsDict:
-							del regionsDict[deletedRegionIdentity]
-
-				if currentDeletesList:
-					deletes[path] = currentDeletesList
-
-		list(map(eraseAllRegionsAtViewDict, viewDict.values()))
-		
-		return deletes
-
 
 
 	# reactor series
