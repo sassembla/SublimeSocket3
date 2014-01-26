@@ -2,6 +2,10 @@
 import sublime, sublime_plugin
 import os
 
+# for log prefix.
+from ... import SublimeSocketAPISettings
+
+
 ## sublime dependents apis and functions.
 class EditorAPI:
 	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedKey, isViewExist):
@@ -69,10 +73,16 @@ class EditorAPI:
 	def statusMessage(self, message):
 		sublime.status_message(message)
 
+	def printMessage(self, message):
+		print(SublimeSocketAPISettings.LOG_prefix, message)
+
 	def addRegionToView(self, view, identity, regions, condition, color):
 		if color == "sublime.DRAW_OUTLINED":
 			color = sublime.DRAW_OUTLINED
 			view.add_regions(identity, regions, condition, 'dot', color)
+
+	def removeRegionFromView(self, view, regionIdentity):
+		view.erase_regions(regionIdentity)
 
 	def platform(self):
 		return sublime.platform()

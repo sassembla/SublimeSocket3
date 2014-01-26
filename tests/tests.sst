@@ -1039,6 +1039,22 @@ test>フォーマットを使用したmonocast/monocastMessage: {
 
 
 
+test>対象のいないmonocastMessage/monocastMessage: {
+    "target": "noTarget",
+    "message": "no one receive this."
+}->assertResult: {
+    "id": "no one receive this message",
+    "contains": {
+        "monocastMessage": {
+            "message": "no one receive this.",
+            "target": ""
+        }
+    },
+    "description": "not match."
+}
+
+
+
 test>メッセージを全クライアントに配信する/broadcastMessage: {
     "message": "broadcasting"
 }->assertResult: {
@@ -1380,7 +1396,7 @@ test>適当な名前のファイルを開き、regionの追加に失敗(noViewFo
 
 
 
-test>eraseのテスト。複数のファイルを開き、複数のregionを追加する。消した個数が合っていればOK/createBuffer: {
+test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregionを追加する。/createBuffer: {
     "name": "notexistfileA.txt"
 }->appendRegion: {
     "line": "1",
@@ -1396,32 +1412,16 @@ test>eraseのテスト。複数のファイルを開き、複数のregionを追�
     "name": "notexistfileB.txt"
 }->eraseAllRegion: {
     
-}->本当はpathを書きたいが、環境固有になってしまうのでダメ。/assertResult: {
-    "id": "eraseAllRegion, two file and each 1 regions will become empty",
-    "isnotempty": "eraseAllRegion",
-    "description": "not all is empty."
-}->closeFile: {
-    "name": "notexistfileA.txt"
-}->closeFile: {
-    "name": "notexistfileB.txt"
-}
-
-
-
-test>eraseのテスト。適当な名前のファイルを開き、regionを追加する。消した個数が合っていればOK/createBuffer: {
-    "name": "SUBLIMESOCKET_PATH:tests/testResources/notexistfile.txt"
-}->appendRegion: {
-    "line": "1",
-    "message": "test",
-    "name": "notexistfile.txt",
-    "condition": "keyword"
-}->eraseAllRegion: {
-    
 }->assertResult: {
-    "id": "eraseAllRegion, all regions are become empty",
-    "isnotempty": "eraseAllRegion",
+    "id": "eraseAllRegion, two file and each 1 regions will become empty",
+    "contains": {
+        "eraseAllRegion": {
+            "erasedIdentities": {"notexistfileB.txt": ["ss_(0, 0)"],"notexistfileA.txt": ["ss_(0, 0)"]}
+        }
+    },
     "description": "not all is empty."
 }
+
 
 
 
@@ -1443,7 +1443,11 @@ test>eraseのテスト、特定のviewのregionすべてを削除する。2件�
     "path": "fileA.txt"
 }->assertResult: {
     "id": "erase specific view regions",
-    "isnotempty": "eraseAllRegion",
+    "contains": {
+        "eraseAllRegion": {
+            "erasedIdentities": {"fileA.txt": ["ss_(0, 0)"]}
+        }
+    },
     "description": "empty."
 }
 

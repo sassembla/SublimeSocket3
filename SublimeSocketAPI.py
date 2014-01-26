@@ -88,7 +88,7 @@ class SublimeSocketAPI:
 					data = data.replace("\t", "	")
 					params = json.loads(data)
 				except Exception as e:
-					print("JSON parse error", e, "source = ", command_params[1])
+					self.editorAPI.printMessage("JSON parse error " + str(e) + " source = " + command_params[1])
 					return
 					
 			clientId = self.runAPI(command, params, clientId, None, results)
@@ -186,11 +186,6 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
 				self.server.collectViews(results)
-				break
-
-			if case(SublimeSocketAPISettings.API_KEYVALUESTORE):
-				result = self.server.KVSControl(params)
-				self.server.sendMessage(clientId, result)
 				break
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
@@ -295,7 +290,7 @@ class SublimeSocketAPI:
 				break
 
 			if case():
-				print("unknown command", command, "/")
+				self.editorAPI.printMessage("unknown command "+ command + " /")
 				break
 
 		return clientId
@@ -382,7 +377,7 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 			self.editorAPI.packagePath()+ "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
-		print("ss: runSetting:", filePath)
+		self.editorAPI.printMessage("runSetting:" + filePath)
 		
 		settingFile = open(filePath, 'r', encoding='utf8')
 		setting = settingFile.read()
@@ -475,7 +470,7 @@ class SublimeSocketAPI:
 			debugFlag = params[SublimeSocketAPISettings.RUNSHELL_DEBUG]
 
 		if debugFlag:
-			print("runnable", runnable)
+			self.editorAPI.printMessage("runnable " + runnable)
 		
 		if len(runnable):
 			subprocess.call(runnable, shell=True)
@@ -509,19 +504,19 @@ class SublimeSocketAPI:
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 		
 		
-		result = self.server.sendMessage(target, message)
+		succeeded, reason = self.server.sendMessage(target, message)
 
-		if result:
+		if succeeded:
 			self.setResultsParams(results, self.monocastMessage, {SublimeSocketAPISettings.OUTPUT_TARGET:target, SublimeSocketAPISettings.OUTPUT_MESSAGE:message})
 
 		else:
-			print("monocastMessage failed. target:", target, "is not exist in clients:", self.server.clients)
+			self.editorAPI.printMessage("monocastMessage failed. target: " + target + " " + reason)
 			self.setResultsParams(results, self.monocastMessage, {SublimeSocketAPISettings.OUTPUT_TARGET:"", SublimeSocketAPISettings.OUTPUT_MESSAGE:message})
 	
 
 
 	## send message to the other via SS.
-	def showAtLog(self, params, results):
+	def showAtLog(self, params, results=None):
 		if SublimeSocketAPISettings.LOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
 			self.showAtLog(params, results)
@@ -529,7 +524,7 @@ class SublimeSocketAPI:
 
 		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param."
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
-		print(SublimeSocketAPISettings.LOG_prefix, message)
+		self.editorAPI.printMessage(message)
 
 		self.setResultsParams(results, self.showAtLog, {"output":message})
 
@@ -697,7 +692,7 @@ class SublimeSocketAPI:
 		# load results for check
 		resultBodies = self.resultBody(results)
 		if debug:
-			print("\nassertResult:\nid:", identity, "\nresultBodies:", resultBodies, "\n:assertResult\n")
+			self.editorAPI.printMessage("\nassertResult:\nid:" + identity + "\nresultBodies:" + str(resultBodies) + "\n:assertResult\n")
 
 
 		assertionIdentity = params[SublimeSocketAPISettings.ASSERTRESULT_ID]
@@ -721,7 +716,7 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_CONTAINS]
 			if debug:
-				print("start assertResult 'contains' in", identity, resultBodies)
+				self.editorAPI.printMessage("start assertResult 'contains' in " + identity + " " + str(resultBodies))
 
 			# match
 			for key in currentDict:
@@ -730,7 +725,7 @@ class SublimeSocketAPI:
 						assertValue = currentDict[key]
 						assertTarget = resultBodies[resultKey]
 						if debug:
-							print("expected:", assertValue, "\n", "actual:", assertTarget, "\n")
+							self.editorAPI.printMessage("expected:" + str(assertValue) + "\n" + "actual:" + str(assertTarget) + "\n")
 
 						if assertValue == assertTarget:
 							setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_PASS,
@@ -741,7 +736,7 @@ class SublimeSocketAPI:
 
 			# fail
 			if debug:
-				print("failed assertResult 'contains' in", identity)
+				self.editorAPI.printMessage("failed assertResult 'contains' in" + identity)
 
 			setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 				assertionIdentity, 
@@ -754,7 +749,7 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS]
 			if debug:
-				print("start assertResult 'not contains' in", identity, resultBodies)
+				self.editorAPI.printMessage("start assertResult 'not contains' in " + identity + " " + resultBodies)
 
 			# match
 			for key in currentDict:
@@ -765,7 +760,7 @@ class SublimeSocketAPI:
 
 						if assertValue == assertTarget:
 							if debug:
-								print("failed assertResult 'not contains' in", identity)
+								self.editorAPI.printMessage("failed assertResult 'not contains' in " + identity)
 
 							setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 								assertionIdentity, 
@@ -784,7 +779,7 @@ class SublimeSocketAPI:
 		# is empty or not
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISEMPTY in params:
 			if debug:
-				print("start assertResult 'isempty' in", identity, resultBodies)
+				self.editorAPI.printMessage("start assertResult 'isempty' in " + identity + " " + resultBodies)
 
 			# match
 			if not resultBodies:
@@ -796,7 +791,7 @@ class SublimeSocketAPI:
 
 			# fail
 			if debug:
-				print("failed assertResult 'empty' in", identity)
+				self.editorAPI.printMessage("failed assertResult 'empty' in " + identity)
 
 			setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 				assertionIdentity, 
@@ -809,7 +804,7 @@ class SublimeSocketAPI:
 		# is not empty or empty
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY in params:
 			if debug:
-				print("start assertResult 'isnotempty' in", identity, resultBodies)
+				self.editorAPI.printMessage("start assertResult 'isnotempty' in " + identity, resultBodies)
 
 			targetAPIKey = params[SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY]
 			
@@ -823,7 +818,7 @@ class SublimeSocketAPI:
 
 			# fail
 			if debug:
-				print("failed assertResult 'isnotempty' in", identity)
+				self.editorAPI.printMessage("failed assertResult 'isnotempty' in " + identity)
 
 			setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 				assertionIdentity, 
@@ -832,7 +827,7 @@ class SublimeSocketAPI:
 			return
 			
 		if debug:
-				print("assertion aborted in assertResult API.", message, identity)
+				self.editorAPI.printMessage("assertion aborted in assertResult API. " + message + " " + identity)
 
 		setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 			assertionIdentity,
@@ -916,7 +911,7 @@ class SublimeSocketAPI:
 
 		if self.editorAPI.isBuffer(name):
 			message = "file " + original_path + " is not exist."
-			print(message)
+			self.editorAPI.printMessage(message)
 
 			result = message
 		
@@ -925,7 +920,7 @@ class SublimeSocketAPI:
 			view = self.editorAPI.openFile(name)
 		
 			message = "file " + original_path + " is opened."
-			print(message)
+			self.editorAPI.printMessage(message)
 		
 			result = message
 
@@ -1028,7 +1023,7 @@ class SublimeSocketAPI:
 			pass
 
 		else:
-			print("filterName:"+str(filterName), "is not yet defined.")
+			self.editorAPI.printMessage("filterName:"+str(filterName) + " " + "is not yet defined.")
 			return
 
 		filterSource = params[SublimeSocketAPISettings.FILTERING_SOURCE]
@@ -1045,9 +1040,9 @@ class SublimeSocketAPI:
 
 			
 			if debug:
-				print("filterName:"+str(filterName))
-				print("pattern:", pattern)
-				print("executablesDict:", executablesDict)
+				self.editorAPI.printMessage("filterName:"+str(filterName))
+				self.editorAPI.printMessage("pattern:" + pattern)
+				self.editorAPI.printMessage("executablesDict:" + executablesDict)
 
 			dotall = False
 			if SublimeSocketAPISettings.DEFINEFILTER_DOTALL in executablesDict:
@@ -1065,13 +1060,13 @@ class SublimeSocketAPI:
 					executablesArray = executablesDict[SublimeSocketAPISettings.DEFINEFILTER_SELECTORS]
 					
 					if debug:
-						print("matched defineFilter selectors:", executablesArray)
-						print("filterSource\n---------------------\n", filterSource, "\n---------------------")
-						print("matched group()", searched.group())
-						print("matched groups()", searched.groups())
+						self.editorAPI.printMessage("matched defineFilter selectors:" + executablesArray)
+						self.editorAPI.printMessage("filterSource\n---------------------\n" + filterSource + "\n---------------------")
+						self.editorAPI.printMessage("matched group():" + searched.group())
+						self.editorAPI.printMessage("matched groups():" + searched.groups())
 					
 						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in executablesDict:
-							print("matched defineFilter comment:", executablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
+							self.editorAPI.printMessage("matched defineFilter comment:" + executablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
 
 					currentGroupSize = len(searched.groups())
 					
@@ -1140,10 +1135,10 @@ class SublimeSocketAPI:
 								params = reduce(reduceLeft, params_dicts[1:], params_dicts[0])
 							
 						else:
-							print("filtering warning:unknown type")
+							self.editorAPI.printMessage("filtering warning:unknown type")
 						
 						if debug:
-							print("filtering command:", command, "params:", params)
+							self.editorAPI.printMessage("filtering command:" + command + " params:" + params)
 
 						# execute
 						self.runAPI(command, params, None, None, results)
@@ -1153,7 +1148,7 @@ class SublimeSocketAPI:
 
 				else:
 					if debug:
-						print("filtering not match")
+						self.editorAPI.printMessage("filtering not match")
 
 		# return succeded signal
 		if 0 < len(currentResults):
@@ -1253,8 +1248,13 @@ class SublimeSocketAPI:
 		
 		regionFrom = params[SublimeSocketAPISettings.SETSELECTION_FROM]
 		regionTo = params[SublimeSocketAPISettings.SETSELECTION_TO]
+		
+		if regionTo < 0:
+			regionFrom = 0
+			regionTo = self.editorAPI.viewSize(view)
 
 		pt = self.editorAPI.generateRegion(regionFrom, regionTo)
+		
 		self.editorAPI.addSelectionToView(view, pt)
 		selected = str(pt)
 		
@@ -1535,9 +1535,6 @@ class SublimeSocketAPI:
 
 	def setSublimeSocketWindowBasePath(self, results):
 		self.sublimeSocketWindowBasePath = self.editorAPI.getFileName()
-		print("sublimeSocketWindowBasePath", self.sublimeSocketWindowBasePath)
-
-
 		self.setResultsParams(results, self.setSublimeSocketWindowBasePath, {"set":"ok"})
 		
 	## verify SublimeSocket API-version and SublimeSocket version
@@ -1652,7 +1649,7 @@ class SublimeSocketAPI:
 					
 				break
 
-		print("ss: " + message)
+		self.editorAPI.printMessage("verify: " + message)
 
 	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition, results):
 		# this check should be run in main thread
@@ -1671,12 +1668,6 @@ class SublimeSocketAPI:
 			deletes = self.server.deleteAllRegionsInAllView()
 		
 		self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
-
-
-
-	## print message to console
-	def printout(self, message):
-		print("debug_message:", message)
 
 	
 	def formattingMessageParameters(self, params, formatKey, outputKey):

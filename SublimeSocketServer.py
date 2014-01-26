@@ -22,7 +22,7 @@ class SublimeSocketServer:
 		self.reserveRestart = None
 
 
-	
+
 	# control server self.
 
 	def resetServer(self):
@@ -34,11 +34,10 @@ class SublimeSocketServer:
 		# teardowned will call.
 	
 	def refreshKVS(self):
-		print("refresh機構、未完成。KVSだけをリセットしてる。")
-		self.kvs.clear()
+		self.clearAllKeysAndValues()
 
 	def transferTeardowned(self, message):
-		print("ss:", message, "\n")
+		self.api.editorAPI.printMessage(message + "\n")
 		self.api.editorAPI.statusMessage(message)
 
 		self.transfer = None
@@ -50,19 +49,20 @@ class SublimeSocketServer:
 			self.spinupTransfer()
 			self.reserveRestart = None
 
+	
+	def transferNoticed(self, message):
+		self.api.editorAPI.printMessage(message)
+
 	def transferSpinupFailed(self, message):
-		print('\n', message, "\n")
+		self.api.editorAPI.printMessage(message)
 		self.api.editorAPI.statusMessage(message)
 
 	def transferSpinupped(self, message):
-		print('\n', message, "\n")
+		self.api.editorAPI.printMessage(message)
 		self.api.editorAPI.statusMessage(message)
 
-		# initialize API-results buffer for load-settings.
-		results = self.api.initResult("loadSettings:"+str(uuid.uuid4()))
-
-		# load settings
-		self.loadSettings(results)
+		# react to renew
+		self.onTransferRenew()
 
 
 	# main API incoming method.
@@ -75,14 +75,23 @@ class SublimeSocketServer:
 		results = self.api.initResult(resultIdentity)
 		self.api.parse(apiData, clientId, results)
 
+	def showTransferInfo(self):
+		if self.transfer:
+			return self.transfer.info()
+
+		else:
+			return "no transfer running."
+
 
 
 	# control transfer.
 
 	def setupTransfer(self, transferMethod, params):
 		if self.transfer:
-			print("ss: SublimeSocket already running.", self.transfer.info())
-			
+			message = "SublimeSocket already running." + self.transfer.info()
+			self.api.editorAPI.printMessage(message + "\n")
+			self.api.editorAPI.statusMessage(message)
+		
 		else:
 			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
 				
@@ -93,7 +102,6 @@ class SublimeSocketServer:
 						break
 
 		self.currentTransferMethod = transferMethod
-
 
 	def spinupTransfer(self):
 		if self.transfer:
@@ -107,36 +115,22 @@ class SublimeSocketServer:
 		else:
 			self.transferSpinupFailed("no transfer running.")
 
-
 	def teardownTransfer(self):
 		if self.transfer:
 			self.transfer.teardown()
 		else:
 			self.transferTeardowned("no transfer running.")
 
-
-
-	def loadSettings(self, results):
-		settingCommands = self.api.editorAPI.loadSettings("loadSettings")
-		for command in settingCommands:
-			self.api.runAPI(command, None, None, None, results)
-
 	
 
 
-
-
-
 	# message series
+	
 	def sendMessage(self, targetId, message):
 		return self.transfer.sendMessage(targetId, message)
 
 	def broadcastMessage(self, message):
 		return self.transfer.broadcastMessage(message)
-
-
-
-
 
 
 
@@ -279,7 +273,7 @@ class SublimeSocketServer:
 
 	def runDeletion(self, eventParam):
 		viewInstance = eventParam[SublimeSocketAPISettings.VIEW_SELF]
-		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME]
+		filePath = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH]
 
 		viewDict = self.viewsDict()
 
@@ -292,36 +286,8 @@ class SublimeSocketServer:
 
 	# KVS series
 
-	## return all key-value as string
-	def showAll(self):
-		if self.kvs.isEmpty():
-			return "No Keys - Values. empty."
-
-		v = self.kvs.items()
-		printKV = []
-		for kvTuple in v:
-			kvsStr = str(kvTuple[0]) + " : " + str(kvTuple[1])+ "	/	"
-			printKV.append(kvsStr)
-		
-		return "".join(printKV)
-
-	## return single key-value as string
-	def showValue(self, key):
-		if not self.kvs.get(key):
-			return str(False)
-		
-		kv = key + " : " + str(self.kvs.get(key))
-		return str(kv)
-
-	## clear all KVS contents
-	def clear(self):
+	def clearAllKeysAndValues(self):
 		self.kvs.clear()
-		return str(True)
-		
-	def remove(self, key):
-		result = self.kvs.remove(key)
-		return str(result)
-
 
 	# view and KVS
 	def viewsDict(self):
@@ -362,7 +328,7 @@ class SublimeSocketServer:
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 
 
-	def KVSControl(self, subCommandAndParam):
+	def clearKVS(self, subCommandAndParam):
 		if 1 < len(subCommandAndParam):
 			return "KVSControl: too many subCommands. please set only one subCommand."
 
@@ -390,7 +356,7 @@ class SublimeSocketServer:
 					break
 
 				if case():
-					print("unknown KVS subcommand")
+					self.api.editorAPI.printMessage("unknown KVS subcommand")
 					break
 
 	
@@ -423,17 +389,17 @@ class SublimeSocketServer:
 		if viewDict:
 			
 			# specify regions that are selected.
-			viewInstance = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
+			view = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
 			selectedRegionSet = params[SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED]
 
-			viewId = viewInstance.file_name()
-
+			path = self.internal_detectViewPath(view)
+			
 			# return if view not exist(include ST's console)
-			if not viewId in viewDict:
+			if not path in viewDict:
 				return
 
 			
-			viewInfoDict = viewDict[viewId]
+			viewInfoDict = viewDict[path]
 			if SublimeSocketAPISettings.SUBDICT_REGIONS in viewInfoDict:
 				regionsDicts = viewInfoDict[SublimeSocketAPISettings.SUBDICT_REGIONS]
 				
@@ -484,40 +450,36 @@ class SublimeSocketServer:
 	def deleteAllRegionsInAllView(self, targetViewPath=None):
 		deletes = {}
 
+		# delete from viewDict on KVS
 		viewDict = self.viewsDict()
 		if not viewDict:
 			return deletes
-		
 
 		def eraseAllRegionsAtViewDict(viewDictValue):
 		
 			if SublimeSocketAPISettings.SUBDICT_REGIONS in viewDictValue:
 				
-				viewInstance = viewDictValue[SublimeSocketAPISettings.VIEW_SELF]
+				view = viewDictValue[SublimeSocketAPISettings.VIEW_SELF]
 					
 
 				regionsDict = viewDictValue[SublimeSocketAPISettings.SUBDICT_REGIONS]
-				deletesList = []
+				path = self.internal_detectViewPath(view)
 
-				currentViewPath = viewInstance.file_name()
-
-				# if exist, should erase specified view's region only.
+				# if target limitation exist, should erase specified view's region only.
 				if targetViewPath:
-					if currentViewPath:
-						if not currentViewPath in targetViewPath:
+					if path:
+						if not path in targetViewPath:
 							return
 					else:
 						return
 
-				deletes[currentViewPath] = deletesList
-				currentDeletesList = deletes[currentViewPath]
+				
+				currentDeletesList = []
 				
 				if regionsDict:
 					for regionIdentity in regionsDict.keys():
-						viewInstance.erase_regions(regionIdentity)
-
-						if currentViewPath:
-							currentDeletesList.append(regionIdentity)
+						self.api.editorAPI.removeRegionFromView(view, regionIdentity)
+						currentDeletesList.append(regionIdentity)
 
 						viewDictValue[SublimeSocketAPISettings.SUBARRAY_DELETED_REGIONS][regionIdentity] = 1
 				
@@ -527,9 +489,11 @@ class SublimeSocketServer:
 						if deletedRegionIdentity in regionsDict:
 							del regionsDict[deletedRegionIdentity]
 
-				regionsDict = {}
+				if currentDeletesList:
+					deletes[path] = currentDeletesList
 
 		list(map(eraseAllRegionsAtViewDict, viewDict.values()))
+		
 		return deletes
 
 
@@ -733,5 +697,19 @@ class SublimeSocketServer:
 		self.updateReactorsLogDict(reactorsLogDict)
 		
 		return True
+
+
+
+	# other series
+
+	def onTransferRenew(self):
+		# initialize API-results buffer for load-settings.
+		results = self.api.initResult("onTransferRenew:"+str(uuid.uuid4()))
+
+		settingCommands = self.api.editorAPI.loadSettings("onTransferRenew")
+		for command in settingCommands:
+			self.api.runAPI(command, None, None, None, results)
+
+
 
 

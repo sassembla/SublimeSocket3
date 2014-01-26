@@ -18,7 +18,7 @@ from .. import SublimeSocketAPISettings
 class WSServer:
 	def __init__(self, server):
 		self.methodName = SublimeSocketAPISettings.WEBSOCKET_SERVER
-		self.clients = {}
+		self.clientIds = {}
 		
 		self.args = None
 
@@ -34,7 +34,12 @@ class WSServer:
 		self.sublimeSocketServer = server
 
 	def info(self):
-		return 'SublimeSocket WebSocketServing running @ ' + str(self.host) + ':' + str(self.port)
+		message = "SublimeSocket WebSocketServing running @ " + str(self.host) + ':' + str(self.port)
+		
+		for clientId in self.clientIds:
+			message = message + "\n	client:" + clientId
+		return message
+		
 
 	def currentArgs(self):
 		return (self.methodName, self.args)
@@ -78,25 +83,26 @@ class WSServer:
 				# genereate new client
 				client = WSClient(self, identity)
 				
-				self.clients[identity] = client
+				self.clientIds[identity] = client
 
 				threading.Thread(target = client.handle, args = (conn,addr)).start()
 			except socket.error as msg:
-				print("WebSocketServer closed.", msg)
+				errorMsg = "SublimeSocket WebSocketServing crashed @ " + str(self.host) + ":" + str(self.port) + " reason:" + str(msg)
+				self.sublimeSocketServer.transferNoticed(errorMsg)
 			
-		msg = 'SublimeSocket WebSocketServing closed @ ' + str(self.host) + ':' + str(self.port)
-		self.sublimeSocketServer.transferTeardowned(msg)		
+		message = "SublimeSocket WebSocketServing closed @ " + str(self.host) + ":" + str(self.port)
+		self.sublimeSocketServer.transferTeardowned(message)		
 
 	## teardown the server
 	def teardown(self):
 		# close all WebSocket clients
-		clientsList = self.clients.copy()
+		clientsList = self.clientIds.copy()
 		
 		for clientId in clientsList:
-			client = self.clients[clientId]
+			client = self.clientIds[clientId]
 			client.close()
 
-		self.clients = []
+		self.clientIds = []
 
 		# stop receiving
 		self.listening = False
@@ -108,14 +114,14 @@ class WSServer:
 
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
-		client = self.clients[clientId]
+		client = self.clientIds[clientId]
 
 		# del from list
-		del self.clients[clientId]
+		del self.clientIds[clientId]
 
 		# update
 		client.clientId = newIdentity
-		self.clients[newIdentity] = client
+		self.clientIds[newIdentity] = client
 
 
 	def thisClientIsDead(self, clientId):
@@ -124,44 +130,34 @@ class WSServer:
 
 	# remove from Client dict
 	def closeClient(self, clientId):
-		client = self.clients[clientId]
+		client = self.clientIds[clientId]
 		client.close()
 
-		if clientId in self.clients:
-			del self.clients[clientId]
-		else:
-			print("ss: server doesn't know about this client:", clientId)
+		if clientId in self.clientIds:
+			del self.clientIds[clientId]
 	
 
-	## show current status & connectionIds
-	def showCurrentStatusAndConnections(self):
-		print("ss: server host:", self.host, "	port:", self.port)
-		
-		print("ss: connections:")
-		for client in self.clients:
-			print("	", client)
-
-
+	# call SublimeSocket server. transfering datas.
 	def call(self, data, clientId):
 		self.sublimeSocketServer.transferInputted(data, clientId)
 
 
 	def sendMessage(self, targetId, message):
-		if targetId in self.clients:
-			client = self.clients[targetId]
+		if targetId in self.clientIds:
+			client = self.clientIds[targetId]
 			buf = self.encoder.text(str(message), mask=0)
 			client.send(buf)
-			return True
-		
-		return False
+			return (True, "done")
+			
+		return (False, "no target found in:" + str(self.clientIds))
 
 
 	def broadcastMessage(self, message):
 		buf = self.encoder.text(str(message), mask=0)
 		
-		clients = self.clients.values()
+		clients = self.clientIds.values()
 
-		clientNames = list(self.clients.keys())
+		clientNames = list(self.clientIds.keys())
 		
 		for client in clients:
 			client.send(buf)

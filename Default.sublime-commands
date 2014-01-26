@@ -5,11 +5,6 @@
     },
     
     {
-        "caption": "SublimeSocket: on > test",
-        "command": "socket_on_then_test"
-    },
-
-    {
         "caption": "SublimeSocket: restart server (close transfer)",
         "command": "socket_restart"
     },
@@ -17,5 +12,16 @@
     {
         "caption": "SublimeSocket: off",
         "command": "socket_off"
+    },
+
+    {
+        "caption": "SublimeSocket: on > test",
+        "command": "socket_on_then_test"
+    },
+
+    {
+        "caption": "SublimeSocket: transfer: information",
+        "command": "transfer_info"
     }
+
 ]

@@ -26,7 +26,9 @@ thread = None
 
 class Socket_on(sublime_plugin.TextCommand):
   def run(self, edit):
-    self.startServer("WebSocketServer", [])
+
+    defaultTransferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
+    self.startServer(defaultTransferMethod, [])
 
 
   @classmethod
@@ -68,10 +70,27 @@ class Socket_off(sublime_plugin.TextCommand):
       thread.teardownServer()
 
     else:
-      notActivatedMessage = "SublimeSocket not yet activated."
-      sublime.status_message(notActivatedMessage)
-      print("ss:", notActivatedMessage)
+      message = "SublimeSocket not yet activated."
+      sublime.status_message(message)
+      print("ss:", message)
       
+
+class Transfer_info(sublime_plugin.TextCommand):
+  def run(self, edit):
+    global thread
+
+    if thread and thread.is_alive():
+      message = thread.server.showTransferInfo()
+      sublime.status_message(message)
+      print("ss:", message)
+
+    else:
+      message = "SublimeSocket not yet activated."
+      sublime.status_message(message)
+      print("ss:", message)
+
+
+
 
 
 # threading
@@ -194,10 +213,10 @@ class CaptureEditing(sublime_plugin.EventListener):
     # self.updateViewInfo(view)
 
   def on_query_completions(self, view, prefix, locations):
-    ret = self.get(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
+    completions = self.getDataFromThread(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
     
-    if ret:
-      return ret
+    if completions:
+      return completions
 
   ## call when the event happen
   def update(self, eventName, view=None):
@@ -225,9 +244,9 @@ class CaptureEditing(sublime_plugin.EventListener):
       self.currentViewInfo["size"] = view.size()
 
 
-  def get(self, eventName, view=None):    
+  def getDataFromThread(self, eventName, view=None):    
     global thread
-
+    
     if thread and thread.is_alive():
       return thread.getReactorDataFromServer(eventName, view)
 
