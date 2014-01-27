@@ -209,8 +209,9 @@ class CaptureEditing(sublime_plugin.EventListener):
     self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_POST_SAVE, view)
     
   def on_selection_modified(self, view):
+    s = view.sel()
+    print("view.sel()", dir(s))
     self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_SELECTION_MODIFIED, view)
-    # self.updateViewInfo(view)
 
   def on_query_completions(self, view, prefix, locations):
     completions = self.getDataFromThread(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
@@ -262,4 +263,11 @@ class ReduceTextCommand(sublime_plugin.TextCommand):
   def run(self, edit):
     region = sublime.Region(self.view.size()-1, self.view.size())
     self.view.erase(edit, region)
+    
+class ClearSelectionCommand(sublime_plugin.TextCommand):
+  def run(self, edit):
+    print("clear!")
+    self.view.sel().clear()
+
+
     

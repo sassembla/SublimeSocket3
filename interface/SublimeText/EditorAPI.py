@@ -120,6 +120,9 @@ class EditorAPI:
 
 	def addSelectionToView(self, view, pt):
 		view.sel().add(pt)
+
+	def clearSelectionOfView(self, view):
+		view.sel().clear()
 		
 	def isRegionContained(self, region, targetRegion):
 		return targetRegion.contains(region)

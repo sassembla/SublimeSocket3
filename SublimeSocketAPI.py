@@ -220,6 +220,10 @@ class SublimeSocketAPI:
 				self.setSelection(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_CLEARSELECTION):
+				self.clearSelection(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_RUNSHELL):
 				self.runShell(params, results)
 				break
@@ -552,49 +556,56 @@ class SublimeSocketAPI:
 		cancelled = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED]
 		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
 
+		finallyBlock = []
+		if SublimeSocketAPISettings.SHOWTOOLTIP_FINALLY in params:
+			finallyBlock = params[SublimeSocketAPISettings.SHOWTOOLTIP_FINALLY]
+
 		view, path = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SHOWTOOLTIP_VIEW, SublimeSocketAPISettings.SHOWTOOLTIP_NAME)
 
-		# nothing run if no selects.
-		if view and selects:
+		assert view, "showToolTip require 'view' or 'name' param."
 
-			# run after the tooltip selected or cancelled.
-			def toolTipClosed(index):
-				injectParams = {}
+		# run after the tooltip selected or cancelled.
+		def toolTipClosed(index):
+			injectParams = {}
 
-				# append target and other injective-key = SHOWTOOLTIP_INJECTIONKEYS
-				injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view
-				
+			# append target and other injective-key = SHOWTOOLTIP_INJECTIONKEYS
+			injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view
+			
+			# gen selector-inside dict and add "inject" notation.
+			selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
+					
+			if -1 < index:
+				if index < len(selects):
+					itemDict = selects[index]
+					key = list(itemDict)[0]
 
-				if -1 < index:
-					if index < len(selects):
-						itemDict = selects[index]
-						key = list(itemDict)[0]
+					# append the "onselected" selectors.
+					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
 
-						# gen selector-inside dict and add "inject" notation.
-						selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
-						selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
+					self.runAllSelector(selectorInsideParams, injectParams, results)
+			else:
+				if cancelled:
 
-						print("selectorInsideParams", selectorInsideParams, "injectParams", injectParams)
-						self.runAllSelector(selectorInsideParams, injectParams, results)
-				else:
-					if cancelled:
+					# append the "oncancelled" selectors.
+					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled.copy()
 
-						# gen selector-inside dict and add "inject" notation.
-						selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
-						selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled.copy()
+					self.runAllSelector(selectorInsideParams, injectParams, results)
 
-						print("selectorInsideParams2", selectorInsideParams, "injectParams", injectParams)
-						self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:selector}, injectParams, results)
+			if finallyBlock:
+				# append the "finally" selectors.
+				selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = finallyBlock.copy()
+
+				self.runAllSelector(selectorInsideParams, injectParams, results)
 
 
-			def getItemKey(item):
-				key = list(item)[0]
-				return key
+		def getItemKey(item):
+			key = list(item)[0]
+			return key
 
-			tooltipItemKeys = [getItemKey(item) for item in selects]
+		tooltipItemKeys = [getItemKey(item) for item in selects]
 
-			self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
-			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
+		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
+		self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
 			
 		
 	## run testus
@@ -803,7 +814,7 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS in params:
 			currentDict = params[SublimeSocketAPISettings.ASSERTRESULT_NOTCONTAINS]
 			if debug:
-				self.editorAPI.printMessage("start assertResult 'not contains' in " + identity + " " + resultBodies)
+				self.editorAPI.printMessage("start assertResult 'not contains' in " + identity + " " + str(resultBodies))
 
 			# match
 			for key in currentDict:
@@ -833,7 +844,7 @@ class SublimeSocketAPI:
 		# is empty or not
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISEMPTY in params:
 			if debug:
-				self.editorAPI.printMessage("start assertResult 'isempty' in " + identity + " " + resultBodies)
+				self.editorAPI.printMessage("start assertResult 'isempty' in " + identity + " " + str(resultBodies))
 
 			# match
 			if not resultBodies:
@@ -1043,6 +1054,12 @@ class SublimeSocketAPI:
 		regionsDict = self.server.regionsDict()
 
 		path = self.internal_detectViewPath(view)
+		print("このpathに対して、setされてるregionがあれば、そのチェックを行う、という形なので、pathでみる。")
+		# path identity に対してselectedかどうかの判定がある感じなので、regionsDictに情報持つのが良さげ。
+		
+		currentIdentitiesSet = []
+
+		identitiesSet = []
 
 		if path in regionsDict:
 			regionsDictOfThisView = regionsDict[path]
@@ -1056,15 +1073,19 @@ class SublimeSocketAPI:
 					region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
 					if self.editorAPI.isRegionContained(region, selected):
-						return regionDict
+						return (regionDictIdentity, regionDict)
 			
-			containedRegionDicts = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
+			containedRegionDictsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
+			containedRegionDicts = [regionDict for regionDict in containedRegionDictsWithNone if regionDict]
 			
-			for regionDict in containedRegionDicts:
-
+			containdIdentities = []
+			for identity, regionDict in containedRegionDicts:
+				containdIdentities.append(identity)
 				selectorInsideParams = params.copy()
 				
-				# append target and other injective-key = AREREGIONSCONTAINED_INJECTIONKEYS
+				# "from", "to", "message", "line" are contained.
+
+				# add below.
 				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET] = target
 				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW] = view
 				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_PATH] = path
@@ -1073,7 +1094,10 @@ class SublimeSocketAPI:
 				selectorInsideParams = self.insertInjectKeys(selectorInsideParams, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECTIONKEYS, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECT)
 
 				self.runAllSelector(selectorInsideParams, regionDict, results)
-				
+			
+			# update current contained region for prevent double-run.
+			identitiesSet = set(containdIdentities)
+			print("path/regionsDictOfThisViewの、", regionsDictOfThisView, "identitiesSetSet", identitiesSet)
 		
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1331,9 +1355,7 @@ class SublimeSocketAPI:
 	## generate selection to view
 	def setSelection(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
-		if not view:
-			return
-
+		assert SublimeSocketAPISettings.SETSELECTION_VIEW in params, "setSelection require 'view' param."
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
 		
@@ -1371,7 +1393,17 @@ class SublimeSocketAPI:
 			self.setResultsParams(results, self.setSelection, {"selected":selected})
 
 
-	########## APIs for shortcut ST2-Display ##########
+	def clearSelection(self, params, results):
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CLEARSELECTION_VIEW, SublimeSocketAPISettings.CLEARSELECTION_NAME)
+		assert SublimeSocketAPISettings.CLEARSELECTION_VIEW in params, "clearSelection require 'view' param."
+		
+		# self.editorAPI.clearSelectionOfView(view)
+		self.editorAPI.runCommandOnView(view, 'clear_selection')
+		self.setResultsParams(results, self.clearSelection, {"cleared":True})
+
+
+
+	########## APIs for shortcut ST GUI ##########
 
 	## show message on ST
 	def showStatusMessage(self, params, results):
