@@ -180,8 +180,8 @@ class SublimeSocketAPI:
 				self.closeAllBuffer(results)
 				break
 
-			if case(SublimeSocketAPISettings.API_CONTAINSREGIONS):
-				self.containsRegions(params, results)
+			if case(SublimeSocketAPISettings.API_AREREGIONSCONTAINED):
+				self.areRegionsContained(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
@@ -239,6 +239,9 @@ class SublimeSocketAPI:
 			if case(SublimeSocketAPISettings.API_SHOWDIALOG):
 				self.showDialog(params, results)
 				break
+
+			if case(SublimeSocketAPISettings.API_SHOWTOOLTIP):
+				self.showToolTip(params, results)
 
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
 				self.appendRegion(params, results)
@@ -962,32 +965,32 @@ class SublimeSocketAPI:
 	def closeAllBuffer(self, results):
 		closed = []
 
-		def close(views):
-			for view in views:
+		def close(window):
+			for view in self.editorAPI.viewsOfWindow(window):
 				path = self.internal_detectViewPath(view)
 				if self.editorAPI.isBuffer(path):
 					closed.append(path)
 
 					self.editorAPI.closeView(view)
 
-		[close(window.views()) for window in self.editorAPI.windows()]
+		[close(window) for window in self.editorAPI.windows()]
 
 		self.setResultsParams(results, self.closeAllBuffer, {"closed":closed})
 
 
-	## selected is contains regions or not.
-	def containsRegions(self, params, results):
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_VIEW in params, "containsRegions require 'view' param."
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_TARGET in params, "containsRegions require 'target' param."
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_EMIT in params, "containsRegions require 'emit' param."
-		assert SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED in params, "containsRegions requires 'selected' param."
+	## selected is contains target regions or not.
+	def areRegionsContained(self, params, results):
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW in params, "areRegionsContained require 'view' param."
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET in params, "areRegionsContained require 'target' param."
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_EVENTEMIT in params, "areRegionsContained require 'eventemit' param."
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED in params, "areRegionsContained requires 'selected' param."
 		
-		view = params[SublimeSocketAPISettings.CONTAINSREGIONS_VIEW]
-		target = params[SublimeSocketAPISettings.CONTAINSREGIONS_TARGET]
-		emit = params[SublimeSocketAPISettings.CONTAINSREGIONS_EMIT]
-		selected = params[SublimeSocketAPISettings.CONTAINSREGIONS_SELECTED]
+		view = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW]
+		target = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET]
+		emit = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_EVENTEMIT]
+		selected = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED]
 
-		self.containsRegionsInView(view, target, emit, selected, results)
+		self.areRegionsContainedInView(view, target, emit, selected, results)
 		
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1481,10 +1484,11 @@ class SublimeSocketAPI:
 
 	def eventEmit(self, params, results):
 		assert SublimeSocketAPISettings.EVENTEMIT_TARGET in params, "eventEmit require 'target' param."
-		assert SublimeSocketAPISettings.EVENTEMIT_EVENT in params, "eventEmit require 'event' param."
+		assert SublimeSocketAPISettings.EVENTEMIT_EVENTEMIT in params, "eventEmit require 'eventemit' param."
 
-		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
+		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENTEMIT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
+		print("受け入れイベントのチェック", params)
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
 		self.setResultsParams(results, 
@@ -1945,8 +1949,7 @@ class SublimeSocketAPI:
 		
 		self.server.storeRegion(path, identity, regionDict)
 	
-	## emit event if params matches the regions that sink in view
-	def containsRegionsInView(self, view, target, emit, selectedRegionSet, results):
+	def areRegionsContainedInView(self, view, target, emit, selectedRegionSet, results):
 		regionsDict = self.server.regionsDict()
 
 		path = self.internal_detectViewPath(view)

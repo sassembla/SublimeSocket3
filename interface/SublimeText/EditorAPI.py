@@ -67,6 +67,9 @@ class EditorAPI:
 	def windows(self):
 		return sublime.windows()
 
+	def viewsOfWindow(self, window):
+		return window.views()
+
 	def generateRegion(self, index, size):
 		return sublime.Region(index, size)
 
