@@ -1,4 +1,4 @@
-testSuite for SublimeSocketAPI./setTestBeforeAfter: {
+TestSuite for SublimeSocket./setTestBeforeAfter: {
     "beforeselectors": [
         {
             "showStatusMessage": {
@@ -628,7 +628,9 @@ test>2つのregion-contentsに対して、setSelectionでareRegionsContainedを�
                                     ]
                                 }
                             ],
-                            "oncancelled": []
+                            "oncancelled": [
+                                
+                            ]
                         }
                     }
                 ]
@@ -696,13 +698,15 @@ test>setSelectionでareRegionsContainedを引き起こし、tooltipへと値を�
                                     "test1": [
                                         {
                                             "showAtLog<-message": {
-
+                                                
                                             }
                                         }
                                     ]
                                 }
                             ],
-                            "oncancelled": []
+                            "oncancelled": [
+                                
+                            ]
                         }
                     }
                 ]
@@ -754,12 +758,17 @@ test>ツールチップの表示/createBuffer: {
             ]
         }
     ],
-    "oncancelled": []
+    "oncancelled": [
+        
+    ]
 }->assertResult: {
     "id": "toolTipShouldShow",
     "contains": {
         "showToolTip": {
-            "items": ["will show the tooltip", "will show the tooltip2"]
+            "items": [
+                "will show the tooltip",
+                "will show the tooltip2"
+            ]
         }
     },
     "description": "not match."
@@ -792,13 +801,16 @@ test>ツールチップの表示2/createBuffer: {
         }
     ],
     "oncancelled": [
-       
+        
     ]
 }->assertResult: {
     "id": "toolTipShouldShow",
     "contains": {
         "showToolTip": {
-            "items": ["will show the tooltip", "will show the tooltip2"]
+            "items": [
+                "will show the tooltip",
+                "will show the tooltip2"
+            ]
         }
     },
     "description": "not match."
@@ -821,7 +833,9 @@ test>ツールチップの選択、一択を選ぶ/createBuffer: {
             ]
         }
     ],
-    "oncancelled": []
+    "oncancelled": [
+        
+    ]
 }->assertResult: {
     "id": "choiceTheHead",
     "contains": {
@@ -838,7 +852,9 @@ test>onselected項目がない場合、効果無しなので表示しない。/c
     "name": "selectToolTip.txt"
 }->showToolTip: {
     "name": "selectToolTip.txt",
-    "onselected": [],
+    "onselected": [
+        
+    ],
     "oncancelled": [
         {
             "showAtLog": {
@@ -850,8 +866,10 @@ test>onselected項目がない場合、効果無しなので表示しない。/c
     "id": "noChoiceToolTip",
     "notcontains": {
         "showToolTip": {
-           "items": []
-       }
+            "items": [
+                
+            ]
+        }
     },
     "description": "not match."
 }
@@ -875,12 +893,17 @@ test>ツールチップの選択後、inject済のviewを使ってappendRegion�
             ]
         }
     ],
-    "oncancelled": []
+    "oncancelled": [
+        
+    ]
 }->assertResult: {
     "id": "choiceAndAddRegion",
     "contains": {
         "appendRegion": {
-            "condition": "keyword", "message": "test", "result": "appended", "line": "1"
+            "condition": "keyword",
+            "message": "test",
+            "result": "appended",
+            "line": "1"
         }
     },
     "description": "not match."
@@ -1759,12 +1782,18 @@ test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregi
     "id": "eraseAllRegion, two file and each 1 regions will become empty",
     "contains": {
         "eraseAllRegion": {
-            "erasedIdentities": {"notexistfileB.txt": ["ss_(0, 0)"],"notexistfileA.txt": ["ss_(0, 0)"]}
+            "erasedIdentities": {
+                "notexistfileB.txt": [
+                    "ss_(0, 0)"
+                ],
+                "notexistfileA.txt": [
+                    "ss_(0, 0)"
+                ]
+            }
         }
     },
     "description": "not all is empty."
 }
-
 
 
 
@@ -1786,12 +1815,15 @@ test>eraseのテスト、特定のviewのregionすべてを削除する。/creat
     "id": "erase specific view regions",
     "contains": {
         "eraseAllRegion": {
-            "erasedIdentities": {"notexistFileC.txt": ["ss_(0, 0)"]}
+            "erasedIdentities": {
+                "notexistFileC.txt": [
+                    "ss_(0, 0)"
+                ]
+            }
         }
     },
     "description": "empty."
 }
-
 
 
 
@@ -1808,7 +1840,9 @@ test>eraseのテスト、存在しないビューのregionを削除しようと�
     "id": "nothing happen",
     "contains": {
         "eraseAllRegion": {
-            "erasedIdentities": {}
+            "erasedIdentities": {
+                
+            }
         }
     },
     "description": "not match."
