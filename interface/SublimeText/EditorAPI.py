@@ -61,6 +61,9 @@ class EditorAPI:
 	def showMessageDialog(self, message):
 		sublime.message_dialog(message)
 
+	def showPopupMenu(self, view, items, reactor):
+		view.show_popup_menu(items, reactor);
+
 	def openFile(self, name):
 		return sublime.active_window().open_file(name)
 

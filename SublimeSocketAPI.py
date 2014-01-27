@@ -242,6 +242,7 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_SHOWTOOLTIP):
 				self.showToolTip(params, results)
+				break
 
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
 				self.appendRegion(params, results)
@@ -319,8 +320,6 @@ class SublimeSocketAPI:
 	## run each selectors
 	def runAllSelector(self, paramDict, eventParam, results):
 		def runForeachAPI(selector):
-			# {u'broadcastMessage': {u'message': u"text's been modified!"}}
-
 			for commands in selector.keys():
 				command = commands
 				
@@ -546,6 +545,58 @@ class SublimeSocketAPI:
 		self.setResultsParams(results, self.showDialog, {"output":message})
 
 
+	def showToolTip(self, params, results):
+		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED in params, "showToolTip require 'onselected' params."
+		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED in params, "showToolTip require 'oncancelled' param."
+		
+		cancelled = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED]
+		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
+
+		view, path = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SHOWTOOLTIP_VIEW, SublimeSocketAPISettings.SHOWTOOLTIP_NAME)
+
+		# nothing run if no selects.
+		if view and selects:
+
+			# run after the tooltip selected or cancelled.
+			def toolTipClosed(index):
+				injectParams = {}
+
+				# append target and other injective-key = SHOWTOOLTIP_INJECTIONKEYS
+				injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view
+				
+
+				if -1 < index:
+					if index < len(selects):
+						itemDict = selects[index]
+						key = list(itemDict)[0]
+
+						# gen selector-inside dict and add "inject" notation.
+						selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
+						selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
+
+						print("selectorInsideParams", selectorInsideParams, "injectParams", injectParams)
+						self.runAllSelector(selectorInsideParams, injectParams, results)
+				else:
+					if cancelled:
+
+						# gen selector-inside dict and add "inject" notation.
+						selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
+						selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled.copy()
+
+						print("selectorInsideParams2", selectorInsideParams, "injectParams", injectParams)
+						self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:selector}, injectParams, results)
+
+
+			def getItemKey(item):
+				key = list(item)[0]
+				return key
+
+			tooltipItemKeys = [getItemKey(item) for item in selects]
+
+			self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
+			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
+			
+		
 	## run testus
 	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
@@ -592,7 +643,7 @@ class SublimeSocketAPI:
 
 			# parse then get results
 			currentTestResults = self.parse(testCase, clientId, currentTestResults)
-
+			
 			# after block
 			if self.testAfterSelectors:
 				self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testAfterSelectors}, None, currentTestResults)
@@ -981,16 +1032,48 @@ class SublimeSocketAPI:
 	## selected is contains target regions or not.
 	def areRegionsContained(self, params, results):
 		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW in params, "areRegionsContained require 'view' param."
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED in params, "areRegionsContained require 'selected' param."
 		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET in params, "areRegionsContained require 'target' param."
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_EVENTEMIT in params, "areRegionsContained require 'eventemit' param."
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED in params, "areRegionsContained requires 'selected' param."
+		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTORS in params, "areRegionsContained require 'selectors' param."
 		
 		view = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW]
-		target = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET]
-		emit = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_EVENTEMIT]
 		selected = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED]
+		target = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET]
+		
+		regionsDict = self.server.regionsDict()
 
-		self.areRegionsContainedInView(view, target, emit, selected, results)
+		path = self.internal_detectViewPath(view)
+
+		if path in regionsDict:
+			regionsDictOfThisView = regionsDict[path]
+			
+			# search each region identity
+			def isRegionMatchInDict(regionDictIdentity):
+				for regionDict in regionsDictOfThisView[regionDictIdentity]:
+					# generete region from identity-key.
+					regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
+					regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
+					region = self.editorAPI.generateRegion(regionFrom, regionTo)
+
+					if self.editorAPI.isRegionContained(region, selected):
+						return regionDict
+			
+			containedRegionDicts = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
+			
+			for regionDict in containedRegionDicts:
+
+				selectorInsideParams = params.copy()
+				
+				# append target and other injective-key = AREREGIONSCONTAINED_INJECTIONKEYS
+				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET] = target
+				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW] = view
+				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_PATH] = path
+				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED] = selected
+
+				selectorInsideParams = self.insertInjectKeys(selectorInsideParams, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECTIONKEYS, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECT)
+
+				self.runAllSelector(selectorInsideParams, regionDict, results)
+				
 		
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1193,8 +1276,8 @@ class SublimeSocketAPI:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
+		
 		if view:
-
 			name = path
 			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
 					name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
@@ -1226,7 +1309,7 @@ class SublimeSocketAPI:
 				params = self.insertInjectKeys(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
 				
 				self.runAllSelector(params, defaultInjectParam, results)
-
+				
 				self.setResultsParams(results, self.viewEmit, {
 						SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
 						SublimeSocketAPISettings.VIEWEMIT_NAME:name,
@@ -1484,11 +1567,10 @@ class SublimeSocketAPI:
 
 	def eventEmit(self, params, results):
 		assert SublimeSocketAPISettings.EVENTEMIT_TARGET in params, "eventEmit require 'target' param."
-		assert SublimeSocketAPISettings.EVENTEMIT_EVENTEMIT in params, "eventEmit require 'eventemit' param."
+		assert SublimeSocketAPISettings.EVENTEMIT_EVENT in params, "eventEmit require 'eventemit' param."
 
-		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENTEMIT]
+		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
-		print("受け入れイベントのチェック", params)
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
 		self.setResultsParams(results, 
@@ -1948,31 +2030,7 @@ class SublimeSocketAPI:
 		regionDict[SublimeSocketAPISettings.REGION_MESSAGE] = message
 		
 		self.server.storeRegion(path, identity, regionDict)
-	
-	def areRegionsContainedInView(self, view, target, emit, selectedRegionSet, results):
-		regionsDict = self.server.regionsDict()
 
-		path = self.internal_detectViewPath(view)
-
-		if path in regionsDict:
-			regionsDictOfThisView = regionsDict[path]
-			
-			# search each region identity
-			def isRegionMatchInDict(regionDictIdentity):
-				for regionDict in regionsDictOfThisView[regionDictIdentity]:
-					# generete region from identity-key.
-					regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
-					regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
-					region = self.editorAPI.generateRegion(regionFrom, regionTo)
-
-					if self.editorAPI.isRegionContained(region, selectedRegionSet):
-						# append target
-						regionDict[SublimeSocketAPISettings.REACTOR_TARGET] = target
-						
-						self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, emit, regionDict, results)
-
-			[isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
-			
 
 
 	# reactor series
@@ -2077,17 +2135,17 @@ class SublimeSocketAPI:
 						self.runReactor(reactorType, reactorParams, eventParam, results)
 
 
-
 	# completion series
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
 		completions = self.server.completionsDict()
-		if viewIdentity in list(completions):
-			completion = completions[viewIdentity]
+		if completions:
+			if viewIdentity in list(completions):
+				completion = completions[viewIdentity]
 
-			self.server.deleteCompletion(viewIdentity)
-			return completion
+				self.server.deleteCompletion(viewIdentity)
+				return completion
 
 		return None
 

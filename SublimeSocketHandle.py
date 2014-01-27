@@ -172,7 +172,7 @@ class SublimeSocketThread(threading.Thread):
       view_file_name = view.file_name()
 
       if view_file_name:
-        return self.server.consumeCompletion(view_file_name, eventName)
+        return self.server.api.consumeCompletion(view_file_name, eventName)
       
   def teardownServer(self):
     # close the SublimeSocketServer and this thread.
