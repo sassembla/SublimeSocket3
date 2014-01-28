@@ -611,82 +611,60 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
-// test>2つのregion-contentsに対して、setSelectionでareRegionsContainedを引き起こす/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "areRegionsContained<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "eventEmit": {
-//                             "target": "containsregiontarget",
-//                             "event": "event_showAtLog"
-//                         }
-//                     },
-//                     {
-//                         "showToolTip<-view": {
-//                             "onselected": [
-//                                 {
-//                                     "test1": [
-//                                         {
-//                                             "showAtLog": {
-//                                                 "message": "tooltip fired!"
-//                                             }
-//                                         }
-//                                     ]
-//                                 }
-//                             ],
-//                             "oncancelled": [
-                                
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->setEventReactor: {
-//     "target": "containsregiontarget",
-//     "react": "event_showAtLog",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "event fired!"
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "viewReactor, fire event_showAtLog",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "event fired!"
-//         }
-//     },
-//     "description": "no showAtLog found."
-// }->assertResult: {
-//     "id": "viewReactor, fire tooltip too.",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "tooltip fired!"
-//         }
-//     },
-//     "description": "no showAtLog found."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>regionの 2 contentsに対して、setSelectionでareRegionsContainedを引き起こす/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "areRegionsContained<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "hit 2"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->setEventReactor: {
+    "target": "containsregiontarget",
+    "react": "event_showAtLog",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "event fired!"
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->appendRegion: {
+    "line": "1",
+    "message": "test2",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "viewReactor, fire tooltip too.",
+    "contains": {
+        "showAtLog": {
+            "output": "hit!"
+        }
+    },
+    "description": "no showAtLog found."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
@@ -989,24 +967,23 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
-test>選択範囲を解消する/createBuffer: {
-    "name": "clearSelection.txt"
-}->setSelection: {
-    "name": "clearSelection.txt",
-    "from": 0,
-    "to": 1
-}->clearSelection: {
-    "name": "clearSelection.txt"
-}->assertResult: {
-    "id": "clear the selection",
-    "contains": {
-        "clearSelection": {
-            "cleared": true
-        }
-    },
-    "description": "not match.",
-    "debug": true
-}
+// test>選択範囲を解消する/createBuffer: {
+//     "name": "clearSelection.txt"
+// }->setSelection: {
+//     "name": "clearSelection.txt",
+//     "from": 0,
+//     "to": 1
+// }->clearSelection: {
+//     "name": "clearSelection.txt"
+// }->assertResult: {
+//     "id": "clear the selection",
+//     "contains": {
+//         "clearSelection": {
+//             "cleared": true
+//         }
+//     },
+//     "description": "not match."
+// }
 
 
 

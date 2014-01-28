@@ -187,8 +187,6 @@ class SublimeSocketServer:
 
 		self.updateRegionsDict(regionsDict)
 
-		regionsDict = self.regionsDict()
-
 	def regionsDict(self):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
 
@@ -200,7 +198,14 @@ class SublimeSocketServer:
 	def updateRegionsDict(self, regionsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REGIONS, regionsDict)
 
+	def selectedRegionsDict(self):
+		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
+		
+		for path, regions in regionsDict.items():
+			for regionId, regionDatas in regions.items():
+				print("regionId", regionId, "regionDatas", regionDatas)
 
+		return None
 
 	# reactor and KVS
 	def reactorsDict(self):

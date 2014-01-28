@@ -1057,8 +1057,8 @@ class SublimeSocketAPI:
 		print("このpathに対して、setされてるregionがあれば、そのチェックを行う、という形なので、pathでみる。")
 		# path identity に対してselectedかどうかの判定がある感じなので、regionsDictに情報持つのが良さげ。
 		
-		currentIdentitiesSet = []
-
+		currentIdentitiesSet = self.server.selectedRegionsDict()
+		print("currentIdentitiesSet", currentIdentitiesSet)
 		identitiesSet = []
 
 		if path in regionsDict:
@@ -1355,7 +1355,9 @@ class SublimeSocketAPI:
 	## generate selection to view
 	def setSelection(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
-		assert SublimeSocketAPISettings.SETSELECTION_VIEW in params, "setSelection require 'view' param."
+		
+		assert view, "setSelection require 'view' or 'name' param."
+		
 		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
 		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
 		
