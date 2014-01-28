@@ -180,8 +180,8 @@ class SublimeSocketAPI:
 				self.closeAllBuffer(results)
 				break
 
-			if case(SublimeSocketAPISettings.API_AREREGIONSCONTAINED):
-				self.areRegionsContained(params, results)
+			if case(SublimeSocketAPISettings.API_SELECTEDREGIONS):
+				self.selectedRegions(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
@@ -550,11 +550,21 @@ class SublimeSocketAPI:
 
 
 	def showToolTip(self, params, results):
+		if SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP in params:
+			params = self.transformToToolTip(params)
+			print("params", params)
+
 		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED in params, "showToolTip require 'onselected' params."
-		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED in params, "showToolTip require 'oncancelled' param."
-		
-		cancelled = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED]
 		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
+
+		if selects:
+			pass
+		else:
+			return
+
+		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED in params, "showToolTip require 'oncancelled' param."
+		cancelled = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONCANCELLED]
+		
 
 		finallyBlock = []
 		if SublimeSocketAPISettings.SHOWTOOLTIP_FINALLY in params:
@@ -603,11 +613,34 @@ class SublimeSocketAPI:
 			return key
 
 		tooltipItemKeys = [getItemKey(item) for item in selects]
+		
 
 		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
 		self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
 			
+
+	# experimental
+	def transformToToolTip(self, params):
+		# ToolTipの実装が、キー：λとかに出来たとして、それを合成する機構が作れるまでのつなぎ。
+		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
+		froms = params[key]
 		
+		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
+		
+		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"].copy()
+
+		onSelectedSelectors = []
+
+		for theFrom in froms:
+			message = theFrom["message"]
+
+			tooltipItemDict = {message:sampleOnSelectedSelector}
+
+			onSelectedSelectors.append(tooltipItemDict)
+		
+		params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED] = onSelectedSelectors
+		return params
+
 	## run testus
 	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
@@ -1039,66 +1072,70 @@ class SublimeSocketAPI:
 
 		self.setResultsParams(results, self.closeAllBuffer, {"closed":closed})
 
+	# run selected regions.
+	def selectedRegions(self, params, results):
+		assert SublimeSocketAPISettings.SELECTEDREGIONS_VIEW in params, "selectedRegions require 'view' param."
+		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED in params, "selectedRegions require 'selected' param."
+		assert SublimeSocketAPISettings.SELECTEDREGIONS_TARGET in params, "selectedRegions require 'target' param."
+		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTORS in params, "selectedRegions require 'selectors' param."
 
-	## selected is contains target regions or not.
-	def areRegionsContained(self, params, results):
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW in params, "areRegionsContained require 'view' param."
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED in params, "areRegionsContained require 'selected' param."
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET in params, "areRegionsContained require 'target' param."
-		assert SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTORS in params, "areRegionsContained require 'selectors' param."
-		
-		view = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW]
-		selected = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED]
-		target = params[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET]
+		view = params[SublimeSocketAPISettings.SELECTEDREGIONS_VIEW]
+		selected = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED]
+		target = params[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET]
 		
 		regionsDict = self.server.regionsDict()
-
 		path = self.internal_detectViewPath(view)
-		print("このpathに対して、setされてるregionがあれば、そのチェックを行う、という形なので、pathでみる。")
-		# path identity に対してselectedかどうかの判定がある感じなので、regionsDictに情報持つのが良さげ。
 		
-		currentIdentitiesSet = self.server.selectedRegionsDict()
-		print("currentIdentitiesSet", currentIdentitiesSet)
-		identitiesSet = []
-
 		if path in regionsDict:
+			# if already sekected, no event running.
+			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
+		
 			regionsDictOfThisView = regionsDict[path]
 			
 			# search each region identity
 			def isRegionMatchInDict(regionDictIdentity):
-				for regionDict in regionsDictOfThisView[regionDictIdentity]:
-					# generete region from identity-key.
-					regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
-					regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
-					region = self.editorAPI.generateRegion(regionFrom, regionTo)
+				if regionDictIdentity in currentSelectedRegionIdsSet:
+					print("すでに選択中の状態として登録されている、ので、なにも返さない。")
+					pass
 
-					if self.editorAPI.isRegionContained(region, selected):
-						return (regionDictIdentity, regionDict)
-			
-			containedRegionDictsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
-			containedRegionDicts = [regionDict for regionDict in containedRegionDictsWithNone if regionDict]
-			
-			containdIdentities = []
-			for identity, regionDict in containedRegionDicts:
-				containdIdentities.append(identity)
+				else:
+					for regionDict in regionsDictOfThisView[regionDictIdentity]:
+
+						# generete region from identity-key.
+						regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
+						regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
+						region = self.editorAPI.generateRegion(regionFrom, regionTo)
+
+						if self.editorAPI.isRegionContained(region, selected):
+							return regionDictIdentity
+
+			containedRegionIdsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
+			latestContainedRegionIdentities = [regionId for regionId in containedRegionIdsWithNone if regionId]
+			print("latestContainedRegionIdentities", latestContainedRegionIdentities)
+
+			# run each region's each regionDatas.
+			for containedRegionId in latestContainedRegionIdentities:
+				regionDatas = regionsDictOfThisView[containedRegionId]
+
+				copiedRegionsData = regionDatas.copy()
 				selectorInsideParams = params.copy()
 				
-				# "from", "to", "message", "line" are contained.
+				viewParamDict = {}
+				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_REGIONDATAS] = copiedRegionsData
 
-				# add below.
-				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_TARGET] = target
-				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_VIEW] = view
-				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_PATH] = path
-				regionDict[SublimeSocketAPISettings.AREREGIONSCONTAINED_SELECTED] = selected
+				# and add below.
+				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET] = target
+				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_VIEW] = view
+				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_PATH] = path
+				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED] = selected
+				
+				selectorInsideParams = self.insertInjectKeys(selectorInsideParams, SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, SublimeSocketAPISettings.SELECTEDREGIONS_INJECT)
+				self.runAllSelector(selectorInsideParams, viewParamDict, results)
 
-				selectorInsideParams = self.insertInjectKeys(selectorInsideParams, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECTIONKEYS, SublimeSocketAPISettings.AREREGIONSCONTAINED_INJECT)
-
-				self.runAllSelector(selectorInsideParams, regionDict, results)
+			# update current contained region for preventing double-run.
+			self.server.updateSelectingRegionIdsAndResetOthers(path, set(latestContainedRegionIdentities))
 			
-			# update current contained region for prevent double-run.
-			identitiesSet = set(containdIdentities)
-			print("path/regionsDictOfThisViewの、", regionsDictOfThisView, "identitiesSetSet", identitiesSet)
-		
+
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
@@ -1397,7 +1434,7 @@ class SublimeSocketAPI:
 
 	def clearSelection(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CLEARSELECTION_VIEW, SublimeSocketAPISettings.CLEARSELECTION_NAME)
-		assert SublimeSocketAPISettings.CLEARSELECTION_VIEW in params, "clearSelection require 'view' param."
+		assert view, "clearSelection require 'view' or 'name' param."
 		
 		# self.editorAPI.clearSelectionOfView(view)
 		self.editorAPI.runCommandOnView(view, 'clear_selection')

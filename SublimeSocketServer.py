@@ -198,14 +198,41 @@ class SublimeSocketServer:
 	def updateRegionsDict(self, regionsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REGIONS, regionsDict)
 
-	def selectedRegionsDict(self):
+	def selectingRegionIds(self, path):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
 		
-		for path, regions in regionsDict.items():
-			for regionId, regionDatas in regions.items():
-				print("regionId", regionId, "regionDatas", regionDatas)
+		if path in regionsDict:
+			def isSelecting(regionData):
+				if SublimeSocketAPISettings.REGION_SELECTING in regionData and regionData[SublimeSocketAPISettings.REGION_SELECTING] == 1:
+					return True
+				return None
 
+			selectingRegionId = []
+			
+			for _, regions in regionsDict.items():
+				for regionId, regionDatas in regions.items():
+					selectingRegionIds = [regionId for regionData in regionDatas if isSelecting(regionData)]
+			
+			return set(selectingRegionIds)
 		return None
+
+	def updateSelectingRegionIdsAndResetOthers(self, path, selectingRegionIds):
+		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
+
+		if path in regionsDict:
+			# ここで含まれてないのも出せるのでそこでリセットするのが移送敵意。
+			regions = regionsDict[path]
+			allRegionIds = set(list(regions))
+			
+			unselectedRegionIds = allRegionIds - selectingRegionIds
+			
+			for selectingRegionId in selectingRegionIds:
+				for regionData in regions[selectingRegionId]:
+					regionData[SublimeSocketAPISettings.REGION_SELECTING] = 1
+			
+			for unselectdRegionid in unselectedRegionIds:
+				for regionData in regions[unselectdRegionid]:
+					regionData[SublimeSocketAPISettings.REGION_SELECTING] = 0
 
 	# reactor and KVS
 	def reactorsDict(self):
