@@ -49,11 +49,12 @@ REACTORSLOG_LATEST	= "latest"
 
 DICT_REGIONS		= "DICT_REGIONS"
 REGION_IDENTITY		= "identity"
-REGION_FROM			= "from"
-REGION_TO			= "to"
-REGION_MESSAGE		= "message"
-REGION_LINE			= "line"
-REGION_SELECTING	= "selecting"
+REGION_ISSELECTING	= "isSelecting"
+REGION_DATA			= "data"
+REGIONDATA_FROM		= "from"
+REGIONDATA_TO		= "to"
+REGIONDATA_MESSAGE	= "message"
+REGIONDATA_LINE		= "line"
 
 # region identifier prefix
 REGION_UUID_PREFIX			= "ss_"

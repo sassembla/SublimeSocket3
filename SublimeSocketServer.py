@@ -178,16 +178,22 @@ class SublimeSocketServer:
 			if identity in regionsDict:
 				pass
 			else:
-				regionsDict[path][identity] = []
+				regionsDict[path][identity] = {}
 
 	
 		# generate if not exist yet.	
 		else:
 			regionsDict[path] = {}
-			regionsDict[path][identity] = []
+			regionsDict[path][identity] = {}
 
 		# add regionDict as new item of list.
-		regionsDict[path][identity].append(regionDict)
+		if SublimeSocketAPISettings.REGION_DATA in regionsDict[path][identity]:
+			pass
+		else:
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_DATA] = []
+
+		
+		regionsDict[path][identity][SublimeSocketAPISettings.REGION_DATA].append(regionDict)
 
 		self.updateRegionsDict(regionsDict)
 
@@ -206,37 +212,27 @@ class SublimeSocketServer:
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
 		
 		if path in regionsDict:
-			def isSelecting(regionData):
-				if SublimeSocketAPISettings.REGION_SELECTING in regionData and regionData[SublimeSocketAPISettings.REGION_SELECTING] == 1:
-					return True
-				return None
+			selectingRegionIds = [regionId for regionId, regionDatas in regionsDict[path].items() if SublimeSocketAPISettings.REGION_ISSELECTING in regionDatas and regionDatas[SublimeSocketAPISettings.REGION_ISSELECTING] == 1]
+			
+			return selectingRegionIds
 
-			selectingRegionId = []
-			
-			for _, regions in regionsDict.items():
-				for regionId, regionDatas in regions.items():
-					selectingRegionIds = [regionId for regionData in regionDatas if isSelecting(regionData)]
-			
-			return set(selectingRegionIds)
-		return None
+		return []
 
 	def updateSelectingRegionIdsAndResetOthers(self, path, selectingRegionIds):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
-
+		
 		if path in regionsDict:
-			# ここで含まれてないのも出せるのでそこでリセットするのが移送敵意。
 			regions = regionsDict[path]
-			allRegionIds = set(list(regions))
+			allRegionIds = list(regions)
 			
-			unselectedRegionIds = allRegionIds - selectingRegionIds
-			
+			unselectedRegionIds = set(allRegionIds) - set(selectingRegionIds)
+			print("selectingRegionIds", selectingRegionIds, "unselectedRegionIds", unselectedRegionIds)
+
 			for selectingRegionId in selectingRegionIds:
-				for regionData in regions[selectingRegionId]:
-					regionData[SublimeSocketAPISettings.REGION_SELECTING] = 1
+				regions[selectingRegionId][SublimeSocketAPISettings.REGION_ISSELECTING] = 1
 			
 			for unselectdRegionid in unselectedRegionIds:
-				for regionData in regions[unselectdRegionid]:
-					regionData[SublimeSocketAPISettings.REGION_SELECTING] = 0
+				regions[unselectdRegionid][SublimeSocketAPISettings.REGION_ISSELECTING] = 0
 
 	# reactor and KVS
 	def reactorsDict(self):

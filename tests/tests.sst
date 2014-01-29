@@ -665,9 +665,11 @@ test>regionの 2 contentsに対して、setSelectionでselectedRegionsを引き�
 test>試験的なやっつけtransformerのテスト/createBuffer: {
     "name": "transformToToolTipSamle.txt"
 }->showToolTip: {
-    "regionDatas": [
-        {"message": "here"}
-    ],
+    "regionDatas": {
+        "data":[
+          {"message": "here"}
+        ]
+    },
     "transformToToolTip": "regionDatas",
     "name": "transformToToolTipSamle.txt",
     "onselected": [

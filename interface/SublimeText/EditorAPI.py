@@ -132,9 +132,11 @@ class EditorAPI:
 		return view.substr(view.word(currentRegion))
 		
 	def selectionAsStr(self, view):
-		sel = view.sel()[0]
-		(row, col) = view.rowcol(sel.a)
-		return str(row)+","+str(col)
+		sel = view.sel()
+		if sel and 0 < len(sel):
+			selRegion = view.sel()[0]
+			(row, col) = view.rowcol(selRegion.a)
+			return str(row)+","+str(col)
 
 	def getLineRegion(self, view, lineCount):
 		# Convert from 1 based to a 0 based line number

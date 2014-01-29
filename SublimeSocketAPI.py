@@ -552,7 +552,6 @@ class SublimeSocketAPI:
 	def showToolTip(self, params, results):
 		if SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP in params:
 			params = self.transformToToolTip(params)
-			print("params", params)
 
 		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED in params, "showToolTip require 'onselected' params."
 		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
@@ -623,15 +622,16 @@ class SublimeSocketAPI:
 	def transformToToolTip(self, params):
 		# ToolTipの実装が、キー：λとかに出来たとして、それを合成する機構が作れるまでのつなぎ。
 		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
-		froms = params[key]
+		froms = params[key][SublimeSocketAPISettings.REGION_DATA]
 		
 		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
 		
 		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"].copy()
 
 		onSelectedSelectors = []
-
+		
 		for theFrom in froms:
+			
 			message = theFrom["message"]
 
 			tooltipItemDict = {message:sampleOnSelectedSelector}
@@ -1089,32 +1089,34 @@ class SublimeSocketAPI:
 		if path in regionsDict:
 			# if already sekected, no event running.
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
-		
+			print("次のregionがチェック済", currentSelectedRegionIdsSet)
+
 			regionsDictOfThisView = regionsDict[path]
 			
 			# search each region identity
 			def isRegionMatchInDict(regionDictIdentity):
-				if regionDictIdentity in currentSelectedRegionIdsSet:
-					print("すでに選択中の状態として登録されている、ので、なにも返さない。")
-					pass
+				for regionDict in regionsDictOfThisView[regionDictIdentity][SublimeSocketAPISettings.REGION_DATA]:
 
-				else:
-					for regionDict in regionsDictOfThisView[regionDictIdentity]:
+					# generete region from identity-key.
+					regionFrom = regionDict[SublimeSocketAPISettings.REGIONDATA_FROM]
+					regionTo = regionDict[SublimeSocketAPISettings.REGIONDATA_TO]
+					region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-						# generete region from identity-key.
-						regionFrom = regionDict[SublimeSocketAPISettings.REGION_FROM]
-						regionTo = regionDict[SublimeSocketAPISettings.REGION_TO]
-						region = self.editorAPI.generateRegion(regionFrom, regionTo)
-
-						if self.editorAPI.isRegionContained(region, selected):
-							return regionDictIdentity
+					if self.editorAPI.isRegionContained(region, selected):
+						return regionDictIdentity
 
 			containedRegionIdsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
 			latestContainedRegionIdentities = [regionId for regionId in containedRegionIdsWithNone if regionId]
 			print("latestContainedRegionIdentities", latestContainedRegionIdentities)
-
+			
 			# run each region's each regionDatas.
 			for containedRegionId in latestContainedRegionIdentities:
+				
+				if containedRegionId in currentSelectedRegionIdsSet:
+					continue
+				else:
+					pass
+
 				regionDatas = regionsDictOfThisView[containedRegionId]
 
 				copiedRegionsData = regionDatas.copy()
@@ -1133,8 +1135,10 @@ class SublimeSocketAPI:
 				self.runAllSelector(selectorInsideParams, viewParamDict, results)
 
 			# update current contained region for preventing double-run.
-			self.server.updateSelectingRegionIdsAndResetOthers(path, set(latestContainedRegionIdentities))
-			
+			self.server.updateSelectingRegionIdsAndResetOthers(path, latestContainedRegionIdentities)
+			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
+			print("アップデート後は",currentSelectedRegionIdsSet)
+			print("-----------------------")
 
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1854,11 +1858,14 @@ class SublimeSocketAPI:
 
 					deletedRegionIdentities.append(regionIdentity)
 				
+
 				if deletedRegionIdentities:
 					deletes[path] = deletedRegionIdentities
 
 			[eraseAllRegions(path) for path in deleteTargetPaths]
 			
+			latestRegionsDict = self.server.regionsDict()
+			print("latestRegionsDict", latestRegionsDict)
 			self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 	
@@ -1962,11 +1969,13 @@ class SublimeSocketAPI:
 			
 				
 		elif nameParamKey and nameParamKey in params:
+			print("ダメですかね、、、", params)
 			name = params[nameParamKey]
 			
 			view = self.internal_detectViewInstance(name)
 			path = self.internal_detectViewPath(view)
 
+		print("うーん", view, path)
 		if view and path:
 			return (view, path)
 		else:
@@ -2095,10 +2104,10 @@ class SublimeSocketAPI:
 	def storeRegionToServer(self, path, identity, line, message, regionFrom, regionTo):
 		
 		regionDict = {}
-		regionDict[SublimeSocketAPISettings.REGION_LINE] = line
-		regionDict[SublimeSocketAPISettings.REGION_FROM] = regionFrom
-		regionDict[SublimeSocketAPISettings.REGION_TO] = regionTo
-		regionDict[SublimeSocketAPISettings.REGION_MESSAGE] = message
+		regionDict[SublimeSocketAPISettings.REGIONDATA_LINE] = line
+		regionDict[SublimeSocketAPISettings.REGIONDATA_FROM] = regionFrom
+		regionDict[SublimeSocketAPISettings.REGIONDATA_TO] = regionTo
+		regionDict[SublimeSocketAPISettings.REGIONDATA_MESSAGE] = message
 		
 		self.server.storeRegion(path, identity, regionDict)
 
