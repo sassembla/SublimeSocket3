@@ -175,7 +175,11 @@ class SublimeSocketServer:
 		regionsDict = self.regionsDict()
 		
 		if path in regionsDict:
-			pass
+			if identity in regionsDict:
+				pass
+			else:
+				regionsDict[path][identity] = []
+
 	
 		# generate if not exist yet.	
 		else:

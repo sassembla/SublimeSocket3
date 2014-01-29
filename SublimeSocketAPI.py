@@ -1662,8 +1662,8 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
-		if not view:
-			return
+		
+		assert view, "runCompletion require 'view' or 'name' param." + params
 		
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
 
@@ -2212,23 +2212,23 @@ class SublimeSocketAPI:
 	def consumeCompletion(self, viewIdentity, eventName):
 		completions = self.server.completionsDict()
 		if completions:
+			print("consumeCompletionに来てて、",viewIdentity);
 			if viewIdentity in list(completions):
+				print("completions", completions)
 				completion = completions[viewIdentity]
-
+				print("viewIdentityでの中身が無い？", completion)
+				
 				self.server.deleteCompletion(viewIdentity)
 				return completion
 
 		return None
 
-	def updateCompletion(self, viewIdentity, completions):
-		completions = self.server.completionsDict()
-		completions[viewIdentity] = completions
-		self.server.updateCompletionsDict(completions)
+	def updateCompletion(self, viewIdentity, composedCompletions):
+		completionsDict = self.server.completionsDict()
 
-
-
-
-
+		completionsDict[viewIdentity] = composedCompletions
+		self.server.updateCompletionsDict(completionsDict)
+		
 
 	# other
 
