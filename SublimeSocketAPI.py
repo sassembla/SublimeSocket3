@@ -590,7 +590,7 @@ class SublimeSocketAPI:
 
 					# append the "onselected" selectors.
 					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
-
+					injectParams["message"] = "sommmeeeee"
 					self.runAllSelector(selectorInsideParams, injectParams, results)
 			else:
 				if cancelled:
@@ -622,24 +622,25 @@ class SublimeSocketAPI:
 	def transformToToolTip(self, params):
 		# ToolTipの実装が、キー：λとかに出来たとして、それを合成する機構が作れるまでのつなぎ。
 		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
-		froms = params[key][SublimeSocketAPISettings.REGION_DATA]
 		
+		messages = params[key][SublimeSocketAPISettings.REGION_MESSAGES]
+		
+
 		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
-		
 		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"].copy()
 
 		onSelectedSelectors = []
 		
-		for theFrom in froms:
+		# messageをキーに、セレクタを値にセットする。
+		# キーごとのセレクタ設定のためには、キーをセレクタ側に値として埋め込む、みたいな機構が必要。
+		for message in messages:
 			
-			message = theFrom["message"]
-
 			tooltipItemDict = {message:sampleOnSelectedSelector}
-
 			onSelectedSelectors.append(tooltipItemDict)
 		
 		params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED] = onSelectedSelectors
 		return params
+
 
 	## run testus
 	def runTests(self, params, clientId, results):
@@ -1091,21 +1092,18 @@ class SublimeSocketAPI:
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
 
 			regionsDictOfThisView = regionsDict[path]
-			
+
 			# search each region identity
-			def isRegionMatchInDict(regionDictIdentity):
-				for regionDict in regionsDictOfThisView[regionDictIdentity][SublimeSocketAPISettings.REGION_DATA]:
+			def isRegionSelected(regionData):
+				regionFrom = regionData[SublimeSocketAPISettings.REGION_FROM]
+				regionTo = regionData[SublimeSocketAPISettings.REGION_TO]
+				region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-					# generete region from identity-key.
-					regionFrom = regionDict[SublimeSocketAPISettings.REGIONDATA_FROM]
-					regionTo = regionDict[SublimeSocketAPISettings.REGIONDATA_TO]
-					region = self.editorAPI.generateRegion(regionFrom, regionTo)
+				if self.editorAPI.isRegionContained(region, selected):
+					return True
+				return False
 
-					if self.editorAPI.isRegionContained(region, selected):
-						return regionDictIdentity
-
-			containedRegionIdsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
-			latestContainedRegionIdentities = [regionId for regionId in containedRegionIdsWithNone if regionId]
+			latestContainedRegionIdentities = [regionIdentity for regionIdentity, regionData in regionsDictOfThisView.items() if isRegionSelected(regionData)]
 			
 			# run each region's each regionDatas.
 			for containedRegionId in latestContainedRegionIdentities:
@@ -1160,6 +1158,7 @@ class SublimeSocketAPI:
 		
 
 	def filtering(self, params, results):
+		print("filtering params", params)
 		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'filterName' param."
 		filterName = params[SublimeSocketAPISettings.FILTERING_NAME]
 
@@ -1476,8 +1475,9 @@ class SublimeSocketAPI:
 			
 			# store region
 			regionFrom, regionTo = self.editorAPI.convertRegionToTuple(regions[0])
-			 
-			self.storeRegionToServer(path, identity, line, message, regionFrom, regionTo)
+			
+
+			self.server.storeRegion(path, identity, line, regionFrom, regionTo, message)
 
 			self.setResultsParams(results, self.appendRegion, {"result":"appended", 
 				SublimeSocketAPISettings.APPENDREGION_LINE:line, 
@@ -2092,22 +2092,6 @@ class SublimeSocketAPI:
 		if path in regionsDict:
 			del regionsDict[path]
 			self.server.updateReactorsDict(regionsDict)
-
-
-
-
-	# region series
-
-	## store region to viewDict-view in KVS
-	def storeRegionToServer(self, path, identity, line, message, regionFrom, regionTo):
-		
-		regionDict = {}
-		regionDict[SublimeSocketAPISettings.REGIONDATA_LINE] = line
-		regionDict[SublimeSocketAPISettings.REGIONDATA_FROM] = regionFrom
-		regionDict[SublimeSocketAPISettings.REGIONDATA_TO] = regionTo
-		regionDict[SublimeSocketAPISettings.REGIONDATA_MESSAGE] = message
-		
-		self.server.storeRegion(path, identity, regionDict)
 
 
 

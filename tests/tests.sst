@@ -32,6 +32,25 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
+test>quickFix的な機構のテスト、appendRegionからのToolTip、filterでの入力でコードを打ち込む。/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->defineFilter: {
+    "name": "quickfix filter",
+    "patterns": [
+        {
+            "^quickfix adoptale pattern": [
+                {
+                    "showAtLog": {
+                        "message": "quickfix ready."
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+
+
 test>viewEmitで別途injectを使う/createBuffer: {
     "name": "injectionWithViewEmit.txt"
 }->viewEmit: {

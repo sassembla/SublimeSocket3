@@ -171,30 +171,28 @@ class SublimeSocketServer:
 
 
 	# regions and KVS
-	def storeRegion(self, path, identity, regionDict):
+	def storeRegion(self, path, identity, line, regionFrom, regionTo, message):
 		regionsDict = self.regionsDict()
 		
 		if path in regionsDict:
-			if identity in regionsDict:
+			if identity in regionsDict[path]:
 				pass
 			else:
 				regionsDict[path][identity] = {}
-
-	
-		# generate if not exist yet.	
+				regionsDict[path][identity][SublimeSocketAPISettings.REGION_LINE] = line
+				regionsDict[path][identity][SublimeSocketAPISettings.REGION_FROM] = regionFrom
+				regionsDict[path][identity][SublimeSocketAPISettings.REGION_TO] = regionTo
+				regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES] = []
 		else:
 			regionsDict[path] = {}
 			regionsDict[path][identity] = {}
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_LINE] = line
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_FROM] = regionFrom
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_TO] = regionTo
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES] = []
 
-		# add regionDict as new item of list.
-		if SublimeSocketAPISettings.REGION_DATA in regionsDict[path][identity]:
-			pass
-		else:
-			regionsDict[path][identity][SublimeSocketAPISettings.REGION_DATA] = []
-
+		regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES].insert(0, message)
 		
-		regionsDict[path][identity][SublimeSocketAPISettings.REGION_DATA].append(regionDict)
-
 		self.updateRegionsDict(regionsDict)
 
 	def regionsDict(self):
@@ -226,7 +224,6 @@ class SublimeSocketServer:
 			allRegionIds = list(regions)
 			
 			unselectedRegionIds = set(allRegionIds) - set(selectingRegionIds)
-			print("selectingRegionIds", selectingRegionIds, "unselectedRegionIds", unselectedRegionIds)
 
 			for selectingRegionId in selectingRegionIds:
 				regions[selectingRegionId][SublimeSocketAPISettings.REGION_ISSELECTING] = 1
@@ -279,7 +276,6 @@ class SublimeSocketServer:
 
 	def updateCompletionsDict(self, completionsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_COMPLETIONS, completionsDict)
-
 
 
 
