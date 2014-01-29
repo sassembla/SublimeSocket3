@@ -1089,7 +1089,6 @@ class SublimeSocketAPI:
 		if path in regionsDict:
 			# if already sekected, no event running.
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
-			print("次のregionがチェック済", currentSelectedRegionIdsSet)
 
 			regionsDictOfThisView = regionsDict[path]
 			
@@ -1107,7 +1106,6 @@ class SublimeSocketAPI:
 
 			containedRegionIdsWithNone = [isRegionMatchInDict(regionDictIdentity) for regionDictIdentity in list(regionsDictOfThisView)]
 			latestContainedRegionIdentities = [regionId for regionId in containedRegionIdsWithNone if regionId]
-			print("latestContainedRegionIdentities", latestContainedRegionIdentities)
 			
 			# run each region's each regionDatas.
 			for containedRegionId in latestContainedRegionIdentities:
@@ -1137,8 +1135,6 @@ class SublimeSocketAPI:
 			# update current contained region for preventing double-run.
 			self.server.updateSelectingRegionIdsAndResetOthers(path, latestContainedRegionIdentities)
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
-			print("アップデート後は",currentSelectedRegionIdsSet)
-			print("-----------------------")
 
 	def defineFilter(self, params, results):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
@@ -1864,8 +1860,11 @@ class SublimeSocketAPI:
 
 			[eraseAllRegions(path) for path in deleteTargetPaths]
 			
-			latestRegionsDict = self.server.regionsDict()
-			print("latestRegionsDict", latestRegionsDict)
+			for delPath in deletes:
+				del regionsDict[delPath]
+
+			self.server.updateRegionsDict(regionsDict)
+			
 			self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
 
 	
@@ -1969,13 +1968,12 @@ class SublimeSocketAPI:
 			
 				
 		elif nameParamKey and nameParamKey in params:
-			print("ダメですかね、、、", params)
 			name = params[nameParamKey]
 			
 			view = self.internal_detectViewInstance(name)
 			path = self.internal_detectViewPath(view)
 
-		print("うーん", view, path)
+
 		if view and path:
 			return (view, path)
 		else:
@@ -2221,11 +2219,8 @@ class SublimeSocketAPI:
 	def consumeCompletion(self, viewIdentity, eventName):
 		completions = self.server.completionsDict()
 		if completions:
-			print("consumeCompletionに来てて、",viewIdentity);
 			if viewIdentity in list(completions):
-				print("completions", completions)
 				completion = completions[viewIdentity]
-				print("viewIdentityでの中身が無い？", completion)
 				
 				self.server.deleteCompletion(viewIdentity)
 				return completion
