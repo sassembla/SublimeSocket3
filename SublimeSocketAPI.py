@@ -371,6 +371,7 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.REACTOR_INJECT, 
 				results)
 
+
 	## count up specified labelled param.
 	def countUp(self, params, results):
 		assert SublimeSocketAPISettings.COUNTUP_LABEL in params, "countUp requre 'label' param."
@@ -597,7 +598,6 @@ class SublimeSocketAPI:
 
 		tooltipItemKeys = [getItemKey(item) for item in selects]
 
-
 		# run after the tooltip selected or cancelled.
 		def toolTipClosed(index):
 			
@@ -615,7 +615,7 @@ class SublimeSocketAPI:
 					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
-						[view, selectedItem], 
+						[view, path, selectedItem], 
 						SublimeSocketAPISettings.REACTOR_INJECT, 
 						results)
 			else:
@@ -627,7 +627,7 @@ class SublimeSocketAPI:
 					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
-						[view, selectedItem], 
+						[view, path, selectedItem], 
 						SublimeSocketAPISettings.REACTOR_INJECT, 
 						results)
 
@@ -639,7 +639,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
-					[view, selectedItem], 
+					[view, path, selectedItem], 
 					SublimeSocketAPISettings.REACTOR_INJECT, 
 					results)
 
@@ -663,8 +663,6 @@ class SublimeSocketAPI:
 
 		onSelectedSelectors = []
 		
-		# messageをキーに、セレクタを値にセットする。
-		# キーごとのセレクタ設定のためには、キーをセレクタ側に値として埋め込む、みたいな機構が必要。
 		for message in messages:
 			
 			tooltipItemDict = {message:sampleOnSelectedSelector}
@@ -1154,11 +1152,15 @@ class SublimeSocketAPI:
 					pass
 
 				regionDatas = regionsDictOfThisView[containedRegionId]
+				line = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_LINE]
+				fromParam = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_FROM]
+				toParam = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_TO]
+				messages = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_MESSAGES]
 
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, 
-					[regionDatas, view, path, target, selected], 
+					[view, path, target, selected, line, fromParam, toParam, messages], 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECT, 
 					results)
 
