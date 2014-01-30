@@ -113,16 +113,15 @@ class SublimeSocketAPI:
 		command = command.replace(" ", "")
 
 		# calc "<-" inject param.
-		if injectParams:
-			if SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
-				splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
-				command = splitted[0]
-				
-				accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
+		if injectParams and SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
+			splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
+			command = splitted[0]
+			
+			accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
 
-				for acceptKey in accepts:
-					if acceptKey in injectParams:
-						params[acceptKey] = injectParams[acceptKey]
+			for acceptKey in accepts:
+				if acceptKey in injectParams:
+					params[acceptKey] = injectParams[acceptKey]
 
 
   		# python-switch
@@ -315,27 +314,31 @@ class SublimeSocketAPI:
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				
 				# default injection
-				reactorDict = self.insertInjectKeys(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
+				reactorDict = self.insertInjectKeysToInjectionMap(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
 				break
 
 		self.runAllSelector(reactorDict, eventParam, results)
 
 
-	## run each selectors
-	def runAllSelector(self, paramDict, eventParam, results):
-		def runForeachAPI(selector):
-			for commands in selector.keys():
-				command = commands
-				
-			params = selector[command].copy()
+	def runAllSelectorWithInjection(self, params, injectiveKeys, injectiveValues, injectionMapKey, results):
+		assert len(injectiveKeys) == len(injectiveValues), "cannot generate inective-keys and values:"+injectiveKeys+" vs "+injectiveValues
+		zippedInjectiveParams = dict(zip(injectiveKeys, injectiveValues))
 
-			# get inject parameter from inputted param.
-			injectParams = self.injectParams(paramDict, eventParam)
-			self.runAPI(command, params, None, injectParams, results)
+		runnableParams = params.copy()
 
-		[runForeachAPI(selector) for selector in paramDict[SublimeSocketAPISettings.REACTOR_SELECTORS]]
+		# add injectionMap
+		injectMapInjectedParams = self.insertInjectKeysToInjectionMap(runnableParams, injectiveKeys, injectionMapKey)
 
+		self.runAllSelector(injectMapInjectedParams, zippedInjectiveParams, results)
 
+		
+	# run each selectors
+	def runAllSelector(self, params, injectiveParams, results):
+		selectors = params[SublimeSocketAPISettings.REACTOR_SELECTORS]
+		injectParams = self.injectParams(params, injectiveParams)
+		
+		for selector in selectors:
+			[self.runAPI(eachCommand, eachParams, None, injectParams, results) for eachCommand, eachParams in selector.items()]
 
 
 	def runFoundationEvent(self, eventName, eventParam, reactors, results):
@@ -573,55 +576,65 @@ class SublimeSocketAPI:
 
 		assert view, "showToolTip require 'view' or 'name' param."
 
-		# run after the tooltip selected or cancelled.
-		def toolTipClosed(index):
-			# injection
-			injectParams = self.injectParams()
-			この辺難しい。
-
-			# if SublimeSocketAPISettings.SHOWTOOLTIP_INJECT in params:
-			# 	injectParams = params[SublimeSocketAPISettings.SHOWTOOLTIP_INJECT]
-
-			# append target and other injective-key = SHOWTOOLTIP_INJECTIONKEYS
-			injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view			
-			print("他のところと違うかも。このAPIのinjectデフォルトが上書きされる。どっちがルールだっけなー。", injectParams)
-
-			# gen selector-inside dict and add "inject" notation.
-			selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
-					
-			if -1 < index:
-				if index < len(selects):
-					itemDict = selects[index]
-					key = list(itemDict)[0]
-
-					# append the "onselected" selectors.
-					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
-
-					self.runAllSelector(selectorInsideParams, injectParams, results)
-			else:
-				if cancelled:
-
-					# append the "oncancelled" selectors.
-					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled.copy()
-
-					self.runAllSelector(selectorInsideParams, injectParams, results)
-
-			if finallyBlock:
-				# append the "finally" selectors.
-				selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = finallyBlock.copy()
-
-				self.runAllSelector(selectorInsideParams, injectParams, results)
-
-
 		def getItemKey(item):
 			key = list(item)[0]
 			return key
 
 		tooltipItemKeys = [getItemKey(item) for item in selects]
-		
 
+
+		# run after the tooltip selected or cancelled.
+		def toolTipClosed(index):
+			
+			if -1 < index:
+				if index < len(selects):
+					selectedItem = tooltipItemKeys[index]
+
+					itemDict = selects[index]
+					key = list(itemDict)[0]
+
+					print("コピーする必要があるとしたらこの辺が根っこになるような気がするが、もっと先だと凄くうれしい。")
+
+					# rename from "onselected" to "selector".
+					selectorInsideParams = params
+					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key]
+					
+					self.runAllSelectorWithInjection(
+						selectorInsideParams, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+						[view, selectedItem], 
+						SublimeSocketAPISettings.REACTOR_INJECT, 
+						results)
+			else:
+				if cancelled:
+					# rename from "cancelled" to "selector".
+					selectorInsideParams = params
+					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled
+					
+					self.runAllSelectorWithInjection(
+						selectorInsideParams, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+						[view, selectedItem], 
+						SublimeSocketAPISettings.REACTOR_INJECT, 
+						results)
+
+			if finallyBlock:
+				# rename from "finally" to "selector".
+				selectorInsideParams = params
+				selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = finallyBlock
+
+				self.runAllSelectorWithInjection(
+					selectorInsideParams, 
+					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+					[view, selectedItem], 
+					SublimeSocketAPISettings.REACTOR_INJECT, 
+					results)
+
+			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
+
+		print("最悪、ここでuniqueかけることができる。そも入れる時点でかさなってるかどうかチェックすればいいわなあ、、", tooltipItemKeys)
 		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
-		self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
+		
 			
 
 	# experimental
@@ -1124,6 +1137,8 @@ class SublimeSocketAPI:
 				copiedRegionsData = regionDatas.copy()
 				selectorInsideParams = params.copy()
 				
+				# セレクタと
+
 				viewParamDict = {}
 				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_REGIONDATAS] = copiedRegionsData
 
@@ -1133,7 +1148,16 @@ class SublimeSocketAPI:
 				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_PATH] = path
 				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED] = selected
 				
-				selectorInsideParams = self.insertInjectKeys(selectorInsideParams, SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, SublimeSocketAPISettings.SELECTEDREGIONS_INJECT)
+				# injectの仕様として、
+				# ・特定の値を受け取る
+				# ・特定の値を渡す
+				# ・受け渡しにはinjectマップを使用する
+				# という形になっているので、
+				# やるべき事は上記のみ、どこでやっているかが問題。
+				# runAPI時点で、injectマップがあれば、inject値を盛り込む、という形になっているので、
+				# injectマップを生成しつつ、？？？？を行う、というのが値を渡す条件。
+
+				selectorInsideParams = self.insertInjectKeysToInjectionMap(selectorInsideParams, SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, SublimeSocketAPISettings.SELECTEDREGIONS_INJECT)
 				self.runAllSelector(selectorInsideParams, viewParamDict, results)
 
 			# update current contained region for preventing double-run.
@@ -1164,7 +1188,6 @@ class SublimeSocketAPI:
 		
 
 	def filtering(self, params, results):
-		print("filtering params", params)
 		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'filterName' param."
 		filterName = params[SublimeSocketAPISettings.FILTERING_NAME]
 
@@ -1372,7 +1395,7 @@ class SublimeSocketAPI:
 					SublimeSocketAPISettings.VIEWEMIT_IDENTITY: identity
 				}
 
-				params = self.insertInjectKeys(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
+				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
 				
 				self.runAllSelector(params, defaultInjectParam, results)
 				
@@ -1918,9 +1941,9 @@ class SublimeSocketAPI:
 		return None
 
 
-	# expand injected list. if "inject" exist, add. or not exist "inject", 
+	# expand injected list.
 	# if already injected, never overwrite.
-	def insertInjectKeys(self, params, injectionInterpolateKeys, injectKeyword):
+	def insertInjectKeysToInjectionMap(self, params, injectionInterpolateKeys, injectKeyword):
 		if injectKeyword in params:
 			pass
 		else:
@@ -1928,6 +1951,7 @@ class SublimeSocketAPI:
 			
 		for key in injectionInterpolateKeys:
 			if not key in params[injectKeyword]:
+				# set key: key for generating injection map.
 				params[injectKeyword][key] = key
 
 		return params
