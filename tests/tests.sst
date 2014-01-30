@@ -32,1108 +32,1106 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
-// test>quickFix的な機構のテスト、appendRegionからのToolTip、filterでの入力でコードを打ち込む。/openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->defineFilter: {
-//     "name": "quickfix adoptable pattern",
-//     "patterns": [
-//         {
-//             "^(.*)": {
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "quickfix ready. groups[0]"
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->showToolTip: {
-//     "name": "sample.txt",
-//     "transformToToolTip": "contents",
-//     "contents": {
-//         "messages": [
-//             "here"
-//         ]
-//     },
-//     "inject": {
-//         "selected": "source"
-//     },
-//     "onselected": [
-//         {
-//             "sample": [
-//                 {
-//                     "選択肢の内容をquickfix要素を発動させるfilterに入れる。/filtering<-source": {
-//                         "name": "quickfix adoptable pattern"
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": [
+test>quickFix的な機構のテスト、appendRegionからのToolTip、filterでの入力でコードを打ち込む。/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->defineFilter: {
+    "name": "quickfix adoptable pattern",
+    "patterns": [
+        {
+            "^(.*)": {
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "quickfix ready. groups[0]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->showToolTip: {
+    "name": "sample.txt",
+    "transformToToolTip": "contents",
+    "contents": {
+        "messages": [
+            "here"
+        ]
+    },
+    "inject": {
+        "selected": "source"
+    },
+    "onselected": [
+        {
+            "sample": [
+                {
+                    "選択肢の内容をquickfix要素を発動させるfilterに入れる。/filtering<-source": {
+                        "name": "quickfix adoptable pattern"
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": [
         
-//     ]
-// }->assertResult: {
-//     "id": "set quickfix",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "quickfix ready. here"
-//         }
-//     },
-//     "description": "not match.",
-//     "debug": true
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+    ]
+}->assertResult: {
+    "id": "set quickfix",
+    "contains": {
+        "showAtLog": {
+            "output": "quickfix ready. here"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>viewEmitで別途injectを使う/createBuffer: {
-//     "name": "injectionWithViewEmit.txt"
-// }->viewEmit: {
-//     "identity": "injectionWithViewEmit",
-//     "name": "injectionWithViewEmit.txt",
-//     "inject": {
-//         "path": "message"
-//     },
-//     "selectors": [
-//         {
-//             "showAtLog<-message": {
+test>viewEmitで別途injectを使う/createBuffer: {
+    "name": "injectionWithViewEmit.txt"
+}->viewEmit: {
+    "identity": "injectionWithViewEmit",
+    "name": "injectionWithViewEmit.txt",
+    "inject": {
+        "path": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
                 
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "inject message param from viewEmit's path param.",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "injectionWithViewEmit.txt"
-//         }
-//     },
-//     "description": "not match."
-// }
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "inject message param from viewEmit's path param.",
+    "contains": {
+        "showAtLog": {
+            "output": "injectionWithViewEmit.txt"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>parameterInjectの上書き内容に関するaccept制約のテスト。bodyに関する値だけを受け取るので、pathの値が変化したい。/createBuffer: {
-//     "name": "view2.txt"
-// }->viewEmit: {
-//     "identity": "viewForInjectContents",
-//     "name": "view2.txt",
-//     "selectors": [
-//         {
-//             "showAtLog<-body": {
-//                 "message": "",
-//                 "format": "path body."
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "no path replacement",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "path ."
-//         }
-//     },
-//     "description": "not match."
-// }
+test>parameterInjectの上書き内容に関するaccept制約のテスト。bodyに関する値だけを受け取るので、pathの値が変化したい。/createBuffer: {
+    "name": "view2.txt"
+}->viewEmit: {
+    "identity": "viewForInjectContents",
+    "name": "view2.txt",
+    "selectors": [
+        {
+            "showAtLog<-body": {
+                "message": "",
+                "format": "path body."
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "no path replacement",
+    "contains": {
+        "showAtLog": {
+            "output": "path ."
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
-//     "path": "notExistFile"
-// }->assertResult: {
-//     "id": "cannot open not exist file",
-//     "contains": {
-//         "openFile": {
-//             "result": "file notExistFile is not exist.",
-//             "path": "notExistFile"
-//         }
-//     },
-//     "description": "not match."
-// }
+test>openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
+    "path": "notExistFile"
+}->assertResult: {
+    "id": "cannot open not exist file",
+    "contains": {
+        "openFile": {
+            "result": "file notExistFile is not exist.",
+            "path": "notExistFile"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>組み合わせでエラーが出ていたのを解消したもの。viewの切り替え問題を含んでいた。/createBuffer: {
-//     "name": "completionTestView.txt"
-// }->viewEmit: {
-//     "identity": "completionTestView",
-//     "name": "completionTestView.txt",
-//     "selectors": [
-//         {
-//             "要素が一つだと一択のため勝手に入力される/runCompletion<-view": {
-//                 "completion": [
-//                     {
-//                         "HEAD": "DrawLine",
-//                         "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
-//                         "return": "Void",
-//                         "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
-//                         "head": "DrawLine"
-//                     }
-//                 ],
-//                 "formathead": "HEADparamsTypeDef\treturn",
-//                 "formattail": "headparamsTargetFmt$0"
-//             }
-//         }
-//     ]
-// }->setViewReactor: {
-//     "target": "someone",
-//     "react": "ss_v_increased",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "increased."
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->modifyView: {
-//     "name": "sample.txt",
-//     "add": "1"
-// }->assertResult: {
-//     "context": "view",
-//     "id": "view text increased",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "increased."
-//         }
-//     },
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>組み合わせでエラーが出ていたのを解消したもの。viewの切り替え問題を含んでいた。/createBuffer: {
+    "name": "completionTestView.txt"
+}->viewEmit: {
+    "identity": "completionTestView",
+    "name": "completionTestView.txt",
+    "selectors": [
+        {
+            "要素が一つだと一択のため勝手に入力される/runCompletion<-view": {
+                "completion": [
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    }
+                ],
+                "formathead": "HEADparamsTypeDef\treturn",
+                "formattail": "headparamsTargetFmt$0"
+            }
+        }
+    ]
+}->setViewReactor: {
+    "target": "someone",
+    "react": "ss_v_increased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "increased."
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->modifyView: {
+    "name": "sample.txt",
+    "add": "1"
+}->assertResult: {
+    "context": "view",
+    "id": "view text increased",
+    "contains": {
+        "showAtLog": {
+            "output": "increased."
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。/createBuffer: {
-//     "name": "completionTestView2.txt"
-// }->runCompletion: {
-//     "name": "completionTestView2.txt",
-//     "completion": [
-//         {
-//             "HEAD": "DrawLine",
-//             "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
-//             "return": "Void",
-//             "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
-//             "head": "DrawLine"
-//         },
-//         {
-//             "HEAD": "DrawLine",
-//             "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
-//             "return": "Void",
-//             "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
-//             "head": "DrawLine"
-//         }
-//     ],
-//     "formathead": "HEADparamsTypeDef\treturn",
-//     "formattail": "headparamsTargetFmt$0"
-// }->assertResult: {
-//     "id": "runCompletion includes 2 completion",
-//     "contains": {
-//         "runCompletion": {
-//             "completed": "completionTestView2.txt"
-//         }
-//     },
-//     "description": "not match."
-// }
+test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。/createBuffer: {
+    "name": "completionTestView2.txt"
+}->runCompletion: {
+    "name": "completionTestView2.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0"
+}->assertResult: {
+    "id": "runCompletion includes 2 completion",
+    "contains": {
+        "runCompletion": {
+            "completed": "completionTestView2.txt"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
-//     "name": "completionCloseTestView.txt"
-// }->viewEmit: {
-//     "identity": "completionCloseTestView",
-//     "name": "completionCloseTestView.txt",
-//     "selectors": [
-//         {
-//             "runCompletion<-view": {
-//                 "completion": [
-//                     {
-//                         "HEAD": "DrawLine",
-//                         "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
-//                         "return": "Void",
-//                         "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
-//                         "head": "DrawLine"
-//                     },
-//                     {
-//                         "HEAD": "DrawLine",
-//                         "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
-//                         "return": "Void",
-//                         "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
-//                         "head": "DrawLine"
-//                     }
-//                 ],
-//                 "formathead": "HEADparamsTypeDef\treturn",
-//                 "formattail": "headparamsTargetFmt$0"
-//             }
-//         }
-//     ]
-// }->cancelCompletion: {
-//     "name": "completionCloseTestView.txt"
-// }->assertResult: {
-//     "id": "completion window close",
-//     "contains": {
-//         "cancelCompletion": {
-//             "cancelled": "completionCloseTestView.txt"
-//         }
-//     },
-//     "description": "not close."
-// }
+test>補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
+    "name": "completionCloseTestView.txt"
+}->viewEmit: {
+    "identity": "completionCloseTestView",
+    "name": "completionCloseTestView.txt",
+    "selectors": [
+        {
+            "runCompletion<-view": {
+                "completion": [
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    },
+                    {
+                        "HEAD": "DrawLine",
+                        "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+                        "return": "Void",
+                        "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+                        "head": "DrawLine"
+                    }
+                ],
+                "formathead": "HEADparamsTypeDef\treturn",
+                "formattail": "headparamsTargetFmt$0"
+            }
+        }
+    ]
+}->cancelCompletion: {
+    "name": "completionCloseTestView.txt"
+}->assertResult: {
+    "id": "completion window close",
+    "contains": {
+        "cancelCompletion": {
+            "cancelled": "completionCloseTestView.txt"
+        }
+    },
+    "description": "not close."
+}
 
 
 
-// test>存在するファイルのviewに対してselectorを実行する,
-// viewEmit/openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->viewEmit: {
-//     "identity": "viewEmitToSample.txt",
-//     "name": "sample.txt",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "view emit over."
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "view emit api test",
-//     "isnotempty": "viewEmit",
-//     "description": "not match."
-// }
+test>存在するファイルのviewに対してselectorを実行する,
+viewEmit/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->viewEmit: {
+    "identity": "viewEmitToSample.txt",
+    "name": "sample.txt",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "view emit over."
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "view emit api test",
+    "isnotempty": "viewEmit",
+    "description": "not match."
+}
 
 
 
-// test>deepなレイヤーのviewEmitを実行してみる/openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->setViewReactor: {
-//     "target": "viewEmitTest",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "viewEmit<-view": {
-//                 "identity": "deepLayerViewEmit",
-//                 "name": "sample.txt",
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "view emit over in deep nest."
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->viewEmit: {
-//     "identity": "setSelectionToSample.txt",
-//     "name": "sample.txt",
-//     "selectors": [
-//         {
-//             "setSelection<-view": {
-//                 "from": 0,
-//                 "to": 1
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "viewEmit in deep level",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "view emit over in deep nest."
-//         }
-//     },
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>deepなレイヤーのviewEmitを実行してみる/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->setViewReactor: {
+    "target": "viewEmitTest",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "viewEmit<-view": {
+                "identity": "deepLayerViewEmit",
+                "name": "sample.txt",
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "view emit over in deep nest."
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->viewEmit: {
+    "identity": "setSelectionToSample.txt",
+    "name": "sample.txt",
+    "selectors": [
+        {
+            "setSelection<-view": {
+                "from": 0,
+                "to": 1
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "viewEmit in deep level",
+    "contains": {
+        "showAtLog": {
+            "output": "view emit over in deep nest."
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>そのビューの文字列が増えたら、ss_v_increasedイベントがでる/setViewReactor: {
-//     "target": "someone",
-//     "react": "ss_v_increased",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "increased."
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->modifyView: {
-//     "name": "sample.txt",
-//     "add": "1"
-// }->closeFile: {
-//     "name": "sample.txt"
-// }->assertResult: {
-//     "context": "view",
-//     "id": "view text increased2",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "increased."
-//         }
-//     },
-//     "description": "not match."
-// }
+test>そのビューの文字列が増えたら、ss_v_increasedイベントがでる/setViewReactor: {
+    "target": "someone",
+    "react": "ss_v_increased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "increased."
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->modifyView: {
+    "name": "sample.txt",
+    "add": "1"
+}->closeFile: {
+    "name": "sample.txt"
+}->assertResult: {
+    "context": "view",
+    "id": "view text increased2",
+    "contains": {
+        "showAtLog": {
+            "output": "increased."
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>そのビューの文字列が減ったら、ss_v_decreasedイベントがでる/setViewReactor: {
-//     "target": "someone",
-//     "react": "ss_v_decreased",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "decreased."
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->modifyView: {
-//     "name": "sample.txt",
-//     "add": "1"
-// }->modifyView: {
-//     "name": "sample.txt",
-//     "reduce": 1
-// }->closeFile: {
-//     "name": "sample.txt"
-// }->assertResult: {
-//     "context": "view",
-//     "id": "view text decreased",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "decreased."
-//         }
-//     },
-//     "description": "not match."
-// }
+test>そのビューの文字列が減ったら、ss_v_decreasedイベントがでる/setViewReactor: {
+    "target": "someone",
+    "react": "ss_v_decreased",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "decreased."
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->modifyView: {
+    "name": "sample.txt",
+    "add": "1"
+}->modifyView: {
+    "name": "sample.txt",
+    "reduce": 1
+}->closeFile: {
+    "name": "sample.txt"
+}->assertResult: {
+    "context": "view",
+    "id": "view text decreased",
+    "contains": {
+        "showAtLog": {
+            "output": "decreased."
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
-//     "name": "notFoundFile.txt"
-// }->getAllFilePath: {
-//     "anchor": "notFoundFile.txt",
-//     "limit": 1
-// }->assertResult: {
-//     "id": "the getAllFilePath testing",
-//     "contains": {
-//         "getAllFilePath": {
-//             "result": "notexist"
-//         }
-//     },
-//     "description": "not match."
-// }
+test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
+    "name": "notFoundFile.txt"
+}->getAllFilePath: {
+    "anchor": "notFoundFile.txt",
+    "limit": 1
+}->assertResult: {
+    "id": "the getAllFilePath testing",
+    "contains": {
+        "getAllFilePath": {
+            "result": "notexist"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>basePathを足がかりに特定のファイルが含まれるフォルダより下のすべてのファイルパスを取得する/openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->getAllFilePath: {
-//     "anchor": "sample.txt",
-//     "limit": 1
-// }->assertResult: {
-//     "id": "getAllFilePath the path found",
-//     "isnotempty": "getAllFilePath",
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>basePathを足がかりに特定のファイルが含まれるフォルダより下のすべてのファイルパスを取得する/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->getAllFilePath: {
+    "anchor": "sample.txt",
+    "limit": 1
+}->assertResult: {
+    "id": "getAllFilePath the path found",
+    "isnotempty": "getAllFilePath",
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>countUp: {
-//     "label": "testCount",
-//     "default": 0
-// }->assertResult: {
-//     "id": "count up",
-//     "contains": {
-//         "countUp": {
-//             "label": "testCount",
-//             "count": 0
-//         }
-//     },
-//     "description": "not match."
-// }->resetCounts: {
+test>countUp: {
+    "label": "testCount",
+    "default": 0
+}->assertResult: {
+    "id": "count up",
+    "contains": {
+        "countUp": {
+            "label": "testCount",
+            "count": 0
+        }
+    },
+    "description": "not match."
+}->resetCounts: {
     
-// }
+}
 
 
 
-// test>countUp: {
-//     "label": "testCount2",
-//     "default": 0
-// }->countUp: {
-//     "label": "testCount2",
-//     "default": 0
-// }->assertResult: {
-//     "id": "count up",
-//     "contains": {
-//         "countUp": {
-//             "label": "testCount2",
-//             "count": 1
-//         }
-//     },
-//     "description": "not match."
-// }->resetCounts: {
+test>countUp: {
+    "label": "testCount2",
+    "default": 0
+}->countUp: {
+    "label": "testCount2",
+    "default": 0
+}->assertResult: {
+    "id": "count up",
+    "contains": {
+        "countUp": {
+            "label": "testCount2",
+            "count": 1
+        }
+    },
+    "description": "not match."
+}->resetCounts: {
     
-// }
+}
 
 
 
-// test>countUp: {
-//     "label": "testCount2",
-//     "default": 0
-// }->countUp: {
-//     "label": "testCount2",
-//     "default": 0
-// }->resetCounts: {
+test>countUp: {
+    "label": "testCount2",
+    "default": 0
+}->countUp: {
+    "label": "testCount2",
+    "default": 0
+}->resetCounts: {
     
-// }->countUp: {
-//     "label": "testCount2",
-//     "default": -1
-// }->assertResult: {
-//     "id": "reset count",
-//     "contains": {
-//         "countUp": {
-//             "label": "testCount2",
-//             "count": -1
-//         }
-//     },
-//     "description": "not match."
-// }
+}->countUp: {
+    "label": "testCount2",
+    "default": -1
+}->assertResult: {
+    "id": "reset count",
+    "contains": {
+        "countUp": {
+            "label": "testCount2",
+            "count": -1
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>setSelectionを連続で発生させて、delayがあるのでタイミング内では一度しか発生しない。/createBuffer: {
-//     "name": "dummy.txt"
-// }->ここでのdelayが機能していれば、イベントはdelayされ、countUpが実行されないはず。/setViewReactor: {
-//     "target": "delayTest",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "countUp": {
-//                 "label": "setSelectionCount",
-//                 "default": 0
-//             }
-//         }
-//     ],
-//     "delay": 100
-// }->setSelection: {
-//     "name": "dummy.txt",
-//     "from": 0,
-//     "to": 0
-// }->setSelection: {
-//     "name": "dummy.txt",
-//     "from": 0,
-//     "to": 0
-// }->assertResult: {
-//     "id": "reactor reacts only once",
-//     "notcontains": {
-//         "countUp": {
-//             "label": "setSelectionCount",
-//             "count": 1
-//         }
-//     },
-//     "description": "not 0."
-// }->resetCounts: {
+test>setSelectionを連続で発生させて、delayがあるのでタイミング内では一度しか発生しない。/createBuffer: {
+    "name": "dummy.txt"
+}->ここでのdelayが機能していれば、イベントはdelayされ、countUpが実行されないはず。/setViewReactor: {
+    "target": "delayTest",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "countUp": {
+                "label": "setSelectionCount",
+                "default": 0
+            }
+        }
+    ],
+    "delay": 100
+}->setSelection: {
+    "name": "dummy.txt",
+    "from": 0,
+    "to": 0
+}->setSelection: {
+    "name": "dummy.txt",
+    "from": 0,
+    "to": 0
+}->assertResult: {
+    "id": "reactor reacts only once",
+    "notcontains": {
+        "countUp": {
+            "label": "setSelectionCount",
+            "count": 1
+        }
+    },
+    "description": "not 0."
+}->resetCounts: {
     
-// }
+}
 
 
 
-// test>setSelectionで選択範囲を作成する/openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "selection generated",
-//     "contains": {
-//         "setSelection": {
-//             "selected": "(0, 1)"
-//         }
-//     },
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>setSelectionで選択範囲を作成する/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "selection generated",
+    "contains": {
+        "setSelection": {
+            "selected": "(0, 1)"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き継ぐ/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "viewEmit<-view": {
-//                             "identity": "testTargetId",
-//                             "selectors": [
-//                                 {
-//                                     "showAtLog<-body": {
-//                                         "format": "the 'body' emitted with parameter"
-//                                     }
-//                                 }
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "viewReactor, fire event_showAtLog",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "the 'a\nb\nc' emitted with parameter"
-//         }
-//     },
-//     "description": "no showAtLog found."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き継ぐ/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "viewEmit<-view": {
+                            "identity": "testTargetId",
+                            "selectors": [
+                                {
+                                    "showAtLog<-body": {
+                                        "format": "the 'body' emitted with parameter"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "viewReactor, fire event_showAtLog",
+    "contains": {
+        "showAtLog": {
+            "output": "the 'a\nb\nc' emitted with parameter"
+        }
+    },
+    "description": "no showAtLog found."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "eventEmit": {
-//                             "target": "containsregiontarget",
-//                             "event": "event_showAtLog"
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->setEventReactor: {
-//     "target": "containsregiontarget",
-//     "react": "event_showAtLog",
-//     "selectors": [
-//         {
-//             "showAtLog": {
-//                 "message": "here comes!!"
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "viewReactor, fire event_showAtLog",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "here comes!!"
-//         }
-//     },
-//     "description": "no showAtLog found."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "eventEmit": {
+                            "target": "containsregiontarget",
+                            "event": "event_showAtLog"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->setEventReactor: {
+    "target": "containsregiontarget",
+    "react": "event_showAtLog",
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "here comes!!"
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "viewReactor, fire event_showAtLog",
+    "contains": {
+        "showAtLog": {
+            "output": "here comes!!"
+        }
+    },
+    "description": "no showAtLog found."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>regionの 2 contentsに対して、setSelectionでselectedRegionsを引き起こし、2件の情報を取得する/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "inject": {
-//                     "regionDatas":"datas"
-//                 },
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showAtLog<-datas": {
-//                             "format": "the datas"
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test2",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->順番に左右されてしまうとは、、、/assertResult: {
-//     "id": "contains 2 regions and there datas.",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "the [{'message': 'test', 'from': 0, 'to': 1, 'line': '1'}, {'message': 'test2', 'from': 0, 'to': 1, 'line': '1'}]"
-//         }
-//     },
-//     "description": "not match. おそらくパラメータ順の問題なので、加味したassertionでないと無理。",
-//     "debug": true
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>regionの 2 contentsに対して、setSelectionでselectedRegionsを引き起こし、2件の情報を取得する/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "inject": {
+                    "regionDatas":"datas"
+                },
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showAtLog<-datas": {
+                            "format": "the datas"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->appendRegion: {
+    "line": "1",
+    "message": "test2",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->順番に左右されてしまうとは、、、/assertResult: {
+    "id": "contains 2 regions and there datas.",
+    "contains": {
+        "showAtLog": {
+            "output": "the [{'message': 'test', 'from': 0, 'to': 1, 'line': '1'}, {'message': 'test2', 'from': 0, 'to': 1, 'line': '1'}]"
+        }
+    },
+    "description": "not match. おそらくパラメータ順の問題なので、加味したassertionでないと無理。"
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>試験的なやっつけtransformerのテスト/createBuffer: {
-//     "name": "transformToToolTipSamle.txt"
-// }->showToolTip: {
-//     "contents": [
-//         {
-//             "messages":["a"]
-//         }
-//     ],
-//     "transformToToolTip": "contents",
-//     "name": "transformToToolTipSamle.txt",
-//     "onselected": [
-//         {
-//             "sample": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "test1"
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": []
-// }->assertResult: {
-//     "id": "transform key-value to key-array",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "test1"
-//         }
-//     },
-//     "description": "not match."
-// }
+test>試験的なやっつけtransformerのテスト/createBuffer: {
+    "name": "transformToToolTipSamle.txt"
+}->showToolTip: {
+    "transformToToolTip": "contents",
+    "contents": {
+        "messages": [
+            "here"
+        ]
+    },
+    "name": "transformToToolTipSamle.txt",
+    "onselected": [
+        {
+            "sample": [
+                {
+                    "showAtLog": {
+                        "message": "test1"
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": []
+}->assertResult: {
+    "id": "transform key-value to key-array",
+    "contains": {
+        "showAtLog": {
+            "output": "test1"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形する/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showToolTip<-view, regionDatas": {
-//                             "transformToToolTip": "regionDatas",
-//                             "onselected": [
-//                                 {
-//                                     "sample": [
-//                                         {
-//                                             "showAtLog": {
-//                                                 "message": "hereComes!"
-//                                             }
-//                                         }
-//                                     ]
-//                                 }
-//                             ],
-//                             "oncancelled": [
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test2",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "show 2 regions messages in toolTip.",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "hereComes!"
-//         }
-//     },
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形する/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showToolTip<-view, regionDatas": {
+                            "transformToToolTip": "regionDatas",
+                            "onselected": [
+                                {
+                                    "sample": [
+                                        {
+                                            "showAtLog": {
+                                                "message": "hereComes!"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            "oncancelled": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->appendRegion: {
+    "line": "1",
+    "message": "test2",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "show 2 regions messages in toolTip.",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes!"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形、内容は空/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showToolTip<-view, regionDatas": {
-//                             "transformToToolTip": "regionDatas",
-//                             "onselected": [
-//                                 {
-//                                     "sample": [
+test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形、内容は空/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showToolTip<-view, regionDatas": {
+                            "transformToToolTip": "regionDatas",
+                            "onselected": [
+                                {
+                                    "sample": [
                                         
-//                                     ]
-//                                 }
-//                             ],
-//                             "oncancelled": [
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test2",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "show 2 regions messages in toolTip, with empty",
-//     "notcontains": {
-//         "showAtLog": {
-//             "output": "hereComes!"
-//         }
-//     },
-//     "description": "not match."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+                                    ]
+                                }
+                            ],
+                            "oncancelled": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->appendRegion: {
+    "line": "1",
+    "message": "test2",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "show 2 regions messages in toolTip, with empty",
+    "notcontains": {
+        "showAtLog": {
+            "output": "hereComes!"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引き継ぐ/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showToolTip<-view": {
-//                             "inject": {
-//                                 "view": "message"
-//                             },
-//                             "onselected": [
-//                                 {
-//                                     "test1": [
-//                                         {
-//                                             "showAtLog<-message": {
+test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引き継ぐ/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showToolTip<-view": {
+                            "inject": {
+                                "view": "message"
+                            },
+                            "onselected": [
+                                {
+                                    "test1": [
+                                        {
+                                            "showAtLog<-message": {
                                                 
-//                                             }
-//                                         }
-//                                     ]
-//                                 }
-//                             ],
-//                             "oncancelled": [
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            "oncancelled": [
                                 
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "fire tooltip with inject",
-//     "isnotempty": "showAtLog",
-//     "description": "no showAtLog found."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "fire tooltip with inject",
+    "isnotempty": "showAtLog",
+    "description": "no showAtLog found."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>setSelectionでselectedRegionsを引き起こそうとするが、regionが無い/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showAtLog": {
-//                             "message": "never comes here."
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
-//     "id": "no region and no selectors run.",
-//     "notcontains": {
-//         "showAtLog": {
-//             "output": "never comes here."
-//         }
-//     },
-//     "description": "no showAtLog found."
-// }->closeFile: {
-//     "name": "sample.txt"
-// }
+test>setSelectionでselectedRegionsを引き起こそうとするが、regionが無い/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selected": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "never comes here."
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->assertResult: {
+    "id": "no region and no selectors run.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "never comes here."
+        }
+    },
+    "description": "no showAtLog found."
+}->closeFile: {
+    "name": "sample.txt"
+}
 
 
 
-// test>ツールチップの表示/createBuffer: {
-//     "name": "showToolTipView.txt"
-// }->showToolTip: {
-//     "name": "showToolTipView.txt",
-//     "onselected": [
-//         {
-//             "will show the tooltip": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "toolTipContentsButNotFire."
-//                     }
-//                 }
-//             ]
-//         },
-//         {
-//             "will show the tooltip2": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "toolTipContentsButNotFire."
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": [
+test>ツールチップの表示/createBuffer: {
+    "name": "showToolTipView.txt"
+}->showToolTip: {
+    "name": "showToolTipView.txt",
+    "onselected": [
+        {
+            "will show the tooltip": [
+                {
+                    "showAtLog": {
+                        "message": "toolTipContentsButNotFire."
+                    }
+                }
+            ]
+        },
+        {
+            "will show the tooltip2": [
+                {
+                    "showAtLog": {
+                        "message": "toolTipContentsButNotFire."
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": [
         
-//     ]
-// }->assertResult: {
-//     "id": "toolTipShouldShow",
-//     "contains": {
-//         "showToolTip": {
-//             "items": [
-//                 "will show the tooltip",
-//                 "will show the tooltip2"
-//             ]
-//         }
-//     },
-//     "description": "not match."
-// }
+    ]
+}->assertResult: {
+    "id": "toolTipShouldShow",
+    "contains": {
+        "showToolTip": {
+            "items": [
+                "will show the tooltip",
+                "will show the tooltip2"
+            ]
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>ツールチップの表示2/createBuffer: {
-//     "name": "showToolTipView.txt"
-// }->showToolTip: {
-//     "name": "showToolTipView.txt",
-//     "onselected": [
-//         {
-//             "will show the tooltip": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "toolTipContentsButNotFire."
-//                     }
-//                 }
-//             ]
-//         },
-//         {
-//             "will show the tooltip2": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "toolTipContentsButNotFire."
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": [
+test>ツールチップの表示2/createBuffer: {
+    "name": "showToolTipView.txt"
+}->showToolTip: {
+    "name": "showToolTipView.txt",
+    "onselected": [
+        {
+            "will show the tooltip": [
+                {
+                    "showAtLog": {
+                        "message": "toolTipContentsButNotFire."
+                    }
+                }
+            ]
+        },
+        {
+            "will show the tooltip2": [
+                {
+                    "showAtLog": {
+                        "message": "toolTipContentsButNotFire."
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": [
         
-//     ]
-// }->assertResult: {
-//     "id": "toolTipShouldShow",
-//     "contains": {
-//         "showToolTip": {
-//             "items": [
-//                 "will show the tooltip",
-//                 "will show the tooltip2"
-//             ]
-//         }
-//     },
-//     "description": "not match."
-// }
+    ]
+}->assertResult: {
+    "id": "toolTipShouldShow",
+    "contains": {
+        "showToolTip": {
+            "items": [
+                "will show the tooltip",
+                "will show the tooltip2"
+            ]
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>ツールチップの選択、一択を選ぶ/createBuffer: {
-//     "name": "selectToolTip.txt"
-// }->showToolTip: {
-//     "name": "selectToolTip.txt",
-//     "onselected": [
-//         {
-//             "showAtLogItem": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "hereComes choice 1"
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": [
+test>ツールチップの選択、一択を選ぶ/createBuffer: {
+    "name": "selectToolTip.txt"
+}->showToolTip: {
+    "name": "selectToolTip.txt",
+    "onselected": [
+        {
+            "showAtLogItem": [
+                {
+                    "showAtLog": {
+                        "message": "hereComes choice 1"
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": [
         
-//     ]
-// }->assertResult: {
-//     "id": "choiceTheHead",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "hereComes choice 1"
-//         }
-//     },
-//     "description": "not match."
-// }
+    ]
+}->assertResult: {
+    "id": "choiceTheHead",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes choice 1"
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>onselected項目がない場合、効果無しなので表示しない。/createBuffer: {
-//     "name": "selectToolTip.txt"
-// }->showToolTip: {
-//     "name": "selectToolTip.txt",
-//     "onselected": [
+test>onselected項目がない場合、効果無しなので表示しない。/createBuffer: {
+    "name": "selectToolTip.txt"
+}->showToolTip: {
+    "name": "selectToolTip.txt",
+    "onselected": [
         
-//     ],
-//     "oncancelled": [
-//         {
-//             "showAtLog": {
-//                 "message": "no choice."
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "no coice on toolTip",
-//     "notcontains": {
-//         "showToolTip": {
-//             "items": [
+    ],
+    "oncancelled": [
+        {
+            "showAtLog": {
+                "message": "no choice."
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "no coice on toolTip",
+    "notcontains": {
+        "showToolTip": {
+            "items": [
                 
-//             ]
-//         }
-//     },
-//     "description": "not match."
-// }
+            ]
+        }
+    },
+    "description": "not match."
+}
 
 
 
-// test>ツールチップの選択後、inject済のviewを使ってappendRegionする/createBuffer: {
-//     "name": "selectToolTip.txt"
-// }->showToolTip: {
-//     "name": "selectToolTip.txt",
-//     "onselected": [
-//         {
-//             "add region": [
-//                 {
-//                     "appendRegion<-view, selected": {
-//                         "line": "1",
-//                         "message": "test",
-//                         "condition": "keyword"
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": [
+test>ツールチップの選択後、inject済のviewを使ってappendRegionする/createBuffer: {
+    "name": "selectToolTip.txt"
+}->showToolTip: {
+    "name": "selectToolTip.txt",
+    "onselected": [
+        {
+            "add region": [
+                {
+                    "appendRegion<-view, selected": {
+                        "line": "1",
+                        "message": "test",
+                        "condition": "keyword"
+                    }
+                }
+            ]
+        }
+    ],
+    "oncancelled": [
         
-//     ]
-// }->assertResult: {
-//     "id": "choice and add region to buffer.",
-//     "contains": {
-//         "appendRegion": {
-//             "condition": "keyword",
-//             "message": "test",
-//             "result": "appended",
-//             "line": "1"
-//         }
-//     },
-//     "description": "not match."
-// }
+    ]
+}->assertResult: {
+    "id": "choice and add region to buffer.",
+    "contains": {
+        "appendRegion": {
+            "condition": "keyword",
+            "message": "test",
+            "result": "appended",
+            "line": "1"
+        }
+    },
+    "description": "not match."
+}
 
 
 
@@ -1141,7 +1139,17 @@ test>ツールチップ選択orキャンセル後、最終的に動作するfina
     "name": "onFinally.txt"
 }->showToolTip: {
     "name": "onFinally.txt",
-    "onselected": [],
+    "onselected": [
+        {
+            "name": [
+                {
+                    "showAtLog": {
+                        "message": "hit."
+                    }
+                }
+            ]
+        }
+    ],
     "oncancelled": [],
     "finally":[
         {
@@ -1157,8 +1165,7 @@ test>ツールチップ選択orキャンセル後、最終的に動作するfina
             "output": "finally."
         }
     },
-    "description": "not match.",
-    "debug": true
+    "description": "not match."
 }
 
 
