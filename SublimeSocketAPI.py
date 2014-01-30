@@ -303,7 +303,7 @@ class SublimeSocketAPI:
 		return clientId
 
 
-	def runReactor(self, reactorType, reactorDict, eventParam, results):
+	def runReactor(self, reactorType, params, eventParam, results):
 		for case in PythonSwitch(reactorType):
 			if case(SublimeSocketAPISettings.REACTORTYPE_EVENT):
 				# do nothing specially.
@@ -314,33 +314,39 @@ class SublimeSocketAPI:
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				
 				# default injection
-				reactorDict = self.insertInjectKeysToInjectionMap(reactorDict, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
+				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
 				break
 
-		self.runAllSelector(reactorDict, eventParam, results)
+		keys = []
+		values = []
+		for key, val in eventParam.items():
+			keys.append(key)
+			values.append(val)
+
+		self.runAllSelector(
+			params, 
+			keys, 
+			values,
+			SublimeSocketAPISettings.REACTOR_INJECT, 
+			results)
 
 
-	def runAllSelectorWithInjection(self, params, injectiveKeys, injectiveValues, injectionMapKey, results):
+	def runAllSelector(self, params, injectiveKeys, injectiveValues, injectionMapKey, results):
 		assert len(injectiveKeys) == len(injectiveValues), "cannot generate inective-keys and values:"+injectiveKeys+" vs "+injectiveValues
 		zippedInjectiveParams = dict(zip(injectiveKeys, injectiveValues))
-
+		
 		runnableParams = params.copy()
 
 		# add injectionMap
 		injectMapInjectedParams = self.insertInjectKeysToInjectionMap(runnableParams, injectiveKeys, injectionMapKey)
 
-		self.runAllSelector(injectMapInjectedParams, zippedInjectiveParams, results)
-
-		
-	# run each selectors
-	def runAllSelector(self, params, injectiveParams, results):
-		selectors = params[SublimeSocketAPISettings.REACTOR_SELECTORS]
-		injectParams = self.injectParams(params, injectiveParams)
+		selectors = injectMapInjectedParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
+		injectParams = self.injectParams(injectMapInjectedParams, zippedInjectiveParams)
 		
 		for selector in selectors:
 			[self.runAPI(eachCommand, eachParams, None, injectParams, results) for eachCommand, eachParams in selector.items()]
 
-
+		
 	def runFoundationEvent(self, eventName, eventParam, reactors, results):
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
@@ -350,11 +356,20 @@ class SublimeSocketAPI:
 
 	def foundation_noViewFound(self, reactDicts, eventParam, results):
 		for target in list(reactDicts):
-			reactDict = reactDicts[target]
+			params = reactDicts[target]
 			
-			self.runAllSelector(reactDict, eventParam, results)
+			keys = []
+			values = []
+			for key, val in eventParam.items():
+				keys.append(key)
+				values.append(val)
 
-
+			self.runAllSelector(
+				params, 
+				keys, 
+				values, 
+				SublimeSocketAPISettings.REACTOR_INJECT, 
+				results)
 
 	## count up specified labelled param.
 	def countUp(self, params, results):
@@ -593,13 +608,11 @@ class SublimeSocketAPI:
 					itemDict = selects[index]
 					key = list(itemDict)[0]
 
-					print("コピーする必要があるとしたらこの辺が根っこになるような気がするが、もっと先だと凄くうれしい。")
-
 					# rename from "onselected" to "selector".
 					selectorInsideParams = params
 					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key]
 					
-					self.runAllSelectorWithInjection(
+					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 						[view, selectedItem], 
@@ -611,7 +624,7 @@ class SublimeSocketAPI:
 					selectorInsideParams = params
 					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = cancelled
 					
-					self.runAllSelectorWithInjection(
+					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 						[view, selectedItem], 
@@ -623,7 +636,7 @@ class SublimeSocketAPI:
 				selectorInsideParams = params
 				selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = finallyBlock
 
-				self.runAllSelectorWithInjection(
+				self.runAllSelector(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 					[view, selectedItem], 
@@ -703,14 +716,22 @@ class SublimeSocketAPI:
 
 			# before block
 			if self.testBeforeSelectors:
-				self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testBeforeSelectors}, None, currentTestResults)
+
+				self.runAllSelector(
+					{SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testBeforeSelectors}, 
+					[], [], SublimeSocketAPISettings.REACTOR_SELECTORS,
+					currentTestResults)
 
 			# parse then get results
 			currentTestResults = self.parse(testCase, clientId, currentTestResults)
 			
 			# after block
 			if self.testAfterSelectors:
-				self.runAllSelector({SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testAfterSelectors}, None, currentTestResults)
+
+				self.runAllSelector(
+					{SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testAfterSelectors}, 
+					[], [], SublimeSocketAPISettings.REACTOR_SELECTORS,
+					currentTestResults)
 
 			# end test
 			self.isTesting = False
@@ -922,7 +943,7 @@ class SublimeSocketAPI:
 		# is not empty or empty
 		elif SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY in params:
 			if debug:
-				self.editorAPI.printMessage("start assertResult 'isnotempty' in " + identity, resultBodies)
+				self.editorAPI.printMessage("start assertResult 'isnotempty' in " + identity + str(resultBodies))
 
 			targetAPIKey = params[SublimeSocketAPISettings.ASSERTRESULT_ISNOTEMPTY]
 			
@@ -1134,31 +1155,12 @@ class SublimeSocketAPI:
 
 				regionDatas = regionsDictOfThisView[containedRegionId]
 
-				copiedRegionsData = regionDatas.copy()
-				selectorInsideParams = params.copy()
-				
-				# セレクタと
-
-				viewParamDict = {}
-				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_REGIONDATAS] = copiedRegionsData
-
-				# and add below.
-				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET] = target
-				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_VIEW] = view
-				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_PATH] = path
-				viewParamDict[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED] = selected
-				
-				# injectの仕様として、
-				# ・特定の値を受け取る
-				# ・特定の値を渡す
-				# ・受け渡しにはinjectマップを使用する
-				# という形になっているので、
-				# やるべき事は上記のみ、どこでやっているかが問題。
-				# runAPI時点で、injectマップがあれば、inject値を盛り込む、という形になっているので、
-				# injectマップを生成しつつ、？？？？を行う、というのが値を渡す条件。
-
-				selectorInsideParams = self.insertInjectKeysToInjectionMap(selectorInsideParams, SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, SublimeSocketAPISettings.SELECTEDREGIONS_INJECT)
-				self.runAllSelector(selectorInsideParams, viewParamDict, results)
+				self.runAllSelector(
+					params, 
+					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, 
+					[regionDatas, view, path, target, selected], 
+					SublimeSocketAPISettings.SELECTEDREGIONS_INJECT, 
+					results)
 
 			# update current contained region for preventing double-run.
 			self.server.updateSelectingRegionIdsAndResetOthers(path, latestContainedRegionIdentities)
@@ -1386,19 +1388,13 @@ class SublimeSocketAPI:
 				# get modifying line num
 				rowColStr = self.editorAPI.selectionAsStr(view)
 
-				# set inject param. viewEmit's specific param.
-				defaultInjectParam = {
-					SublimeSocketAPISettings.VIEWEMIT_VIEWSELF: view,
-					SublimeSocketAPISettings.VIEWEMIT_BODY: body,
-					SublimeSocketAPISettings.VIEWEMIT_PATH: modifiedPath,
-					SublimeSocketAPISettings.VIEWEMIT_ROWCOL: rowColStr,
-					SublimeSocketAPISettings.VIEWEMIT_IDENTITY: identity
-				}
+				self.runAllSelector(
+					params, 
+					SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, 
+					[view, body, modifiedPath, rowColStr, identity], 
+					SublimeSocketAPISettings.VIEWEMIT_INJECT, 
+					results)
 
-				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, SublimeSocketAPISettings.VIEWEMIT_INJECT)
-				
-				self.runAllSelector(params, defaultInjectParam, results)
-				
 				self.setResultsParams(results, self.viewEmit, {
 						SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
 						SublimeSocketAPISettings.VIEWEMIT_NAME:name,
@@ -2193,14 +2189,26 @@ class SublimeSocketAPI:
 				
 				target = eventParam[SublimeSocketAPISettings.REACTOR_TARGET]
 				if target in reactorsDict[eventName]:
-					reactDict = reactorsDict[eventName][target]
+					params = reactorsDict[eventName][target]
 
 					delay = reactorsDict[eventName][target][SublimeSocketAPISettings.REACTOR_DELAY]
 
 					if not self.isExecutableWithDelay(eventName, target, delay):
 						pass
 					else:
-						self.runAllSelector(reactDict, eventParam, results)
+						keys = []
+						values = []
+
+						for key, val in eventParam.items():
+							keys.append(key)
+							values.append(val)
+
+						self.runAllSelector(
+							params, 
+							keys, 
+							values, 
+							SublimeSocketAPISettings.REACTOR_INJECT, 
+							results)
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 			if reactorsDict and eventName in reactorsDict:

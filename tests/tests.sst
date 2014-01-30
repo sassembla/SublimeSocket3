@@ -123,7 +123,6 @@ test>parameterInjectの上書き内容に関するaccept制約のテスト。bod
     "selectors": [
         {
             "showAtLog<-body": {
-                "message": "",
                 "format": "path body."
             }
         }
@@ -703,14 +702,15 @@ test>regionの 2 contentsに対して、setSelectionでselectedRegionsを引き�
     "name": "sample.txt",
     "from": 0,
     "to": 1
-}->順番に左右されてしまうとは、、、/assertResult: {
+}->assertResult: {
     "id": "contains 2 regions and there datas.",
     "contains": {
         "showAtLog": {
-            "output": "the [{'message': 'test', 'from': 0, 'to': 1, 'line': '1'}, {'message': 'test2', 'from': 0, 'to': 1, 'line': '1'}]"
+            "output": "the {'from': 0, 'line': '1', 'messages': ['test2', 'test'], 'to': 1}"
         }
     },
-    "description": "not match. おそらくパラメータ順の問題なので、加味したassertionでないと無理。"
+    "description": "not match.",
+    "debug": true
 }->closeFile: {
     "name": "sample.txt"
 }
