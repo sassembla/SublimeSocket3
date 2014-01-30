@@ -575,11 +575,17 @@ class SublimeSocketAPI:
 
 		# run after the tooltip selected or cancelled.
 		def toolTipClosed(index):
-			injectParams = {}
+			# injection
+			injectParams = self.injectParams()
+			この辺難しい。
+
+			# if SublimeSocketAPISettings.SHOWTOOLTIP_INJECT in params:
+			# 	injectParams = params[SublimeSocketAPISettings.SHOWTOOLTIP_INJECT]
 
 			# append target and other injective-key = SHOWTOOLTIP_INJECTIONKEYS
-			injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view
-			
+			injectParams[SublimeSocketAPISettings.SHOWTOOLTIP_VIEW] = view			
+			print("他のところと違うかも。このAPIのinjectデフォルトが上書きされる。どっちがルールだっけなー。", injectParams)
+
 			# gen selector-inside dict and add "inject" notation.
 			selectorInsideParams = self.insertInjectKeys(params, SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, SublimeSocketAPISettings.SHOWTOOLTIP_INJECT)
 					
@@ -590,7 +596,7 @@ class SublimeSocketAPI:
 
 					# append the "onselected" selectors.
 					selectorInsideParams[SublimeSocketAPISettings.REACTOR_SELECTORS] = itemDict[key].copy()
-					injectParams["message"] = "sommmeeeee"
+
 					self.runAllSelector(selectorInsideParams, injectParams, results)
 			else:
 				if cancelled:
@@ -1889,7 +1895,7 @@ class SublimeSocketAPI:
 
 		return path
 
-	# if inject parameter exist, inject it by information.
+	# if inject parameter exist, inject it by the "injet" information.
 	def injectParams(self, injectInfoDict, injectSourceDict):
 		if SublimeSocketAPISettings.REACTOR_INJECT in injectInfoDict:
 			
