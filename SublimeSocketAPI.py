@@ -7,6 +7,8 @@ import os
 import time
 import re
 import uuid
+import sys
+import io
 
 from functools import reduce
 from .PythonSwitch import PythonSwitch
@@ -245,6 +247,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_SHOWTOOLTIP):
 				self.showToolTip(params, results)
+				break
+
+			if case(SublimeSocketAPISettings.API_TRANSFORM):
+				self.transform(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
@@ -652,11 +658,9 @@ class SublimeSocketAPI:
 
 	# experimental
 	def transformToToolTip(self, params):
-		# ToolTipの実装が、キー：λとかに出来たとして、それを合成する機構が作れるまでのつなぎ。
-		# 言語的につなぎをつくるには、evalで特定のメソッドを実行させることができるようにすれば良いのでは。
-		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
 		
-		messages = params[key][SublimeSocketAPISettings.REGION_MESSAGES]
+		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
+		messages = params[key][SublimeSocketAPISettings.SELECTEDREGIONS_MESSAGES]
 		
 
 		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
@@ -673,6 +677,73 @@ class SublimeSocketAPI:
 		return params
 
 
+	def transform(self, params, results):
+		assert SublimeSocketAPISettings.TARANSFORM_TRANSFORMER in params, "transform require 'transformer' params."
+		assert SublimeSocketAPISettings.TARANSFORM_SELECTOR in params,  "transform require 'selector' params."
+		
+
+		# def execfile2(filename, _globals=dict(), _locals=dict(), cmd=None, quiet=False):
+		# 	_globals['__name__']='__main__'
+		# 	saved_argv = []
+		# 	# saved_argv = sys.argv # we save sys.argv
+		# 	if cmd:
+		# 		sys.argv=list([filename])
+		# 		if isinstance(cmd , list):
+		# 			sys.argv.append(cmd)
+		# 		else:
+		# 			sys.argv.extend(shlex.split(cmd))
+			
+		# 	exit_code = 0
+
+		# 	try:
+		# 		execfile(filename, _globals, _locals)
+		# 	except SystemExit as e:
+		# 		if isinstance(e.code , int):
+		# 			exit_code = e.code # this could be 0 if you do sys.exit(0)
+		# 		else:
+		# 			exit_code = 1
+		# 	except Exception:
+		# 		if not quiet:
+		# 			import traceback
+		# 			traceback.print_exc(file=sys.stderr)
+		# 		exit_code = 1
+		# 	finally:
+		# 		if cmd:
+		# 			pass
+		# 			# sys.argv = saved_argv # we restore sys.argv
+		# 	return exit_code
+
+		transformer = params[SublimeSocketAPISettings.TARANSFORM_TRANSFORMER]
+		transformerName = self.getKeywordBasedPath(transformer, 
+			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
+			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
+
+
+		selector = params[SublimeSocketAPISettings.TARANSFORM_SELECTOR]
+		assert len(selector) == 1, "only one selector can run through transform."
+
+		inputs = params.copy()
+
+		
+		assert os.path.exists(transformerName), "transformer not exist at:"+transformerName
+		
+		# result = exec(compile(open(transformerName).read(), transformerName, 'exec'))
+		# result = execfile2(transformerName, params)
+		# os.system( + " " + str(params) + ">str.txt")
+
+		# result = runpy.run_path(transformerName, init_globals=None, run_name=None)
+		with open(transformerName) as f:
+			code = compile(f.read(), transformerName, "exec")
+
+			result = []
+			before = sys.stdout
+			sys.stdout = NullStream(result)
+
+			exec(code, None, None)
+			
+			sys.stdout = before#sys.__stdout__
+			print("result", result)
+			
 	## run testus
 	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
@@ -2298,3 +2369,10 @@ class SublimeSocketAPI:
 		
 		return True
 
+class NullStream:
+	def __init__(self, buf):
+		self.buf = buf
+
+	def write(self, text):
+		self.buf.append(text)
+		pass
