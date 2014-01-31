@@ -653,13 +653,14 @@ class SublimeSocketAPI:
 	# experimental
 	def transformToToolTip(self, params):
 		# ToolTipの実装が、キー：λとかに出来たとして、それを合成する機構が作れるまでのつなぎ。
+		# 言語的につなぎをつくるには、evalで特定のメソッドを実行させることができるようにすれば良いのでは。
 		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
 		
 		messages = params[key][SublimeSocketAPISettings.REGION_MESSAGES]
 		
 
 		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
-		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"].copy()
+		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"]
 
 		onSelectedSelectors = []
 		
