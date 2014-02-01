@@ -116,15 +116,16 @@ class SublimeSocketAPI:
 
 		# calc "<-" inject param.
 		if injectParams and SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
+			
 			splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
 			command = splitted[0]
 			
 			accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
-
+			
 			# empty "<-" means all injective will be inject.
-			if len(accepts) == 0:
+			if len(accepts) == 1 and accepts[0] == "":
 				accepts = list(injectParams)
-
+			
 			for acceptKey in accepts:
 				if acceptKey in injectParams:
 					params[acceptKey] = injectParams[acceptKey]
@@ -731,16 +732,12 @@ class SublimeSocketAPI:
 					print(valHeader+val)
 
 					iterated = True
-
-			if debug:
-				print("transformer's inputs:"+str(params))
-				print("transformer's keys:"+str(keys))
 			
 			# set stdout
-			sys.stdout = NullStream(result)
+			sys.stdout = TransformerStream(result)
 		
 			# run transformer.py DSL.
-			exec(code, {"inputs":params, "keys":params.keys(), "output":output}, None)
+			exec(code, {"inputs":params, "keys":list(params), "output":output}, None)
 
 			
 		except Exception as e:
@@ -753,33 +750,34 @@ class SublimeSocketAPI:
 		def composeResultList(keyOrValueOrDelim):
 			if keyOrValueOrDelim.startswith(keyHeader):
 				key = keyOrValueOrDelim[len(keyHeader):]
-				assert key, "no key found error in transform. ret(parametersDict) key is None or something wrong."
+				assert key, "no key found error in transform. output(parametersDict) key is None or something wrong."
 				return key
 
 			elif keyOrValueOrDelim.startswith(valHeader):
 				val = keyOrValueOrDelim[len(valHeader):]
-				assert val, "no value found error in transform. ret(parametersDict) value is None or something wrong."
+				assert val, "no value found error in transform. output(parametersDict) value is None or something wrong."
 				return val
 
 			else:
 				pass
 				# assert False, "failed to generate result params. please use 'ret' function in the last line of your transformer.py. keys() and params() will help you."
 
-		if debug:
-			print("result(includes print()):"+str(result))
-
+		
 		naturalResultList = [s for s in result if s != "\n" and s != delim]
 		
 		if start in naturalResultList:
 			pass
 		else:
-			assert False, "no start sign in result. please use 'ret' function in the last line of your transformer.py. keys() and params() will help you."
+			assert False, "failed to get result. reason:"+str(naturalResultList)
 		
 		index = naturalResultList.index(start)+1 #next to start
 
 		resultList = [composeResultList(s) for s in naturalResultList[index:]]
 		resultParam = dict(zip(resultList[0::2], resultList[1::2]))
-		print("resultParam", resultParam)
+
+		if debug:
+			print("resultParam:"+str(resultParam))
+
 		# run selector.
 		# inject all keys and values.
 		keys = []
@@ -792,7 +790,7 @@ class SublimeSocketAPI:
 		selectorParams = {
 			SublimeSocketAPISettings.REACTOR_SELECTORS:[selector]
 		}
-		
+
 		self.runAllSelector(
 			selectorParams, 
 			keys, 
@@ -2428,7 +2426,7 @@ class SublimeSocketAPI:
 		
 		return True
 
-class NullStream:
+class TransformerStream:
 	def __init__(self, buf):
 		self.buf = buf
 

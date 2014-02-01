@@ -32,17 +32,49 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
+test>transformでparamsAをparamsBに変更する。/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->viewEmit: {
+    "name": "sample.txt",
+    "identity": "allParamTransformer",
+    "selectors": [
+        {
+            "allValueInjectionのテスト/transform<-": {
+                "transformer": "SUBLIMESOCKET_PATH:tests/testResources/allParamTransformer.py",
+                "selector": {
+                    "showAtLog<-message": {
+
+                    }
+                },
+                "debug": true
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "APIName<- means all param injection.",
+    "contains": {
+        "showAtLog": {
+            "output": "view:unmeasure, path:sample.txt, body:a\nb\nc, rowcol:0,0, identity:allParamTransformer"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
+
 // test>transformでparamsAをparamsBに変更する。/openFile: {
 //     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 // }->viewEmit: {
 //     "name": "sample.txt",
-//     "identity": "allParamTransformer",
+//     "identity": "sampleTransformer",
 //     "selectors": [
 //         {
-//             "allValueInjectionのテスト/transform<-": {
-//                 "transformer": "SUBLIMESOCKET_PATH:tests/testResources/allParamTransformer.py",
+//             "ここでmessageを作り出す/transform": {
+//                 "transformer": "SUBLIMESOCKET_PATH:tests/testResources/sampleTransformer.py",
 //                 "selector": {
-//                     "showAtLog<-message": {
+//                     "こいつがmessage付きで実行されるはず。inject範囲は<-ベースで勝手に拡張される。/showAtLog<-message": {
 
 //                     }
 //                 },
@@ -51,47 +83,16 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 //         }
 //     ]
 // }->assertResult: {
-//     "id": "APIName<- means all param injection.",
+//     "id": "transform values from output values.",
 //     "contains": {
 //         "showAtLog": {
-//             "output": "view:unmeasure, path:sample.txt, body:a\nb\nc"
+//             "output": "that's transformed without format!!"
 //         }
 //     },
-//     "description": "not match.",
-//     "debug": true
+//     "description": "not match."
+// }->closeFile: {
+//     "name": "sample.txt"
 // }
-
-
-
-test>transformでparamsAをparamsBに変更する。/openFile: {
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-}->viewEmit: {
-    "name": "sample.txt",
-    "identity": "sampleTransformer",
-    "selectors": [
-        {
-            "ここでmessageを作り出す/transform": {
-                "transformer": "SUBLIMESOCKET_PATH:tests/testResources/sampleTransformer.py",
-                "selector": {
-                    "こいつがmessage付きで実行されるはず。inject範囲は<-ベースで勝手に拡張される。/showAtLog<-message": {
-
-                    }
-                }
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "transform values from output values.",
-    "contains": {
-        "showAtLog": {
-            "output": "that's transformed without format!!"
-        }
-    },
-    "description": "not match.",
-    "debug": true
-}->closeFile: {
-    "name": "sample.txt"
-}
 
 
 
