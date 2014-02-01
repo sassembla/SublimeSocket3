@@ -325,6 +325,7 @@ SUBAPI_TRANSFORMTOTOOLTIP	= "transformToToolTip"
 API_TRANSFORM			= "transform"
 TARANSFORM_TRANSFORMER	= "transformer"
 TARANSFORM_SELECTOR		= "selector"
+TARANSFORM_DEBUG		= "debug"
 
 API_APPENDREGION		= "appendRegion"
 APPENDREGION_NAME		= "name"

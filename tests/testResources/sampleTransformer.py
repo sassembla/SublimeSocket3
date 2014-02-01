@@ -1,3 +1,10 @@
-import sys
 x = 100
-print("hahaha")
+print("hahha!!")
+
+result = {}
+result["hahaha"] = "hehehe"
+result["kkuku"] = "kekeke"
+result["message"] = "that's transformed without format!!"
+
+output(result)
+print("heee")

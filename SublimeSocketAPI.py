@@ -121,6 +121,10 @@ class SublimeSocketAPI:
 			
 			accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
 
+			# empty "<-" means all injective will be inject.
+			if len(accepts) == 0:
+				accepts = list(injectParams)
+
 			for acceptKey in accepts:
 				if acceptKey in injectParams:
 					params[acceptKey] = injectParams[acceptKey]
@@ -681,69 +685,123 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.TARANSFORM_TRANSFORMER in params, "transform require 'transformer' params."
 		assert SublimeSocketAPISettings.TARANSFORM_SELECTOR in params,  "transform require 'selector' params."
 		
-
-		# def execfile2(filename, _globals=dict(), _locals=dict(), cmd=None, quiet=False):
-		# 	_globals['__name__']='__main__'
-		# 	saved_argv = []
-		# 	# saved_argv = sys.argv # we save sys.argv
-		# 	if cmd:
-		# 		sys.argv=list([filename])
-		# 		if isinstance(cmd , list):
-		# 			sys.argv.append(cmd)
-		# 		else:
-		# 			sys.argv.extend(shlex.split(cmd))
-			
-		# 	exit_code = 0
-
-		# 	try:
-		# 		execfile(filename, _globals, _locals)
-		# 	except SystemExit as e:
-		# 		if isinstance(e.code , int):
-		# 			exit_code = e.code # this could be 0 if you do sys.exit(0)
-		# 		else:
-		# 			exit_code = 1
-		# 	except Exception:
-		# 		if not quiet:
-		# 			import traceback
-		# 			traceback.print_exc(file=sys.stderr)
-		# 		exit_code = 1
-		# 	finally:
-		# 		if cmd:
-		# 			pass
-		# 			# sys.argv = saved_argv # we restore sys.argv
-		# 	return exit_code
-
+		debug = False
+		if SublimeSocketAPISettings.TARANSFORM_DEBUG in params:
+			debug = params[SublimeSocketAPISettings.TARANSFORM_DEBUG]
+		
 		transformer = params[SublimeSocketAPISettings.TARANSFORM_TRANSFORMER]
 		transformerName = self.getKeywordBasedPath(transformer, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
+		if debug:
+			print("transformer's path:"+transformerName)
 
 		selector = params[SublimeSocketAPISettings.TARANSFORM_SELECTOR]
 		assert len(selector) == 1, "only one selector can run through transform."
 
 		inputs = params.copy()
 
-		
 		assert os.path.exists(transformerName), "transformer not exist at:"+transformerName
 		
-		# result = exec(compile(open(transformerName).read(), transformerName, 'exec'))
-		# result = execfile2(transformerName, params)
-		# os.system( + " " + str(params) + ">str.txt")
-
-		# result = runpy.run_path(transformerName, init_globals=None, run_name=None)
+		
+		code = None
 		with open(transformerName) as f:
 			code = compile(f.read(), transformerName, "exec")
+		
+		assert code, "no transformer generated. failed to generate from:"+transformerName
+		
+		start = str(uuid.uuid4())
+		delim = str(uuid.uuid4())
+		keyHeader = "key:"
+		valHeader = "val:"
+		
+		result = []
 
-			result = []
-			before = sys.stdout
+		before = sys.stdout
+		try:
+			def output(paramDict):
+				print(start)
+				iterated = False
+				for key, val in paramDict.items():
+					if iterated:
+						print(delim)
+						
+					print(keyHeader+key)
+					print(valHeader+val)
+
+					iterated = True
+
+			if debug:
+				print("transformer's inputs:"+str(params))
+				print("transformer's keys:"+str(keys))
+			
+			# set stdout
 			sys.stdout = NullStream(result)
+		
+			# run transformer.py DSL.
+			exec(code, {"inputs":params, "keys":params.keys(), "output":output}, None)
 
-			exec(code, None, None)
 			
-			sys.stdout = before#sys.__stdout__
-			print("result", result)
-			
+		except Exception as e:
+			print("failed to run transform:"+str(e))
+		finally:
+			# reset stdout.
+			sys.stdout = before
+
+		
+		def composeResultList(keyOrValueOrDelim):
+			if keyOrValueOrDelim.startswith(keyHeader):
+				key = keyOrValueOrDelim[len(keyHeader):]
+				assert key, "no key found error in transform. ret(parametersDict) key is None or something wrong."
+				return key
+
+			elif keyOrValueOrDelim.startswith(valHeader):
+				val = keyOrValueOrDelim[len(valHeader):]
+				assert val, "no value found error in transform. ret(parametersDict) value is None or something wrong."
+				return val
+
+			else:
+				pass
+				# assert False, "failed to generate result params. please use 'ret' function in the last line of your transformer.py. keys() and params() will help you."
+
+		if debug:
+			print("result(includes print()):"+str(result))
+
+		naturalResultList = [s for s in result if s != "\n" and s != delim]
+		
+		if start in naturalResultList:
+			pass
+		else:
+			assert False, "no start sign in result. please use 'ret' function in the last line of your transformer.py. keys() and params() will help you."
+		
+		index = naturalResultList.index(start)+1 #next to start
+
+		resultList = [composeResultList(s) for s in naturalResultList[index:]]
+		resultParam = dict(zip(resultList[0::2], resultList[1::2]))
+		print("resultParam", resultParam)
+		# run selector.
+		# inject all keys and values.
+		keys = []
+		values = []
+
+		for key, val in resultParam.items():
+			keys.append(key)
+			values.append(val)
+
+		selectorParams = {
+			SublimeSocketAPISettings.REACTOR_SELECTORS:[selector]
+		}
+		
+		self.runAllSelector(
+			selectorParams, 
+			keys, 
+			values, 
+			SublimeSocketAPISettings.REACTOR_INJECT, 
+			results)
+
+
+
 	## run testus
 	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
@@ -2270,6 +2328,7 @@ class SublimeSocketAPI:
 					if not self.isExecutableWithDelay(eventName, target, delay):
 						pass
 					else:
+						# inject all keys and values.
 						keys = []
 						values = []
 
