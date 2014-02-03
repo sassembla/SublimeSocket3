@@ -20,10 +20,12 @@ class EditorAPI:
 			fileName = viewInstance.file_name()
 			baseName = os.path.basename(fileName)
 		
+		selecteds = []
+
 		# generate selected-region's (from, to) set.
 		for region in viewInstance.sel():
-			print("generateSublimeViewInfo region", region)
-		selecteds = viewInstance.sel()
+			regionTupel = (region.a, region.b)
+			selecteds.append(regionTupel)
 
 		return {
 			viewKey : viewInstance,
@@ -61,7 +63,6 @@ class EditorAPI:
 	def runAfterDelay(self, execution, delay):
 		sublime.set_timeout(execution, delay)
 
-
 	def showMessageDialog(self, message):
 		sublime.message_dialog(message)
 
@@ -77,8 +78,8 @@ class EditorAPI:
 	def viewsOfWindow(self, window):
 		return window.views()
 
-	def generateRegion(self, index, size):
-		return sublime.Region(index, size)
+	def generateRegion(self, theFrom, theTo):
+		return sublime.Region(theFrom, theTo)
 
 	def statusMessage(self, message):
 		sublime.status_message(message)
@@ -131,12 +132,21 @@ class EditorAPI:
 	def clearSelectionOfView(self, view):
 		view.sel().clear()
 		
-	def isRegionContained(self, region, targetRegion):
-		return targetRegion.contains(region)
+	def isRegionContained(self, region, selecteds):
+		selectionRegionList = [self.generateRegion(regionParam[0], regionParam[1]) for regionParam in selecteds]
+
+		for selectinRegion in selectionRegionList:
+			if selectinRegion.contains(region):
+				return True
+
+		return False
 
 	def bodyOfView(self, view):
 		currentRegion = sublime.Region(0, view.size())
 		return view.substr(view.word(currentRegion))
+
+	def crossedContents(self, view, fromParam, toParam):
+		return view.substr(sublime.Region(fromParam, toParam))
 		
 	def selectionAsStr(self, view):
 		sel = view.sel()

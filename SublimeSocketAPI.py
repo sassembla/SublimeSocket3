@@ -751,7 +751,7 @@ class SublimeSocketAPI:
 		if start in naturalResultList:
 			pass
 		else:
-			assert False, "failed to get result. reason:"+str(naturalResultList)
+			assert False, "at:" + transformerName + " failed to get result. reason:"+str(naturalResultList)
 		
 		index = naturalResultList.index(start)+1 #next to start
 
@@ -1230,8 +1230,7 @@ class SublimeSocketAPI:
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SELECTEDREGIONS_VIEW, SublimeSocketAPISettings.SELECTEDREGIONS_NAME)
 		
-		# selecteds = エディタで現在選択中の領域、複数のstartとendからなるregionの素なので、SELECTEDREGIONS_SELECTEDSからregionに合成する。
-		selected = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
+		selecteds = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
 		regionsDict = self.server.regionsDict()
 		
 		# run selector if selected region contains 
@@ -1249,7 +1248,7 @@ class SublimeSocketAPI:
 				regionTo = regionData[SublimeSocketAPISettings.REGION_TO]
 				region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-				if self.editorAPI.isRegionContained(region, selected):
+				if self.editorAPI.isRegionContained(region, selecteds):
 					return True
 				return False
 
@@ -1269,10 +1268,13 @@ class SublimeSocketAPI:
 				toParam = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_TO]
 				messages = regionDatas[SublimeSocketAPISettings.SELECTEDREGIONS_MESSAGES]
 
+				# add the line contents of this region. selection x region
+				crossed = self.editorAPI.crossedContents(view, fromParam, toParam)
+
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, 
-					[view, path, target, selected, line, fromParam, toParam, messages], 
+					[view, path, crossed, target, line, fromParam, toParam, messages], 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECT, 
 					results)
 
@@ -1533,20 +1535,22 @@ class SublimeSocketAPI:
 		
 		assert view, "setSelection require 'view' or 'name' param."
 		
-		assert SublimeSocketAPISettings.SETSELECTION_FROM in params, "setSelection require 'from' param."
-		assert SublimeSocketAPISettings.SETSELECTION_TO in params, "setSelection require 'to' param."
+		assert SublimeSocketAPISettings.SETSELECTION_SELECTIONS in params, "setSelection require 'selections' param."
 		
-		regionFrom = params[SublimeSocketAPISettings.SETSELECTION_FROM]
-		regionTo = params[SublimeSocketAPISettings.SETSELECTION_TO]
+		selections = params[SublimeSocketAPISettings.SETSELECTION_SELECTIONS]
 		
-		if regionTo < 0:
-			regionFrom = 0
-			regionTo = self.editorAPI.viewSize(view)
+		for selection in selections:
+			regionFrom = selection[SublimeSocketAPISettings.SETSELECTION_FROM]
+			regionTo = selection[SublimeSocketAPISettings.SETSELECTION_TO]
+			
+			if regionTo < 0:
+				regionFrom = 0
+				regionTo = self.editorAPI.viewSize(view)
 
-		region = self.editorAPI.generateRegion(regionFrom, regionTo)
-		
-		self.editorAPI.addSelectionToView(view, region)
-		selected = str(region)
+			region = self.editorAPI.generateRegion(regionFrom, regionTo)
+			
+			self.editorAPI.addSelectionToView(view, region)
+			selected = str(region)
 		
 		# emit viewReactor
 		viewParams = self.editorAPI.generateSublimeViewInfo(

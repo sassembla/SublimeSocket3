@@ -1,5 +1,5 @@
 # toolTipを生成する
-assert "path" in inputs and "selectedBody" in inputs, "not contained necessary parameters."+str(keys)
+assert "path" in inputs and "crossed" in inputs, "not contained necessary parameters."+str(keys)
 
 import os
 
@@ -7,12 +7,13 @@ path = inputs["path"]
 
 name = os.path.basename(path)
 
-selectedBody = inputs["selectedBody"]
-lines = [selectedBody, selectedBody, selectedBody]
+crossed = inputs["crossed"]
+
+# 試しに改行で分けてみる
+lines = crossed.split("\n")
 
 # create onselected
 onselected = []
-
 
 for line in lines:
 	selectorContents = {"showAtLog":{"message":"here comes "+ line +" as a daredevil!!"}}
