@@ -32,35 +32,65 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
-test>transformでparamsAをparamsBに変更する。/openFile: {
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-}->viewEmit: {
-    "name": "sample.txt",
-    "identity": "allParamTransformer",
-    "selectors": [
-        {
-            "allValueInjectionのテスト/transform<-": {
-                "transformer": "SUBLIMESOCKET_PATH:tests/testResources/allParamTransformer.py",
-                "selector": {
-                    "showAtLog<-message": {
+// test>transformでlistとdictを扱う/openFile: {
+//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+// }->viewEmit: {
+//     "name": "sample.txt",
+//     "identity": "allParamTransformer",
+//     "selectors": [
+//         {
+//             "allValueInjectionのテスト/transform<-path, body": {
+//                 "transformer": "SUBLIMESOCKET_PATH:tests/testResources/listTransformer.py",
+//                 "selector": {
+//                     "showToolTip<-name, onselected": {
+//                         "oncancelled": []
+//                     }
+//                 },
+//                 "debug": true
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "APIName<- means all param injection.",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "this is a"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+//     "name": "sample.txt"
+// }
 
-                    }
-                },
-                "debug": true
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "APIName<- means all param injection.",
-    "contains": {
-        "showAtLog": {
-            "output": "view:unmeasure, path:sample.txt, body:a\nb\nc, rowcol:0,0, identity:allParamTransformer"
-        }
-    },
-    "description": "not match."
-}->closeFile: {
-    "name": "sample.txt"
-}
+
+
+// test>transformでparamsAをparamsBに変更する。/openFile: {
+//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+// }->viewEmit: {
+//     "name": "sample.txt",
+//     "identity": "allParamTransformer",
+//     "selectors": [
+//         {
+//             "allValueInjectionのテスト、全要素を並べてtoolTipにする/transform<-": {
+//                 "transformer": "SUBLIMESOCKET_PATH:tests/testResources/toolTipTransformer.py",
+//                 "selector": {
+//                     "showToolTip<-name, onselected, oncancelled": {}
+//                 },
+//                 "debug": true
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "APIName<- means all param injection.",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "here comes a as a daredevil!!"
+//         }
+//     },
+//     "description": "not match."
+// }->closeFile: {
+//     "name": "sample.txt"
+// }
 
 
 
@@ -72,7 +102,6 @@ test>transformでparamsAをparamsBに変更する。/openFile: {
 //     "selectors": [
 //         {
 //             "ここでmessageを作り出す/transform": {
-//                 "transformer": "SUBLIMESOCKET_PATH:tests/testResources/sampleTransformer.py",
 //                 "selector": {
 //                     "こいつがmessage付きで実行されるはず。inject範囲は<-ベースで勝手に拡張される。/showAtLog<-message": {
 
@@ -829,87 +858,50 @@ test>transformでparamsAをparamsBに変更する。/openFile: {
 
 
 
-// test>試験的なやっつけtransformerのテスト/createBuffer: {
-//     "name": "transformToToolTipSamle.txt"
-// }->showToolTip: {
-//     "transformToToolTip": "contents",
-//     "contents": {
-//         "messages": [
-//             "here"
-//         ]
-//     },
-//     "name": "transformToToolTipSamle.txt",
-//     "onselected": [
-//         {
-//             "sample": [
-//                 {
-//                     "showAtLog": {
-//                         "message": "test1"
-//                     }
-//                 }
-//             ]
-//         }
-//     ],
-//     "oncancelled": []
-// }->assertResult: {
-//     "id": "transform key-value to key-array",
-//     "contains": {
-//         "showAtLog": {
-//             "output": "test1"
-//         }
-//     },
-//     "description": "not match."
-// }
-
-
-
-// test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形する/setViewReactor: {
-//     "target": "containsregiontarget",
-//     "react": "ss_on_selection_modified_by_setselection",
-//     "selectors": [
-//         {
-//             "selectedRegions<-view, selected": {
-//                 "target": "containsregiontarget",
-//                 "selectors": [
-//                     {
-//                         "showToolTip<-view, messages": {
-//                             "transformToToolTip": "messages",
-//                             "onselected": [
-//                                 {
-//                                     "sample": [
-//                                         {
-//                                             "showAtLog": {
-//                                                 "message": "hereComes!"
-//                                             }
-//                                         }
-//                                     ]
-//                                 }
-//                             ],
-//                             "oncancelled": [
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             }
-//         }
-//     ]
-// }->openFile: {
-//     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->appendRegion: {
-//     "line": "1",
-//     "message": "test2",
-//     "name": "sample.txt",
-//     "condition": "keyword"
-// }->setSelection: {
-//     "name": "sample.txt",
-//     "from": 0,
-//     "to": 1
-// }->assertResult: {
+test>transormの応用例、2件のregionDataをToolTipに変形する/setViewReactor: {
+    "target": "containsregiontarget",
+    "react": "ss_on_selection_modified_by_setselection",
+    "selectors": [
+        {
+            "selectedRegions<-view, selecteds": {
+                "target": "containsregiontarget",
+                "selectors": [
+                    {
+                        "transform<-path, selecteds": {
+                            "transformer": "SUBLIMESOCKET_PATH:tests/testResources/containsRegionTargetTransformer.py",
+                            "selector": {
+                                "showToolTip<-name, onselected, oncancelled": {
+                                    
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->appendRegion: {
+    "line": "1",
+    "message": "test2",
+    "name": "sample.txt",
+    "condition": "keyword"
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 0,
+    "to": 1
+}->setSelection: {
+    "name": "sample.txt",
+    "from": 2,
+    "to": 3
+}
+// ->assertResult: {
 //     "id": "show 2 regions messages in toolTip.",
 //     "contains": {
 //         "showAtLog": {

@@ -8,7 +8,7 @@ from ... import SublimeSocketAPISettings
 
 ## sublime dependents apis and functions.
 class EditorAPI:
-	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedKey, isViewExist):
+	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedsKey, isViewExist):
 		existOrNot = False
 
 		if self.isBuffer(viewInstance.file_name()):
@@ -19,7 +19,11 @@ class EditorAPI:
 			existOrNot = True
 			fileName = viewInstance.file_name()
 			baseName = os.path.basename(fileName)
-			
+		
+		# generate selected-region's (from, to) set.
+		for region in viewInstance.sel():
+			print("generateSublimeViewInfo region", region)
+		selecteds = viewInstance.sel()
 
 		return {
 			viewKey : viewInstance,
@@ -28,7 +32,7 @@ class EditorAPI:
 			viewPathKey: fileName,
 			viewBaseNameKey: baseName,
 			viewVNameKey: viewInstance.name(),
-			viewSelectedKey: viewInstance.sel(),
+			viewSelectedsKey: selecteds,
 			isViewExist: existOrNot
 		}
 
@@ -121,6 +125,9 @@ class EditorAPI:
 	def addSelectionToView(self, view, pt):
 		view.sel().add(pt)
 
+	def selectedBody(self, view, region):
+		return view.substr(region)
+		
 	def clearSelectionOfView(self, view):
 		view.sel().clear()
 		

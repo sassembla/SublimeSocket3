@@ -343,7 +343,7 @@ class SublimeSocketAPI:
 
 
 	def runAllSelector(self, params, injectiveKeys, injectiveValues, injectionMapKey, results):
-		assert len(injectiveKeys) == len(injectiveValues), "cannot generate inective-keys and values:"+injectiveKeys+" vs "+injectiveValues
+		assert len(injectiveKeys) == len(injectiveValues), "cannot generate inective-keys and values:"+str(injectiveKeys)+" vs injects:"+str(injectiveValues)
 		zippedInjectiveParams = dict(zip(injectiveKeys, injectiveValues))
 		
 		runnableParams = params.copy()
@@ -580,9 +580,6 @@ class SublimeSocketAPI:
 
 
 	def showToolTip(self, params, results):
-		if SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP in params:
-			params = self.transformToToolTip(params)
-
 		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED in params, "showToolTip require 'onselected' params."
 		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
 
@@ -604,13 +601,16 @@ class SublimeSocketAPI:
 		assert view, "showToolTip require 'view' or 'name' param."
 
 		def getItemKey(item):
-			key = list(item)[0]
+			itemList = list(item)
+			assert len(itemList) == 1, "multiple items found in one items. not valid. at:"+str(item)
+			key = itemList[0]
 			return key
 
 		tooltipItemKeys = [getItemKey(item) for item in selects]
 
 		# run after the tooltip selected or cancelled.
 		def toolTipClosed(index):
+			selectedItem = "cancelled"
 			
 			if -1 < index:
 				if index < len(selects):
@@ -658,28 +658,6 @@ class SublimeSocketAPI:
 
 		print("最悪、ここでuniqueかけることができる。そも入れる時点でかさなってるかどうかチェックすればいいわなあ、、", tooltipItemKeys)
 		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
-		
-			
-
-	# experimental
-	def transformToToolTip(self, params):
-		
-		key = params[SublimeSocketAPISettings.SUBAPI_TRANSFORMTOTOOLTIP]
-		messages = params[key][SublimeSocketAPISettings.SELECTEDREGIONS_MESSAGES]
-		
-
-		onSelectedSelectors = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
-		sampleOnSelectedSelector = onSelectedSelectors[0]["sample"]
-
-		onSelectedSelectors = []
-		
-		for message in messages:
-			
-			tooltipItemDict = {message:sampleOnSelectedSelector}
-			onSelectedSelectors.append(tooltipItemDict)
-		
-		params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED] = onSelectedSelectors
-		return params
 
 
 	def transform(self, params, results):
@@ -707,7 +685,7 @@ class SublimeSocketAPI:
 		
 		
 		code = None
-		with open(transformerName) as f:
+		with open(transformerName, encoding='utf8') as f:
 			code = compile(f.read(), transformerName, "exec")
 		
 		assert code, "no transformer generated. failed to generate from:"+transformerName
@@ -727,9 +705,13 @@ class SublimeSocketAPI:
 				for key, val in paramDict.items():
 					if iterated:
 						print(delim)
-						
+
 					print(keyHeader+key)
-					print(valHeader+val)
+
+					# convert to JSON
+					jsonVal = json.dumps(val)
+				
+					print(valHeader+jsonVal)
 
 					iterated = True
 			
@@ -746,6 +728,8 @@ class SublimeSocketAPI:
 			# reset stdout.
 			sys.stdout = before
 
+		if debug:
+			print("unfixed result:"+str(result))
 		
 		def composeResultList(keyOrValueOrDelim):
 			if keyOrValueOrDelim.startswith(keyHeader):
@@ -754,13 +738,12 @@ class SublimeSocketAPI:
 				return key
 
 			elif keyOrValueOrDelim.startswith(valHeader):
-				val = keyOrValueOrDelim[len(valHeader):]
-				assert val, "no value found error in transform. output(parametersDict) value is None or something wrong."
-				return val
+				jsonVal = keyOrValueOrDelim[len(valHeader):]
+				assert jsonVal, "no value found error in transform. output(parametersDict) value is None or something wrong."
 
-			else:
-				pass
-				# assert False, "failed to generate result params. please use 'ret' function in the last line of your transformer.py. keys() and params() will help you."
+				# re-pack to value, list, dict.
+				val = json.loads(jsonVal)
+				return val
 
 		
 		naturalResultList = [s for s in result if s != "\n" and s != delim]
@@ -790,7 +773,7 @@ class SublimeSocketAPI:
 		selectorParams = {
 			SublimeSocketAPISettings.REACTOR_SELECTORS:[selector]
 		}
-
+		print("selectorParams", selectorParams)
 		self.runAllSelector(
 			selectorParams, 
 			keys, 
@@ -1143,7 +1126,7 @@ class SublimeSocketAPI:
 						SublimeSocketAPISettings.VIEW_PATH,
 						SublimeSocketAPISettings.VIEW_BASENAME,
 						SublimeSocketAPISettings.VIEW_VNAME,
-						SublimeSocketAPISettings.VIEW_SELECTED,
+						SublimeSocketAPISettings.VIEW_SELECTEDS,
 						SublimeSocketAPISettings.VIEW_ISEXIST
 					)
 
@@ -1197,7 +1180,7 @@ class SublimeSocketAPI:
 							SublimeSocketAPISettings.VIEW_PATH,
 							SublimeSocketAPISettings.VIEW_BASENAME,
 							SublimeSocketAPISettings.VIEW_VNAME,
-							SublimeSocketAPISettings.VIEW_SELECTED,
+							SublimeSocketAPISettings.VIEW_SELECTEDS,
 							SublimeSocketAPISettings.VIEW_ISEXIST
 						)
 
@@ -1241,19 +1224,20 @@ class SublimeSocketAPI:
 
 	# run selected regions.
 	def selectedRegions(self, params, results):
-		assert SublimeSocketAPISettings.SELECTEDREGIONS_VIEW in params, "selectedRegions require 'view' param."
-		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED in params, "selectedRegions require 'selected' param."
+		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS in params, "selectedRegions require 'selecteds' param."
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_TARGET in params, "selectedRegions require 'target' param."
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTORS in params, "selectedRegions require 'selectors' param."
 
-		view = params[SublimeSocketAPISettings.SELECTEDREGIONS_VIEW]
-		selected = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTED]
-		target = params[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET]
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SELECTEDREGIONS_VIEW, SublimeSocketAPISettings.SELECTEDREGIONS_NAME)
 		
+		# selecteds = エディタで現在選択中の領域、複数のstartとendからなるregionの素なので、SELECTEDREGIONS_SELECTEDSからregionに合成する。
+		selected = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
 		regionsDict = self.server.regionsDict()
-		path = self.internal_detectViewPath(view)
 		
+		# run selector if selected region contains 
 		if path in regionsDict:
+			target = params[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET]
+
 			# if already sekected, no event running.
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
 
@@ -1559,31 +1543,29 @@ class SublimeSocketAPI:
 			regionFrom = 0
 			regionTo = self.editorAPI.viewSize(view)
 
-		pt = self.editorAPI.generateRegion(regionFrom, regionTo)
+		region = self.editorAPI.generateRegion(regionFrom, regionTo)
 		
-		self.editorAPI.addSelectionToView(view, pt)
-		selected = str(pt)
+		self.editorAPI.addSelectionToView(view, region)
+		selected = str(region)
 		
-		filePath = self.editorAPI.nameOfView(view)
+		# emit viewReactor
+		viewParams = self.editorAPI.generateSublimeViewInfo(
+			view,
+			SublimeSocketAPISettings.VIEW_SELF,
+			SublimeSocketAPISettings.VIEW_ID,
+			SublimeSocketAPISettings.VIEW_BUFFERID,
+			SublimeSocketAPISettings.VIEW_PATH,
+			SublimeSocketAPISettings.VIEW_BASENAME,
+			SublimeSocketAPISettings.VIEW_VNAME,
+			SublimeSocketAPISettings.VIEW_SELECTEDS,
+			SublimeSocketAPISettings.VIEW_ISEXIST)
+		print("viewParams", viewParams)
 
-		if filePath:
-			# emit viewReactor
-			viewParams = self.editorAPI.generateSublimeViewInfo(
-				view,
-				SublimeSocketAPISettings.VIEW_SELF,
-				SublimeSocketAPISettings.VIEW_ID,
-				SublimeSocketAPISettings.VIEW_BUFFERID,
-				SublimeSocketAPISettings.VIEW_PATH,
-				SublimeSocketAPISettings.VIEW_BASENAME,
-				SublimeSocketAPISettings.VIEW_VNAME,
-				SublimeSocketAPISettings.VIEW_SELECTED,
-				SublimeSocketAPISettings.VIEW_ISEXIST)
+		emitIdentity = str(uuid.uuid4())
+		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-			emitIdentity = str(uuid.uuid4())
-			viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
-
-			self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
-			self.setResultsParams(results, self.setSelection, {"selected":selected})
+		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+		self.setResultsParams(results, self.setSelection, {"selected":selected})
 
 
 	def clearSelection(self, params, results):
@@ -2183,7 +2165,7 @@ class SublimeSocketAPI:
 					SublimeSocketAPISettings.VIEW_PATH,
 					SublimeSocketAPISettings.VIEW_BASENAME,
 					SublimeSocketAPISettings.VIEW_VNAME,
-					SublimeSocketAPISettings.VIEW_SELECTED,
+					SublimeSocketAPISettings.VIEW_SELECTEDS,
 					SublimeSocketAPISettings.VIEW_ISEXIST
 				)
 
