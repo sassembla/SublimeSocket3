@@ -1,0 +1,1 @@
+# pathとslectedsを、toopTipに
