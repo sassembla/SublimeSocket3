@@ -191,9 +191,10 @@ class SublimeSocketServer:
 			regionsDict[path][identity][SublimeSocketAPISettings.REGION_TO] = regionTo
 			regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES] = []
 
-		regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES].insert(0, message)
+		if not message in regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES]:
+			regionsDict[path][identity][SublimeSocketAPISettings.REGION_MESSAGES].insert(0, message)
 		
-		self.updateRegionsDict(regionsDict)
+			self.updateRegionsDict(regionsDict)
 
 	def regionsDict(self):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)

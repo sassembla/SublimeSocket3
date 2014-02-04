@@ -32,6 +32,54 @@ TestSuite for SublimeSocket./setTestBeforeAfter: {
 
 
 
+
+test>transformにcodeを使う/transform: {
+    "code": "output({\"message\":\"hereComes\"})",
+    "selectors": [
+        {
+            "showAtLog<-message": {
+                
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "transform uses the code made from json",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes"
+        }
+    },
+    "description": "not match."
+}
+
+
+
+test>transformに、無理して長文を書く/transform: {
+    "code": "
+    import os\n
+    for a in \"abc\":\n
+    \tprint(\"\", a)\n
+    
+    output({\"message\":\"hereComes2\"})",
+    "selectors": [
+        {
+            "showAtLog<-message": {
+                
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "transform uses the code made from json",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes2"
+        }
+    },
+    "description": "not match."
+}
+
+
+
 test>transformでlistとdictを扱う/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->viewEmit: {
@@ -40,12 +88,16 @@ test>transformでlistとdictを扱う/openFile: {
     "selectors": [
         {
             "allValueInjectionのテスト/transform<-path, body": {
-                "transformer": "SUBLIMESOCKET_PATH:tests/testResources/listTransformer.py",
-                "selector": {
-                    "showToolTip<-name, onselected": {
-                        "oncancelled": []
+                "transformerpath": "SUBLIMESOCKET_PATH:tests/testResources/listTransformer.py",
+                "selectors": [
+                    {
+                        "showToolTip<-name, onselected": {
+                            "oncancelled": [
+                                
+                            ]
+                        }
                     }
-                },
+                ],
                 "debug": true
             }
         }
@@ -72,10 +124,14 @@ test>transformでparamsAをparamsBに変更する。/openFile: {
     "selectors": [
         {
             "allValueInjectionのテスト、全要素を並べてtoolTipにする/transform<-": {
-                "transformer": "SUBLIMESOCKET_PATH:tests/testResources/toolTipTransformer.py",
-                "selector": {
-                    "showToolTip<-name, onselected, oncancelled": {}
-                },
+                "transformerpath": "SUBLIMESOCKET_PATH:tests/testResources/toolTipTransformer.py",
+                "selectors": [
+                    {
+                        "showToolTip<-name, onselected, oncancelled": {
+                            
+                        }
+                    }
+                ],
                 "debug": true
             }
         }
@@ -118,12 +174,14 @@ test>quickFix的な機構のテスト、appendRegionからのToolTip、filterで
             "sample": [
                 {
                     "transform<-selecteditem": {
-                        "transformer": "SUBLIMESOCKET_PATH:tests/testResources/setSelectedNameToFilter.py",
-                        "selector": {
-                            "filtering<-source": {
-                                "name": "quickfix-adoptable-pattern"
+                        "transformerpath": "SUBLIMESOCKET_PATH:tests/testResources/setSelectedNameToFilter.py",
+                        "selectors": [
+                            {
+                                "filtering<-source": {
+                                    "name": "quickfix-adoptable-pattern"
+                                }
                             }
-                        }
+                        ]
                     }
                 }
             ]
@@ -474,6 +532,24 @@ test>そのビューの文字列が減ったら、ss_v_decreasedイベントが�
 
 
 
+test>強制セーブ/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->forcelySave: {
+    "name": "sample.txt"
+}->assertResult: {
+    "id": "add line to the view",
+    "contains": {
+        "forcelySave": {
+
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
+
 test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
     "name": "notFoundFile.txt"
 }->getAllFilePath: {
@@ -748,14 +824,14 @@ test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
 
 
 
-test>regionの 2 contentsに対して、setSelectionでselectedRegionsを引き起こし、2件の情報を取得する/setViewReactor: {
+test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起こし、2件の情報を取得する/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
     "selectors": [
         {
             "selectedRegions<-view, selecteds": {
                 "inject": {
-                    "messages":"datas"
+                    "messages": "datas"
                 },
                 "target": "containsregiontarget",
                 "selectors": [
@@ -863,12 +939,14 @@ test>transormの応用例、2件のregionDataをそれぞれToolTipに変形す�
                 "selectors": [
                     {
                         "transform<-path, crossed": {
-                            "transformer": "SUBLIMESOCKET_PATH:tests/testResources/containsRegionTargetTransformer.py",
-                            "selector": {
-                                "showToolTip<-name, onselected, oncancelled": {
-                                    
+                            "transformerpath": "SUBLIMESOCKET_PATH:tests/testResources/containsRegionTargetTransformer.py",
+                            "selectors": [
+                                {
+                                    "showToolTip<-name, onselected, oncancelled": {
+                                        
+                                    }
                                 }
-                            }
+                            ]
                         }
                     }
                 ]
@@ -940,6 +1018,7 @@ test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形�
                                 }
                             ],
                             "oncancelled": [
+                                
                             ]
                         }
                     }
@@ -1230,7 +1309,7 @@ test>ツールチップの選択後、inject済のviewを使ってappendRegion�
         {
             "add region": [
                 {
-                    "appendRegion<-view, selected": {
+                    "appendRegion<-view": {
                         "line": "1",
                         "message": "test",
                         "condition": "keyword"
@@ -1272,8 +1351,10 @@ test>ツールチップ選択orキャンセル後、最終的に動作するfina
             ]
         }
     ],
-    "oncancelled": [],
-    "finally":[
+    "oncancelled": [
+        
+    ],
+    "finally": [
         {
             "showAtLog": {
                 "message": "finally."

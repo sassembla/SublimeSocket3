@@ -253,9 +253,12 @@ class CaptureEditing(sublime_plugin.EventListener):
 
 # view contents control
 class InsertTextCommand(sublime_plugin.TextCommand):
-  def run(self, edit, string=''):
-    self.view.insert(edit, self.view.size(), string)
-
+  def run(self, edit, string='', fromParam=0):
+    fromParam = int(fromParam)
+    if fromParam == -1:
+      self.view.insert(edit, self.view.size(), string)
+    else:
+      self.view.insert(edit, fromParam, string)
 
 class ReduceTextCommand(sublime_plugin.TextCommand):
   def run(self, edit):
@@ -266,5 +269,9 @@ class ClearSelectionCommand(sublime_plugin.TextCommand):
   def run(self, edit):
     self.view.sel().clear()
 
+
+class ForcelySave(sublime_plugin.TextCommand):
+  def run(self, edit):
+    self.view.run_command("save")
 
     

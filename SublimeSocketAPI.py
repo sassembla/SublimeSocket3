@@ -105,9 +105,12 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, command, params, clientId=None, injectParams=None, results=None):		
+	def runAPI(self, commandbase, params, clientId=None, injectParams=None, results=None):		
+
+		command = commandbase
+		
 		# erase comment
-		if SublimeSocketAPISettings.API_COMMENT_DELIM in command:
+		if SublimeSocketAPISettings.API_COMMENT_DELIM in commandbase:
 			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
 			command = splitted[1]
 
@@ -127,8 +130,8 @@ class SublimeSocketAPI:
 				accepts = list(injectParams)
 			
 			for acceptKey in accepts:
-				if acceptKey in injectParams:
-					params[acceptKey] = injectParams[acceptKey]
+				assert acceptKey in injectParams, "cannot inject not injected param:" + acceptKey + " in " + commandbase
+				params[acceptKey] = injectParams[acceptKey]
 
 
   		# python-switch
@@ -288,6 +291,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
 				self.runCompletion(params, results)
+				break
+
+			if case(SublimeSocketAPISettings.API_FORCELYSAVE):
+				self.forcelySave(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETSUBLIMESOCKETWINDOWBASEPATH):
@@ -656,39 +663,46 @@ class SublimeSocketAPI:
 
 			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
 
-		print("最悪、ここでuniqueかけることができる。そも入れる時点でかさなってるかどうかチェックすればいいわなあ、、", tooltipItemKeys)
 		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
 
 
 	def transform(self, params, results):
-		assert SublimeSocketAPISettings.TARANSFORM_TRANSFORMER in params, "transform require 'transformer' params."
-		assert SublimeSocketAPISettings.TARANSFORM_SELECTOR in params,  "transform require 'selector' params."
-		
-		debug = False
-		if SublimeSocketAPISettings.TARANSFORM_DEBUG in params:
-			debug = params[SublimeSocketAPISettings.TARANSFORM_DEBUG]
-		
-		transformer = params[SublimeSocketAPISettings.TARANSFORM_TRANSFORMER]
-		transformerName = self.getKeywordBasedPath(transformer, 
-			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
-			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
-
-		if debug:
-			print("transformer's path:"+transformerName)
-
-		selector = params[SublimeSocketAPISettings.TARANSFORM_SELECTOR]
-		assert len(selector) == 1, "only one selector can run through transform."
-
-		inputs = params.copy()
-
-		assert os.path.exists(transformerName), "transformer not exist at:"+transformerName
-		
-		
+		assert SublimeSocketAPISettings.TRANSFORM_SELECTORS in params,  "transform require 'selectors' params."
 		code = None
-		with open(transformerName, encoding='utf8') as f:
-			code = compile(f.read(), transformerName, "exec")
-		
+
+		if SublimeSocketAPISettings.TRANSFORM_PATH in params:
+			transformerPath = params[SublimeSocketAPISettings.TRANSFORM_PATH]
+			transformerName = self.getKeywordBasedPath(transformerPath, 
+				SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
+				self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
+
+			assert os.path.exists(transformerName), "transformerpath not exist at:"+transformerName
+
+			with open(transformerName, encoding='utf8') as f:
+				code = compile(f.read(), transformerName, "exec")
+
+		elif SublimeSocketAPISettings.TRANSFORM_CODE in params:
+			transformerCode = params[SublimeSocketAPISettings.TRANSFORM_CODE]
+			transformerName = "load transformer from api. not file."
+
+			code = compile(transformerCode, "", "exec")
+
+		else:
+			assert False, "no resource found for transform. transform require '' or '' params."
+
 		assert code, "no transformer generated. failed to generate from:"+transformerName
+
+		debug = False
+		if SublimeSocketAPISettings.TRANSFORM_DEBUG in params:
+			debug = params[SublimeSocketAPISettings.TRANSFORM_DEBUG]
+		
+		if debug:
+			print("transformer's path or code:"+transformerName)
+
+
+		selectors = params[SublimeSocketAPISettings.TRANSFORM_SELECTORS]
+		
+		inputs = params.copy()
 		
 		start = str(uuid.uuid4())
 		delim = str(uuid.uuid4())
@@ -770,12 +784,8 @@ class SublimeSocketAPI:
 			keys.append(key)
 			values.append(val)
 
-		selectorParams = {
-			SublimeSocketAPISettings.REACTOR_SELECTORS:[selector]
-		}
-		print("selectorParams", selectorParams)
 		self.runAllSelector(
-			selectorParams, 
+			params, 
 			keys, 
 			values, 
 			SublimeSocketAPISettings.REACTOR_INJECT, 
@@ -1523,8 +1533,15 @@ class SublimeSocketAPI:
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
 		if view:
 			if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
-				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': params[SublimeSocketAPISettings.MODIFYVIEW_ADD]})
-				
+				add = params[SublimeSocketAPISettings.MODIFYVIEW_ADD]
+
+				# no line set = append the text to next to the last character of the view.
+				if not SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
+					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":self.editorAPI.viewSize(view)})
+				else:
+					line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
+					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":line})
+
 			if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
 				self.editorAPI.runCommandOnView(view, 'reduce_text')
 
@@ -1836,6 +1853,15 @@ class SublimeSocketAPI:
 
 		self.setResultsParams(results, self.runCompletion, {"completed":path})
 			
+
+	def forcelySave(self, params, results):
+		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)
+
+		assert view, "forcelySave require 'view' or 'path' params."
+
+		self.editorAPI.runCommandOnView(view, 'forcely_save')
+		self.setResultsParams(results, self.forcelySave, {})
+		
 
 	def setSublimeSocketWindowBasePath(self, results):
 		self.sublimeSocketWindowBasePath = self.editorAPI.getFileName()
