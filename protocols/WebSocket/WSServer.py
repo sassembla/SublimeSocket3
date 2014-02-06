@@ -11,8 +11,8 @@ import uuid
 from .WSClient import WSClient
 from .WSEncoder import WSEncoder
 
-from ..PythonSwitch import PythonSwitch
-from .. import SublimeSocketAPISettings
+from ...PythonSwitch import PythonSwitch
+from ... import SublimeSocketAPISettings
 
 
 class WSServer:
