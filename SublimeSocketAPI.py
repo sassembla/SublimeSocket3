@@ -14,8 +14,11 @@ from functools import reduce
 from .PythonSwitch import PythonSwitch
 
 # choice editorApi by platform.
-from .interface.SublimeText.EditorAPI import EditorAPI
+from .editorAPIs.SublimeText.EditorAPI import EditorAPI
 from . import SublimeSocketAPISettings
+
+
+from .parser.SushiJSONParser import SushiJSONParser
 
 
 ## API Parse the action
@@ -27,9 +30,6 @@ class SublimeSocketAPI:
 
 		self.isTesting = False
 		self.globalResults = []
-		
-		self.testBeforeSelectors = []
-		self.testAfterSelectors = []
 
 		self.counts = {}
 
@@ -73,26 +73,9 @@ class SublimeSocketAPI:
 	## Parse the API command
 	def parse(self, data, clientId=None, results=None):
 		
-		# SAMPLE: inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...|>...
-		commands = data.split(SublimeSocketAPISettings.API_CONCAT_DELIM)
+		runnable = SushiJSONParser.parseStraight(data)
 
-		# command and param  SAMPLE:		inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}
-		for commandIdentityAndParams in commands :
-			command_params = commandIdentityAndParams.split(SublimeSocketAPISettings.API_COMMAND_PARAMS_DELIM, 1)
-			command = command_params[0]
-
-			params = ''
-			if 1 < len(command_params):
-				try:
-					data = command_params[1].replace("\r\n", "\n")
-					data = data.replace("\r", "\n")
-					data = data.replace("\n", "\\n")
-					data = data.replace("\t", "	")
-					params = json.loads(data)
-				except Exception as e:
-					self.editorAPI.printMessage("JSON parse error " + str(e) + " source = " + command_params[1])
-					return
-					
+		for command, params in runnable:
 			clientId = self.runAPI(command, params, clientId, None, results)
 		return results
 
@@ -105,35 +88,9 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, commandbase, params, clientId=None, injectParams=None, results=None):		
-
-		command = commandbase
+	def runAPI(self, basecommand, baseparams, clientId=None, injectParams=None, results=None):
+		command, params = SushiJSONParser.inject(basecommand, baseparams, injectParams)
 		
-		# erase comment
-		if SublimeSocketAPISettings.API_COMMENT_DELIM in commandbase:
-			splitted = command.split(SublimeSocketAPISettings.API_COMMENT_DELIM, 1)
-			command = splitted[1]
-
-		# remove spaces " "
-		command = command.replace(" ", "")
-
-		# calc "<-" inject param.
-		if injectParams and SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT in command:
-			
-			splitted = command.split(SublimeSocketAPISettings.COMMAND_KEYWORD_INJECT, 1)
-			command = splitted[0]
-			
-			accepts = splitted[1].split(SublimeSocketAPISettings.COMMAND_KEYWORD_DELIM)
-			
-			# empty "<-" means all injective will be inject.
-			if len(accepts) == 1 and accepts[0] == "":
-				accepts = list(injectParams)
-			
-			for acceptKey in accepts:
-				assert acceptKey in injectParams, "cannot inject not injected param:" + acceptKey + " in " + commandbase
-				params[acceptKey] = injectParams[acceptKey]
-
-
   		# python-switch
 		for case in PythonSwitch(command):
 			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
@@ -142,10 +99,6 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RUNTESTS):
 				self.runTests(params, clientId, results)
-				break
-
-			if case(SublimeSocketAPISettings.API_SETTESTBEFOREAFTER):
-				self.setTestBeforeAfter(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
@@ -793,7 +746,7 @@ class SublimeSocketAPI:
 
 
 
-	## run testus
+	## run tests こいつがテストランナーだ。分離したい。 Parserにくっつけていいんじゃないかなー。トリガーから別ける必要がある。
 	def runTests(self, params, clientId, results):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
@@ -808,18 +761,9 @@ class SublimeSocketAPI:
 		setting = settingFile.read()
 		settingFile.close()
 
-		# remove //comment line
-		removeCommented_setting = re.sub(r'//.*', r'', setting)
-		
-		# remove spaces
-		removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
-		
-		# remove CRLF
-		removeCRLF_setting = removeSpaces_setting.replace("\n", "")
-		testSources = removeCRLF_setting
-		
 		# load test delimited scripts.
-		testCases = testSources.split(SublimeSocketAPISettings.API_TESTCASE_DELIM)
+		testCases = SushiJSONParser.parseTestSuite(setting)
+		
 		
 		def runTestCase(testCase):
 			passedCount = 0
@@ -833,25 +777,9 @@ class SublimeSocketAPI:
 
 			currentTestResults = self.initResult("test:"+str(uuid.uuid4()))
 
-			# before block
-			if self.testBeforeSelectors:
-
-				self.runAllSelector(
-					{SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testBeforeSelectors}, 
-					[], [], SublimeSocketAPISettings.REACTOR_SELECTORS,
-					currentTestResults)
-
-			# parse then get results
+			# parseなんだけど、parseではなく、runAPIまで落とす。テストスイートごとの実行にする必要がある。
 			currentTestResults = self.parse(testCase, clientId, currentTestResults)
 			
-			# after block
-			if self.testAfterSelectors:
-
-				self.runAllSelector(
-					{SublimeSocketAPISettings.SETTESTBEFOREAFTER_SELECTORS:self.testAfterSelectors}, 
-					[], [], SublimeSocketAPISettings.REACTOR_SELECTORS,
-					currentTestResults)
-
 			# end test
 			self.isTesting = False
 

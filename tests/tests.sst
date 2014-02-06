@@ -1,4 +1,4 @@
-TestSuite for SublimeSocket./setTestBeforeAfter: {
+beforeafter>the before after selectors: {
     "beforeselectors": [
         {
             "showStatusMessage": {

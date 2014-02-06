@@ -9,7 +9,7 @@ from . import SublimeSocketAPISettings
 from .KVS import KVS
 
 # choose transfer method.
-from .WebSocket.WSServer import WSServer
+from .protocols.WebSocket.WSServer import WSServer
 from .PythonSwitch import PythonSwitch
 
 

@@ -72,16 +72,6 @@ API_PREFIX					= "sublimesocket"
 
 API_PREFIX_SUB				= "ss"
 API_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]->
-API_CONCAT_DELIM			= "->"	# concat commands. every commands run in sequential.
-API_COMMAND_PARAMS_DELIM	= ":"	# only first ":" will be evaluated as delimiter / each commnand.
-
-API_COMMENT_DELIM			= "/"	# comment expression in API. ss@COMMENT/API...
-
-API_TESTCASE_DELIM			= "test>"	# test commands delim.
-
-
-COMMAND_KEYWORD_INJECT		= "<-"
-COMMAND_KEYWORD_DELIM		= ","
 
 
 API_VERSION		= "1.4.0"
@@ -135,12 +125,6 @@ VERIFICATION_CODE_REFUSED_CLIENT_UPDATE				= -2
 
 API_RUNTESTS		= "runTests"
 RUNTESTS_PATH		= "path"
-
-
-API_SETTESTBEFOREAFTER	= "setTestBeforeAfter"
-SETTESTBEFOREAFTER_BEFORESELECTORS = "beforeselectors"
-SETTESTBEFOREAFTER_AFTERSELECTORS = "afterselectors"
-SETTESTBEFOREAFTER_SELECTORS = "selectors"
 
 
 API_ASSERTRESULT			= "assertResult"
