@@ -32,12 +32,10 @@
         },
 
         onOpen: function () {
-          var subsPath = "SUBLIMESOCKET_TESTSUITE_FILEPATH";
-
-          _WS.writeLog('<span class="label label-info">CONNECTED:'+ subsPath +'</span>');
+          _WS.writeLog('<span class="label label-info">CONNECTED</span>');
 
           //call api then get callback
-          _WS.s.send('sublimesocket@inputIdentity:{\"id\":\"sublimesockettest\"}->runTests:{\"path\": \"' + subsPath + '\"}');
+          _WS.s.send('sublimesocket@inputIdentity:{\"id\":\"sublimesockettest\"}->connectedCall:{}');
         },
 
         onClose: function () {

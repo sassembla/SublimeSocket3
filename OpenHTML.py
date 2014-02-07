@@ -18,12 +18,10 @@ class Openhtml(sublime_plugin.TextCommand):
   def openSublimeSocketTest(self, params):
     assert "host" in params, "openSublimeSocketTest require 'host' param."
     assert "port" in params, "openSublimeSocketTest require 'port' param."
-    assert "testSuiteFilePath" in params, "openSublimeSocketTest require 'testSuiteFilePath' param."
 
     # get current Plugin's tests path.
     host = params["host"]
     port = params["port"]
-    testSuiteFileName = params["testSuiteFilePath"]
 
     currentPackagePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"
 
@@ -31,7 +29,6 @@ class Openhtml(sublime_plugin.TextCommand):
         {
             SublimeSocketAPISettings.SS_HOST_REPLACE:host, 
             SublimeSocketAPISettings.SS_PORT_REPLACE:port,
-            SublimeSocketAPISettings.SS_TESTSUITE_FILEPATH_REPLACE:testSuiteFileName
         },
         currentPackagePath + "tests/tests.html", 
         currentPackagePath + "tmp/tests.html")

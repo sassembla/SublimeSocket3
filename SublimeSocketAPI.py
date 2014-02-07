@@ -15,8 +15,9 @@ from .PythonSwitch import PythonSwitch
 
 # choice editorApi by platform.
 from .editorAPIs.SublimeText.EditorAPI import EditorAPI
-from . import SublimeSocketAPISettings
 
+
+from . import SublimeSocketAPISettings
 
 from .parser.SushiJSONParser import SushiJSONParser
 
@@ -93,12 +94,24 @@ class SublimeSocketAPI:
 		
   		# python-switch
 		for case in PythonSwitch(command):
-			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
-				clientId = self.inputIdentity(clientId, params, results)
+			if case(SublimeSocketAPISettings.API_CONNECTEDCALL):
+				self.server.transferConnected()
 				break
 
-			if case(SublimeSocketAPISettings.API_RUNTESTS):
-				self.runTests(params, clientId, results)
+			if case("beforeselectors"):
+				for selector in params:
+					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
+				break
+				
+			if case("afterselectors"):
+				for selector in params:
+					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
+				break
+
+
+
+			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
+				clientId = self.inputIdentity(clientId, params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
@@ -254,8 +267,7 @@ class SublimeSocketAPI:
 				self.setSublimeSocketWindowBasePath(results)
 				break
 
-			# internal APIS
-			if case(SublimeSocketAPISettings.API_I_SHOWSTATUSMESSAGE):
+			if case(SublimeSocketAPISettings.API_SHOWSTATUSMESSAGE):
 				self.showStatusMessage(params, results)
 				break
 
@@ -746,20 +758,20 @@ class SublimeSocketAPI:
 
 
 
-	## run tests こいつがテストランナーだ。分離したい。 Parserにくっつけていいんじゃないかなー。トリガーから別ける必要がある。
-	def runTests(self, params, clientId, results):
+	## run tests こいつがテストランナーだ。分離したい。 Parserにくっつけていいんじゃないかなー。今はSublimeのAPIに紐づいてるので、トリガーから別ける必要がある。
+	def runTests(self, params):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
-		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
 
+		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
+		
 		# check contains PREFIX of path or not
 		filePath = self.getKeywordBasedPath(filePath, 
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 		
-		settingFile = open(filePath, 'r', encoding='utf8')
-		
-		setting = settingFile.read()
-		settingFile.close()
+		setting = ""
+		with open(filePath, encoding='utf8') as f:
+			setting = f.read()
 
 		# load test delimited scripts.
 		testCases = SushiJSONParser.parseTestSuite(setting)
@@ -777,12 +789,11 @@ class SublimeSocketAPI:
 
 			currentTestResults = self.initResult("test:"+str(uuid.uuid4()))
 
-			# parseなんだけど、parseではなく、runAPIまで落とす。テストスイートごとの実行にする必要がある。
-			currentTestResults = self.parse(testCase, clientId, currentTestResults)
+			for testCommand, testParams in testCase:
+				self.runAPI(testCommand, testParams, None, None, currentTestResults)
 			
 			# end test
 			self.isTesting = False
-
 
 			# reduce results
 			for resultKey in currentTestResults:
@@ -821,14 +832,6 @@ class SublimeSocketAPI:
 		totalResultMessage = "TOTAL:" + str(testPassedCount + testFailedCount) + " passed:" + str(testPassedCount) + " failed:" + str(testFailedCount)
 		self.server.broadcastMessage(totalResultMessage)
 
-
-	def setTestBeforeAfter(self, params, results):
-		assert SublimeSocketAPISettings.SETTESTBEFOREAFTER_BEFORESELECTORS in params, "setTestBeforeAfter require 'beforeselectors' param."
-		assert SublimeSocketAPISettings.SETTESTBEFOREAFTER_AFTERSELECTORS in params, "setTestBeforeAfter require 'afterselectors' param."
-		
-		self.testBeforeSelectors = params[SublimeSocketAPISettings.SETTESTBEFOREAFTER_BEFORESELECTORS]
-		self.testAfterSelectors = params[SublimeSocketAPISettings.SETTESTBEFOREAFTER_AFTERSELECTORS]
-	
 
 	## assertions
 	def assertResult(self, params, currentResults):

@@ -1,3 +1,4 @@
+// test suite of SublimeSocket APIs
 beforeafter>the before after selectors: {
     "beforeselectors": [
         {
@@ -29,7 +30,6 @@ beforeafter>the before after selectors: {
         }
     ]
 }
-
 
 
 
@@ -1853,6 +1853,20 @@ test>filterのパターンを試す/defineFilter: {
 
 
 
+test>Clientのidentityをセットする/inputIdentity: {
+    "id": "test"
+}->assertResult: {
+    "id": "inputIdentity done as test",
+    "contains": {
+        "inputIdentity": {
+            "inputIdentity": "test"
+        }
+    },
+    "description": "not match"
+}
+
+
+
 test>メッセージを特定クライアントに配信する。/monocastMessage: {
     "target": "sublimesockettest",
     "message": "monocasting"
@@ -2102,20 +2116,6 @@ test>複数件の同名のevent-別のtargetreactorをセットして、増加�
                     }
                 }
             }
-        }
-    },
-    "description": "not match"
-}
-
-
-
-test>Clientのidentityをセットする/inputIdentity: {
-    "id": "test"
-}->assertResult: {
-    "id": "inputIdentity done as test",
-    "contains": {
-        "inputIdentity": {
-            "inputIdentity": "test"
         }
     },
     "description": "not match"

@@ -13,7 +13,6 @@ SUSHIJSON_TESTCASE_DELIM			= "test>"	# test commands delim.
 SUSHIJSON_API_SETTESTBEFOREAFTER	= "setTestBeforeAfter"
 SETTESTBEFOREAFTER_BEFORESELECTORS	= "beforeselectors"
 SETTESTBEFOREAFTER_AFTERSELECTORS	= "afterselectors"
-SETTESTBEFOREAFTER_SELECTORS 		= "selectors"
 
 
 class SushiJSONParser():
@@ -43,6 +42,7 @@ class SushiJSONParser():
 					data = data.replace("\r", "\n")
 					data = data.replace("\n", "")
 					data = data.replace("\t", "	")
+					
 					params = json.loads(data)
 				except Exception as e:
 					print("SushiJSON parse error ", e, "source", command_params[1])
@@ -55,7 +55,8 @@ class SushiJSONParser():
 	
 	@classmethod
 	def parseTestSuite(self, data):
-		splitted = data.split(SUSHIJSON_TESTCASE_DELIM)
+		removeCommentedData = re.sub(r'//.*', r'', data)
+		splitted = removeCommentedData.split(SUSHIJSON_TESTCASE_DELIM)
 
 		# get before-after block from data.
 		beforeAfter = splitted[0]
@@ -67,10 +68,18 @@ class SushiJSONParser():
 		beforeSelectors = params[SETTESTBEFOREAFTER_BEFORESELECTORS]
 		afterSelectors = params[SETTESTBEFOREAFTER_AFTERSELECTORS]
 
-		tests = splitted[1:]
+		testCases = splitted[1:]
 
-		return ""
-		
+		def addBeforeAndAfter(testCase):
+			parsedCommandsAndParams = self.parseStraight(testCase)
+
+			parsedCommandsAndParams.insert(0, (SETTESTBEFOREAFTER_BEFORESELECTORS, beforeSelectors))
+			parsedCommandsAndParams.append((SETTESTBEFOREAFTER_AFTERSELECTORS, afterSelectors))
+			
+			return parsedCommandsAndParams
+			
+		return [addBeforeAndAfter(testCase) for testCase in testCases]
+
 
 	@classmethod
 	def inject(self, command, params, injects):

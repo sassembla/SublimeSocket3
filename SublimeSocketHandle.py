@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import sublime, sublime_plugin
 import threading
+import uuid
 
-from .OpenHTML import Openhtml
 from .SublimeSocketServer import SublimeSocketServer
 from . import SublimeSocketAPISettings
 
-import uuid
+from .PythonSwitch import PythonSwitch
 
+
+from .OpenHTML import Openhtml
 
 # SublimeSocket server's thread
 thread = None
@@ -109,16 +111,26 @@ class SublimeSocketThread(threading.Thread):
 
   def setupThread(self, transferMethod, args):
     
-    if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
+    if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:   
       params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
+         
+      for case in PythonSwitch(transferMethod):
+        if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+          
+          if "runTests" in args:
+            Openhtml.openSublimeSocketTest(params)
+            
+            testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
+            def runTests():
+              self.server.api.runTests({SublimeSocketAPISettings.RUNTESTS_PATH:testSuiteFilePath})
+
+            self.server.appendOnConnectedTriggers(runTests)
+            
+          break
+
       
       self.server.setupTransfer(transferMethod, params)
 
-    if "runTests" in args:
-      testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
-      params["testSuiteFilePath"] = testSuiteFilePath
-      
-      Openhtml.openSublimeSocketTest(params)
 
 
   def restartServer(self):

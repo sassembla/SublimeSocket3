@@ -21,7 +21,7 @@ class SublimeSocketServer:
 		self.transfer = None
 		self.reserveRestart = None
 
-
+		self.onConnectedTriggers = []
 
 	# control server self.
 
@@ -64,8 +64,14 @@ class SublimeSocketServer:
 		# react to renew
 		self.onTransferRenew()
 
+	def transferConnected(self):
+		if self.onConnectedTriggers:
+			for func in self.onConnectedTriggers:
+				func()
+		self.onConnected = []
 
-	# main API incoming method.
+
+	# main API data incoming method.
 	def transferInputted(self, data, clientId):
 		apiData = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)[1]
 
@@ -101,6 +107,7 @@ class SublimeSocketServer:
 						self.transfer.setup(params)
 						break
 
+
 		self.currentTransferMethod = transferMethod
 
 	def spinupTransfer(self):
@@ -121,7 +128,9 @@ class SublimeSocketServer:
 		else:
 			self.transferTeardowned("no transfer running.")
 
-	
+	def appendOnConnectedTriggers(self, func):
+		self.onConnectedTriggers.append(func)
+
 
 	# message series
 	
