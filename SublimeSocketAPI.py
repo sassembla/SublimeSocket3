@@ -19,8 +19,8 @@ from .editorAPIs.SublimeText.EditorAPI import EditorAPI
 
 from . import SublimeSocketAPISettings
 
-from .parser.SushiJSONParser import SushiJSONParser
-
+from .parser.SushiJSON import SushiJSONParser
+from .parser import SushiJSON
 
 ## API Parse the action
 class SublimeSocketAPI:
@@ -77,9 +77,10 @@ class SublimeSocketAPI:
 		runnable = SushiJSONParser.parseStraight(data)
 
 		for command, params in runnable:
-			clientId = self.runAPI(command, params, clientId, None, results)
-		return results
+			self.runAPI(command, params, clientId, None, results)
 
+		return results
+		
 
 	def innerParse(self, data, clientId=None, results=None):
 		currentResults = self.initResult("inner:"+str(uuid.uuid4()))
@@ -89,8 +90,8 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, basecommand, baseparams, clientId=None, injectParams=None, results=None):
-		command, params = SushiJSONParser.inject(basecommand, baseparams, injectParams)
+	def runAPI(self, baseCommand, baseParams, clientId=None, injectParams=None, results=None):
+		command, params = SushiJSONParser.inject(baseCommand, baseParams, injectParams)
 		
   		# python-switch
 		for case in PythonSwitch(command):
@@ -98,20 +99,18 @@ class SublimeSocketAPI:
 				self.server.transferConnected()
 				break
 
-			if case("beforeselectors"):
+			if case(SushiJSON.SETTESTBEFOREAFTER_BEFORESELECTORS):
 				for selector in params:
 					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
 				break
 				
-			if case("afterselectors"):
+			if case(SushiJSON.SETTESTBEFOREAFTER_AFTERSELECTORS):
 				for selector in params:
 					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
 				break
 
-
-
-			if case(SublimeSocketAPISettings.API_INPUTIDENTITY):
-				clientId = self.inputIdentity(clientId, params, results)
+			if case(SublimeSocketAPISettings.API_CHANGEIDENTITY):
+				self.changeIdentity(params, clientId, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
@@ -282,8 +281,6 @@ class SublimeSocketAPI:
 			if case():
 				self.editorAPI.printMessage("unknown command "+ command + " /")
 				break
-
-		return clientId
 
 
 	def runReactor(self, reactorType, params, eventParam, results):
@@ -758,8 +755,8 @@ class SublimeSocketAPI:
 
 
 
-	## run tests こいつがテストランナーだ。分離したい。 Parserにくっつけていいんじゃないかなー。今はSublimeのAPIに紐づいてるので、トリガーから別ける必要がある。
-	def runTests(self, params):
+
+	def runTests(self, params, clientId):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
 
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
@@ -790,7 +787,7 @@ class SublimeSocketAPI:
 			currentTestResults = self.initResult("test:"+str(uuid.uuid4()))
 
 			for testCommand, testParams in testCase:
-				self.runAPI(testCommand, testParams, None, None, currentTestResults)
+				self.runAPI(testCommand, testParams, clientId, None, currentTestResults)
 			
 			# end test
 			self.isTesting = False
@@ -1025,15 +1022,19 @@ class SublimeSocketAPI:
 		return
 		
 	
-	## input identity to client.
-	def inputIdentity(self, clientId, params, results):
-		assert SublimeSocketAPISettings.IDENTITY_ID in params, "updateClientId requre 'id' param"
-		newIdentity = params[SublimeSocketAPISettings.IDENTITY_ID]
+	## change identity of client.
+	def changeIdentity(self, params, currentClientIdentity, results):
+		assert SublimeSocketAPISettings.IDENTITY_TO in params, "updateClientId requre 'to' param"
+		
+		currentIdentityCandicate = currentClientIdentity
 
-		self.server.transfer.updateClientId(clientId, newIdentity)
-		self.setResultsParams(results, self.inputIdentity, {"inputIdentity":newIdentity})
+		if SublimeSocketAPISettings.IDENTITY_FROM in params:
+			currentIdentityCandicate = params[SublimeSocketAPISettings.IDENTITY_FROM]
 
-		return newIdentity
+		newIdentity = params[SublimeSocketAPISettings.IDENTITY_TO]
+
+		self.server.transfer.updateClientId(currentIdentityCandicate, newIdentity)
+		self.setResultsParams(results, self.changeIdentity, {"current":newIdentity})
 
 	## create buffer then set contents if exist.
 	def createBuffer(self, params, results):

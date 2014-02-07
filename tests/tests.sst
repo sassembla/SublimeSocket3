@@ -1853,16 +1853,20 @@ test>filterのパターンを試す/defineFilter: {
 
 
 
-test>Clientのidentityをセットする/inputIdentity: {
-    "id": "test"
+test>Clientのidentityを変更する/changeIdentity: {
+    "from": "sublimesockettest",
+    "to": "test"
 }->assertResult: {
-    "id": "inputIdentity done as test",
+    "id": "changeIdentity done as test",
     "contains": {
-        "inputIdentity": {
-            "inputIdentity": "test"
+        "changeIdentity": {
+            "current": "test"
         }
     },
     "description": "not match"
+}->changeIdentity: {
+    "from": "test",
+    "to": "sublimesockettest"
 }
 
 

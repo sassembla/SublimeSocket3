@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import threading
 import os
 import socket
 import string
-
+import threading
 import uuid
-
 
 from .WSClient import WSClient
 from .WSEncoder import WSEncoder

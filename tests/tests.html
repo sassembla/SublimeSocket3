@@ -35,7 +35,7 @@
           _WS.writeLog('<span class="label label-info">CONNECTED</span>');
 
           //call api then get callback
-          _WS.s.send('sublimesocket@inputIdentity:{\"id\":\"sublimesockettest\"}->connectedCall:{}');
+          _WS.s.send('sublimesocket@changeIdentity:{\"to\":\"sublimesockettest\"}->connectedCall:{}');
         },
 
         onClose: function () {

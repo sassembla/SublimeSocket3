@@ -121,9 +121,11 @@ class SublimeSocketThread(threading.Thread):
             Openhtml.openSublimeSocketTest(params)
             
             testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
-            def runTests():
-              self.server.api.runTests({SublimeSocketAPISettings.RUNTESTS_PATH:testSuiteFilePath})
 
+            
+            def runTests():
+              self.server.api.runTests({SublimeSocketAPISettings.RUNTESTS_PATH:testSuiteFilePath}, "sublimesockettest")
+            
             self.server.appendOnConnectedTriggers(runTests)
             
           break

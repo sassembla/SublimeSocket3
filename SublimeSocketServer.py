@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import uuid
 import re
 import time
@@ -68,7 +69,7 @@ class SublimeSocketServer:
 		if self.onConnectedTriggers:
 			for func in self.onConnectedTriggers:
 				func()
-		self.onConnected = []
+		self.onConnectedTriggers = []
 
 
 	# main API data incoming method.
@@ -130,7 +131,6 @@ class SublimeSocketServer:
 
 	def appendOnConnectedTriggers(self, func):
 		self.onConnectedTriggers.append(func)
-
 
 	# message series
 	
