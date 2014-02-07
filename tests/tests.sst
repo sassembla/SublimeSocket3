@@ -1,5 +1,4 @@
-// test suite of SublimeSocket APIs
-beforeafter>the before after selectors: {
+beforeafter>the before after selectors/selector: {
     "beforeselectors": [
         {
             "showStatusMessage": {
@@ -7,21 +6,15 @@ beforeafter>the before after selectors: {
             }
         },
         {
-            "resetReactors": {
-                
-            }
+            "resetReactors": {}
         }
     ],
     "afterselectors": [
         {
-            "closeAllBuffer": {
-                
-            }
+            "closeAllBuffer": {}
         },
         {
-            "resetReactors": {
-                
-            }
+            "resetReactors": {}
         },
         {
             "showStatusMessage": {

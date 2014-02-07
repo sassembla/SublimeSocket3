@@ -766,12 +766,12 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.RUNSETTING_PREFIX_SUBLIMESOCKET_PATH,
 			self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 		
-		setting = ""
+		data = ""
 		with open(filePath, encoding='utf8') as f:
-			setting = f.read()
+			data = f.read()
 
 		# load test delimited scripts.
-		testCases = SushiJSONParser.parseTestSuite(setting)
+		testCases = SushiJSONParser.parseTestSuite(data)
 		
 		
 		def runTestCase(testCase):

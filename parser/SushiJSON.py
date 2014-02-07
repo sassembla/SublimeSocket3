@@ -40,7 +40,7 @@ class SushiJSONParser():
 				try:
 					data = command_params[1].replace("\r\n", "\n")
 					data = data.replace("\r", "\n")
-					data = data.replace("\n", "")
+					data = data.replace("\n", "\\n")
 					data = data.replace("\t", "	")
 					
 					params = json.loads(data)
@@ -55,13 +55,18 @@ class SushiJSONParser():
 	
 	@classmethod
 	def parseTestSuite(self, data):
-		removeCommentedData = re.sub(r'//.*', r'', data)
-		splitted = removeCommentedData.split(SUSHIJSON_TESTCASE_DELIM)
+		splitted = data.split(SUSHIJSON_TESTCASE_DELIM)
 
 		# get before-after block from data.
-		beforeAfter = splitted[0]
-		
-		command, params = self.parseStraight(beforeAfter)[0]
+		beforeAfterBase = splitted[0]
+		print("beforeAfterBase", beforeAfterBase)
+
+		# remove comment-line
+		commentRemoved = re.sub(r'//.*', r'', beforeAfterBase)
+
+		print("commentRemoved", commentRemoved)
+
+		command, params = self.parseStraight(beforeAfterBase)[0]
 		assert SUSHIJSON_TEST_BEFOREAFTER_DELIM in command, "SushiJSONTests must start with " + SUSHIJSON_TEST_BEFOREAFTER_DELIM + " statement."
 
 		# extract selectors.
