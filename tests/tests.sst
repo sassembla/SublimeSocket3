@@ -1,4 +1,4 @@
-beforeafter>the before after selectors/selector: {
+beforeafter>thebeforeafterselectors/selector: {
     "beforeselectors": [
         {
             "showStatusMessage": {
@@ -6,15 +6,21 @@ beforeafter>the before after selectors/selector: {
             }
         },
         {
-            "resetReactors": {}
+            "resetReactors": {
+                
+            }
         }
     ],
     "afterselectors": [
         {
-            "closeAllBuffer": {}
+            "closeAllBuffer": {
+                
+            }
         },
         {
-            "resetReactors": {}
+            "resetReactors": {
+                
+            }
         },
         {
             "showStatusMessage": {
@@ -23,7 +29,6 @@ beforeafter>the before after selectors/selector: {
         }
     ]
 }
-
 
 
 test>transformにcodeを使う/transform: {
@@ -46,14 +51,12 @@ test>transformにcodeを使う/transform: {
 }
 
 
-
 test>transformに、無理して長文を書く/transform: {
     "code": "
-    import os\n
-    for a in \"abc\":\n
-    \tprint(\"\", a)\n
-    
-    output({\"message\":\"hereComes2\"})",
+import os\n
+for a in \"abc\":\n
+\tprint(\"\", a)\n
+output({\"message\":\"hereComes2\"})",
     "selectors": [
         {
             "showAtLog<-message": {
@@ -70,7 +73,6 @@ test>transformに、無理して長文を書く/transform: {
     },
     "description": "not match."
 }
-
 
 
 test>transformでlistとdictを扱う/openFile: {
@@ -108,7 +110,6 @@ test>transformでlistとdictを扱う/openFile: {
 }
 
 
-
 test>transformでparamsAをparamsBに変更する。/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->viewEmit: {
@@ -140,7 +141,6 @@ test>transformでparamsAをparamsBに変更する。/openFile: {
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>quickFix的な機構のテスト、appendRegionからのToolTip、filterでの入力でコードを打ち込む。/openFile: {
@@ -196,7 +196,6 @@ test>quickFix的な機構のテスト、appendRegionからのToolTip、filterで
 }
 
 
-
 test>viewEmitで別途injectを使う/createBuffer: {
     "name": "injectionWithViewEmit.txt"
 }->viewEmit: {
@@ -223,7 +222,6 @@ test>viewEmitで別途injectを使う/createBuffer: {
 }
 
 
-
 test>parameterInjectの上書き内容に関するaccept制約のテスト。bodyに関する値だけを受け取るので、pathの値が変化したい。/createBuffer: {
     "name": "view2.txt"
 }->viewEmit: {
@@ -247,7 +245,6 @@ test>parameterInjectの上書き内容に関するaccept制約のテスト。bod
 }
 
 
-
 test>openFileで、存在しないファイルを開いた場合、即閉じる/openFile: {
     "path": "notExistFile"
 }->assertResult: {
@@ -260,7 +257,6 @@ test>openFileで、存在しないファイルを開いた場合、即閉じる/
     },
     "description": "not match."
 }
-
 
 
 test>組み合わせでエラーが出ていたのを解消したもの。viewの切り替え問題を含んでいた。/createBuffer: {
@@ -314,7 +310,6 @@ test>組み合わせでエラーが出ていたのを解消したもの。view�
 }
 
 
-
 test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。/createBuffer: {
     "name": "completionTestView2.txt"
 }->runCompletion: {
@@ -346,7 +341,6 @@ test>補完を外部からセット、そのままウインドウ表示する。
     },
     "description": "not match."
 }
-
 
 
 test>補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
@@ -391,7 +385,6 @@ test>補完ウインドウを表示してcancelCompletionで閉じる/createBuff
 }
 
 
-
 test>存在するファイルのviewに対してselectorを実行する,
 viewEmit/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
@@ -410,7 +403,6 @@ viewEmit/openFile: {
     "isnotempty": "viewEmit",
     "description": "not match."
 }
-
 
 
 test>deepなレイヤーのviewEmitを実行してみる/openFile: {
@@ -461,7 +453,6 @@ test>deepなレイヤーのviewEmitを実行してみる/openFile: {
 }
 
 
-
 test>そのビューの文字列が増えたら、ss_v_increasedイベントがでる/setViewReactor: {
     "target": "someone",
     "react": "ss_v_increased",
@@ -489,7 +480,6 @@ test>そのビューの文字列が増えたら、ss_v_increasedイベントが�
     },
     "description": "not match."
 }
-
 
 
 test>そのビューの文字列が減ったら、ss_v_decreasedイベントがでる/setViewReactor: {
@@ -524,7 +514,6 @@ test>そのビューの文字列が減ったら、ss_v_decreasedイベントが�
 }
 
 
-
 test>強制セーブ/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->forcelySave: {
@@ -533,14 +522,13 @@ test>強制セーブ/openFile: {
     "id": "add line to the view",
     "contains": {
         "forcelySave": {
-
+            
         }
     },
     "description": "not match."
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
@@ -559,7 +547,6 @@ test>存在しないファイルのパスを指定して、getAllFilePathがnote
 }
 
 
-
 test>basePathを足がかりに特定のファイルが含まれるフォルダより下のすべてのファイルパスを取得する/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->getAllFilePath: {
@@ -572,7 +559,6 @@ test>basePathを足がかりに特定のファイルが含まれるフォルダ�
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>countUp: {
@@ -590,7 +576,6 @@ test>countUp: {
 }->resetCounts: {
     
 }
-
 
 
 test>countUp: {
@@ -611,7 +596,6 @@ test>countUp: {
 }->resetCounts: {
     
 }
-
 
 
 test>countUp: {
@@ -635,7 +619,6 @@ test>countUp: {
     },
     "description": "not match."
 }
-
 
 
 test>setSelectionを連続で発生させて、delayがあるのでタイミング内では一度しか発生しない。/createBuffer: {
@@ -682,7 +665,6 @@ test>setSelectionを連続で発生させて、delayがあるのでタイミン�
 }
 
 
-
 test>setSelectionで選択範囲を作成する/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setSelection: {
@@ -704,7 +686,6 @@ test>setSelectionで選択範囲を作成する/openFile: {
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き継ぐ/setViewReactor: {
@@ -757,7 +738,6 @@ test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き�
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
@@ -816,7 +796,6 @@ test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
 }
 
 
-
 test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起こし、2件の情報を取得する/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
@@ -870,7 +849,6 @@ test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起
 }
 
 
-
 test>selectedRegionsからの値変形チェック/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
@@ -919,7 +897,6 @@ test>selectedRegionsからの値変形チェック/setViewReactor: {
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>transormの応用例、2件のregionDataをそれぞれToolTipに変形する/setViewReactor: {
@@ -991,7 +968,6 @@ test>transormの応用例、2件のregionDataをそれぞれToolTipに変形す�
 }
 
 
-
 test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形、内容は空/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
@@ -1052,7 +1028,6 @@ test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形�
 }
 
 
-
 test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引き継ぐ/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
@@ -1110,7 +1085,6 @@ test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引�
 }
 
 
-
 test>setSelectionでselectedRegionsを引き起こそうとするが、regionが無い/setViewReactor: {
     "target": "containsregiontarget",
     "react": "ss_on_selection_modified_by_setselection",
@@ -1149,7 +1123,6 @@ test>setSelectionでselectedRegionsを引き起こそうとするが、regionが
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>ツールチップの表示/createBuffer: {
@@ -1193,7 +1166,6 @@ test>ツールチップの表示/createBuffer: {
 }
 
 
-
 test>ツールチップの表示2/createBuffer: {
     "name": "showToolTipView.txt"
 }->showToolTip: {
@@ -1235,7 +1207,6 @@ test>ツールチップの表示2/createBuffer: {
 }
 
 
-
 test>ツールチップの選択、一択を選ぶ/createBuffer: {
     "name": "selectToolTip.txt"
 }->showToolTip: {
@@ -1265,7 +1236,6 @@ test>ツールチップの選択、一択を選ぶ/createBuffer: {
 }
 
 
-
 test>onselected項目がない場合、効果無しなので表示しない。/createBuffer: {
     "name": "selectToolTip.txt"
 }->showToolTip: {
@@ -1291,7 +1261,6 @@ test>onselected項目がない場合、効果無しなので表示しない。/c
     },
     "description": "not match."
 }
-
 
 
 test>ツールチップの選択後、inject済のviewを使ってappendRegionする/createBuffer: {
@@ -1326,7 +1295,6 @@ test>ツールチップの選択後、inject済のviewを使ってappendRegion�
     },
     "description": "not match."
 }
-
 
 
 test>ツールチップ選択orキャンセル後、最終的に動作するfinallyな仕掛け/createBuffer: {
@@ -1365,7 +1333,6 @@ test>ツールチップ選択orキャンセル後、最終的に動作するfina
 }
 
 
-
 test>選択範囲を解消する/createBuffer: {
     "name": "clearSelection.txt"
 }->setSelection: {
@@ -1389,7 +1356,6 @@ test>選択範囲を解消する/createBuffer: {
 }
 
 
-
 test>ファイルが存在するviewを集める。一つ以上のファイルパスがあるはず/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->collectViews: {
@@ -1401,7 +1367,6 @@ test>ファイルが存在するviewを集める。一つ以上のファイル�
 }->closeFile: {
     "name": "sample.txt"
 }
-
 
 
 test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
@@ -1434,7 +1399,6 @@ test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
 }
 
 
-
 test>SublimeSocketとしての現在のbasePathを指定する/createBuffer: {
     "name": "setSublimeSocketWindowBasePathTest.txt"
 }->setSublimeSocketWindowBasePath: {
@@ -1448,7 +1412,6 @@ test>SublimeSocketとしての現在のbasePathを指定する/createBuffer: {
     },
     "description": "not match"
 }
-
 
 
 test>delayのチェック。イベントを2件発生させ、delayによって先行したものだけを実行させる/createBuffer: {
@@ -1494,7 +1457,6 @@ test>delayのチェック。イベントを2件発生させ、delayによって�
 }
 
 
-
 test>現在開いているファイルに対するviewEmitのテスト。特定のバッファを開いておいて、viewEmit発効/createBuffer: {
     "name": "viewEmit.txt"
 }->viewEmit: {
@@ -1520,7 +1482,6 @@ test>現在開いているファイルに対するviewEmitのテスト。特定�
 }
 
 
-
 test>eventEmitのテスト/setEventReactor: {
     "target": "event_EmitTestTarget",
     "react": "event_EmitTestEvent",
@@ -1543,7 +1504,6 @@ test>eventEmitのテスト/setEventReactor: {
     },
     "description": "not match"
 }
-
 
 
 test>特定のviewに対するreactorのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
@@ -1579,7 +1539,6 @@ test>特定のviewに対するreactorのテスト。途中でイベントの出�
 }
 
 
-
 test>Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample2.txt"
 }->assertResult: {
@@ -1591,7 +1550,6 @@ test>Sublimeにあまり依存せず、ファイルのデータを読み出す/r
     },
     "description": "not match."
 }
-
 
 
 test>Notifyを表示する/notify: {
@@ -1609,7 +1567,6 @@ test>Notifyを表示する/notify: {
 }
 
 
-
 test>シェルを実行する/runShell: {
     "main": "pwd"
 }->assertResult: {
@@ -1621,7 +1578,6 @@ test>シェルを実行する/runShell: {
     },
     "description": "not match."
 }
-
 
 
 test>ステータスバーにメッセージを表示/showStatusMessage: {
@@ -1637,7 +1593,6 @@ test>ステータスバーにメッセージを表示/showStatusMessage: {
 }
 
 
-
 test>ログ出力のテスト/showAtLog: {
     "message": "testLogMessage"
 }->assertResult: {
@@ -1649,7 +1604,6 @@ test>ログ出力のテスト/showAtLog: {
     },
     "description": "not match."
 }
-
 
 
 test>フォーマット付きログ出力のテスト/showAtLog: {
@@ -1666,7 +1620,6 @@ test>フォーマット付きログ出力のテスト/showAtLog: {
     },
     "description": "not match."
 }
-
 
 
 test>フィルタ定義を行い、フィルタが生成されている/defineFilter: {
@@ -1710,7 +1663,6 @@ test>フィルタ定義を行い、フィルタが生成されている/defineFi
 }
 
 
-
 test>filteringのテスト。フィルタをセット、改行指定ありで、結果に特定のデータが入る/defineFilter: {
     "name": "filter_13/12/04 18:16:49",
     "patterns": [
@@ -1746,7 +1698,6 @@ test>filteringのテスト。フィルタをセット、改行指定ありで、
 }
 
 
-
 test>filteringのテスト。フィルタをセット、改行指定無しで、結果に特定のデータが入らない/defineFilter: {
     "name": "filter_13/12/04 23:58:49",
     "patterns": [
@@ -1779,7 +1730,6 @@ test>filteringのテスト。フィルタをセット、改行指定無しで、
     },
     "description": "but match, should not match"
 }
-
 
 
 test>filterのパターンを試す/defineFilter: {
@@ -1845,7 +1795,6 @@ test>filterのパターンを試す/defineFilter: {
 }
 
 
-
 test>Clientのidentityを変更する/changeIdentity: {
     "from": "sublimesockettest",
     "to": "test"
@@ -1863,7 +1812,6 @@ test>Clientのidentityを変更する/changeIdentity: {
 }
 
 
-
 test>メッセージを特定クライアントに配信する。/monocastMessage: {
     "target": "sublimesockettest",
     "message": "monocasting"
@@ -1877,7 +1825,6 @@ test>メッセージを特定クライアントに配信する。/monocastMessag
     },
     "description": "faild to monocast."
 }
-
 
 
 test>フォーマットを使用したmonocast/monocastMessage: {
@@ -1901,7 +1848,6 @@ test>フォーマットを使用したmonocast/monocastMessage: {
 }
 
 
-
 test>対象のいないmonocastMessage/monocastMessage: {
     "target": "noTarget",
     "message": "no one receive this."
@@ -1915,7 +1861,6 @@ test>対象のいないmonocastMessage/monocastMessage: {
     },
     "description": "not match."
 }
-
 
 
 test>メッセージを全クライアントに配信する/broadcastMessage: {
@@ -1933,7 +1878,6 @@ test>メッセージを全クライアントに配信する/broadcastMessage: {
 }
 
 
-
 test>reactorをリセットする/resetReactors: {
     
 }->assertResult: {
@@ -1947,7 +1891,6 @@ test>reactorをリセットする/resetReactors: {
     },
     "description": "not match"
 }
-
 
 
 test>reactorをセットする/resetReactors: {
@@ -1987,7 +1930,6 @@ test>reactorをセットする/resetReactors: {
 }
 
 
-
 test>delayが存在するsetEventReactorを実行、即時実行される/setEventReactor: {
     "target": "runImmediate",
     "react": "event_runImmediate",
@@ -2011,7 +1953,6 @@ test>delayが存在するsetEventReactorを実行、即時実行される/setEve
     },
     "description": "not yet run."
 }
-
 
 
 test>複数件の同名のevent-targetreactorをセットして、上書きされる。/resetReactors: {
@@ -2058,7 +1999,6 @@ test>複数件の同名のevent-targetreactorをセットして、上書きさ�
     },
     "description": "not match. 2"
 }
-
 
 
 test>複数件の同名のevent-別のtargetreactorをセットして、増加する/resetReactors: {
@@ -2119,7 +2059,6 @@ test>複数件の同名のevent-別のtargetreactorをセットして、増加�
 }
 
 
-
 test>設定の実行が実行されきったかどうか/runSetting: {
     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
 }->assertResult: {
@@ -2131,7 +2070,6 @@ test>設定の実行が実行されきったかどうか/runSetting: {
     },
     "description": "not match"
 }
-
 
 
 test>適当な名前のファイルを開き、その名前を指定し、regionを追加する/createBuffer: {
@@ -2155,7 +2093,6 @@ test>適当な名前のファイルを開き、その名前を指定し、region
 }
 
 
-
 test>適当な名前のファイルを開き、regionを追加する。pathの1部マッチ。追加後のidが入っていればOK。/createBuffer: {
     "name": "notexistfile.txt"
 }->appendRegion: {
@@ -2175,7 +2112,6 @@ test>適当な名前のファイルを開き、regionを追加する。pathの1�
     },
     "description": "not match."
 }
-
 
 
 test>適当な名前のファイルを開き、regionを追加する。pathの部分マッチ。追加後のidが入っていればOK。/createBuffer: {
@@ -2199,7 +2135,6 @@ test>適当な名前のファイルを開き、regionを追加する。pathの�
 }
 
 
-
 test>適当な名前のファイルを開き、regionを追加する。pathの全部分マッチ。追加後のidが入っていればOK。/createBuffer: {
     "name": "notexistfile.txt"
 }->appendRegion: {
@@ -2219,7 +2154,6 @@ test>適当な名前のファイルを開き、regionを追加する。pathの�
     },
     "description": "not match."
 }
-
 
 
 test>適当な名前のファイルを開き、regionの追加に失敗(noViewFoundを起こす)/createBuffer: {
@@ -2242,7 +2176,6 @@ test>適当な名前のファイルを開き、regionの追加に失敗(noViewFo
     },
     "description": "not match."
 }
-
 
 
 test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregionを追加する。/createBuffer: {
@@ -2279,7 +2212,6 @@ test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregi
 }
 
 
-
 test>eraseのテスト、特定のviewのregionすべてを削除する。/createBuffer: {
     "name": "notexistFileC.txt"
 }->appendRegion: {
@@ -2309,7 +2241,6 @@ test>eraseのテスト、特定のviewのregionすべてを削除する。/creat
 }
 
 
-
 test>eraseのテスト、存在しないビューのregionを削除しようとして、何も起こらない。/createBuffer: {
     "name": "someBuffer.txt"
 }->appendRegion: {
@@ -2332,7 +2263,6 @@ test>eraseのテスト、存在しないビューのregionを削除しようと�
 }
 
 
-
 test>バージョンの精査、apiVersionmajorが一致、minorが低いのでクライアントのUpdateを勧められる+突破/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "1.-1.0"
@@ -2347,7 +2277,6 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 }
 
 
-
 test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "1.4.0"
@@ -2360,7 +2289,6 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     },
     "description": "not match."
 }
-
 
 
 test>バージョンの精査、apiVersionmajorが一致、minorが高いので、SSをupdateするアドレスを渡して切断される。/versionVerify: {
@@ -2378,7 +2306,6 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
 }
 
 
-
 test>バージョンの精査、apiVersionmajorが低いので、クライアント側へとupdateを求めるシグナル+切断/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "0.0.0",
@@ -2392,7 +2319,6 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     },
     "description": "not match."
 }
-
 
 
 test>バージョンの精査、apiVersionmajorが高いので、SSをupdateするアドレスを渡して切断/versionVerify: {
@@ -2410,7 +2336,6 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
 }
 
 
-
 test>適当に匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
     "name": "something"
 }->closeAllBuffer: {
@@ -2426,7 +2351,6 @@ test>適当に匿名のバッファを作り、現在のバッファとして閉
     },
     "description": "failed to close."
 }
-
 
 
 test>適当に複数の匿名のバッファを作り、現在のバッファとして閉じる/createBuffer: {
@@ -2449,7 +2373,6 @@ test>適当に複数の匿名のバッファを作り、現在のバッファと
 }
 
 
-
 test>特定の名称のファイルのバッファを作成、内容を入力する。/createBuffer: {
     "name": "test"
 }->assertResult: {
@@ -2464,7 +2387,6 @@ test>特定の名称のファイルのバッファを作成、内容を入力す
 }
 
 
-
 test>存在するファイルを開く/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->assertResult: {
@@ -2477,7 +2399,6 @@ test>存在するファイルを開く/openFile: {
     },
     "description": "not contains."
 }
-
 
 
 test>存在するファイルを開く、閉じる、を二回繰り返し、閉じる順序と内容を確認する。/openFile: {
@@ -2509,7 +2430,6 @@ test>存在するファイルを開く、閉じる、を二回繰り返し、閉
 }
 
 
-
 test>補完を外部からセット。候補が1つのため、強制的に補完される。/createBuffer: {
     "name": "completionTestView.txt"
 }->一つだと一択のため勝手に入力される/runCompletion: {
@@ -2536,7 +2456,6 @@ test>補完を外部からセット。候補が1つのため、強制的に補�
 }
 
 
-
 test>ダイアログを表示/showDialog: {
     "message": "here comes daredevil"
 }->assertResult: {
@@ -2548,7 +2467,6 @@ test>ダイアログを表示/showDialog: {
     },
     "description": "not match."
 }
-
 
 
 test>ダイアログをフォーマット付きで表示/showDialog: {

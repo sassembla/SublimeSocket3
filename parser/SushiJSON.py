@@ -20,15 +20,15 @@ class SushiJSONParser():
 	@classmethod 
 	def parseStraight(self, data):
 		# remove //comment line
-		removeCommented_setting = re.sub(r'//.*', r'', data)
+		removeCommented = re.sub(r'//.*', r'', data)
 		
 		# remove spaces
-		removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
+		removeSpaces = re.sub(r'(?m)^\s+', '', removeCommented)
 		
 		parsedCommandsAndParams = []
 
 		# e.g. inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}->showAlert...|>...
-		commands = removeSpaces_setting.split(SUSHIJSON_CONCAT_DELIM)		
+		commands = removeSpaces.split(SUSHIJSON_CONCAT_DELIM)		
 
 		# command and param  SAMPLE:		inputIdentity:{"id":"537d5da6-ce7d-42f0-387b-d9c606465dbb"}
 		for commandIdentityAndParams in commands :
@@ -40,7 +40,9 @@ class SushiJSONParser():
 				try:
 					data = command_params[1].replace("\r\n", "\n")
 					data = data.replace("\r", "\n")
+
 					data = data.replace("\n", "\\n")
+					
 					data = data.replace("\t", "	")
 					
 					params = json.loads(data)
@@ -54,17 +56,12 @@ class SushiJSONParser():
 		
 	
 	@classmethod
+	# こいつもネットワーク経由だったからバグが出なかったんだなー。ネットワーク経由で入力するにはあっちでファイル読まないと行けなくてダメだな。
 	def parseTestSuite(self, data):
+		data = data.replace("\n", "")
 		splitted = data.split(SUSHIJSON_TESTCASE_DELIM)
-
-		# get before-after block from data.
+		
 		beforeAfterBase = splitted[0]
-		print("beforeAfterBase", beforeAfterBase)
-
-		# remove comment-line
-		commentRemoved = re.sub(r'//.*', r'', beforeAfterBase)
-
-		print("commentRemoved", commentRemoved)
 
 		command, params = self.parseStraight(beforeAfterBase)[0]
 		assert SUSHIJSON_TEST_BEFOREAFTER_DELIM in command, "SushiJSONTests must start with " + SUSHIJSON_TEST_BEFOREAFTER_DELIM + " statement."
