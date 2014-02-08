@@ -1949,6 +1949,7 @@ class SublimeSocketAPI:
 				
 				deletedRegionIdentities = []
 				for regionIdentity in targetRegionsDict:
+					assert regionIdentity, "regionIdentity is None."
 					view = self.internal_detectViewInstance(path)
 					self.editorAPI.removeRegionFromView(view, regionIdentity)
 

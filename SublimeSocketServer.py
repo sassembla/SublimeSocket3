@@ -67,8 +67,9 @@ class SublimeSocketServer:
 
 	def transferConnected(self):
 		if self.onConnectedTriggers:
-			for func in self.onConnectedTriggers:
-				func()
+			for funcDict in self.onConnectedTriggers:
+				for _, func in funcDict.items():
+					func()
 		self.onConnectedTriggers = []
 
 
@@ -130,7 +131,12 @@ class SublimeSocketServer:
 			self.transferTeardowned("no transfer running.")
 
 	def appendOnConnectedTriggers(self, func):
-		self.onConnectedTriggers.append(func)
+		for addedFunctionDict in self.onConnectedTriggers:
+			if func.__name__ in addedFunctionDict.keys():
+				print("duplicate trigger:"+func)
+				return
+			
+		self.onConnectedTriggers.append({func.__name__:func})
 
 	# message series
 	

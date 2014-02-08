@@ -56,9 +56,11 @@ class SushiJSONParser():
 		
 	
 	@classmethod
-	# こいつもネットワーク経由だったからバグが出なかったんだなー。ネットワーク経由で入力するにはあっちでファイル読まないと行けなくてダメだな。
 	def parseTestSuite(self, data):
+		# remove comment line then remove \n from data, before parse. this sequence is need for generate testcases.
+		data = re.sub(r'//.*', r'', data)
 		data = data.replace("\n", "")
+		
 		splitted = data.split(SUSHIJSON_TESTCASE_DELIM)
 		
 		beforeAfterBase = splitted[0]
