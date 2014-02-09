@@ -501,7 +501,50 @@ viewEmit/openFile: {
 }
 
 
-test>deepなレイヤーのviewEmitを実行してみる/openFile: {
+test>deepなレイヤーのviewEmitで、injectを実施する/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->setViewReactor: {
+    "target": "viewReactor and inject",
+    "react": "ss_on_selection_modified_by_setselection",
+    "injects": {
+        "basename": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+
+            }
+        }
+    ]
+}->viewEmit: {
+    "identity": "setSelectionToSample.txt",
+    "name": "sample.txt",
+    "selectors": [
+        {
+            "setSelection<-view": {
+                "selections": [
+                    {
+                        "from": 0,
+                        "to": 2
+                    }
+                ]
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "viewEmit in deep level with API defined injection",
+    "contains": {
+        "showAtLog": {
+            "output": "sample.txt"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
+test>deepなレイヤーのviewEmitを実行する/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setViewReactor: {
     "target": "viewEmitTest",

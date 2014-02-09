@@ -291,15 +291,16 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.REACTORTYPE_VIEW):
-				# add view param for react.
-				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
-				
-				print("あとで弄る。viewのreactorのinjectsが効いてないかも。")
-				# assert False, "testing."
+				if SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTS in params:
+					pass
+				else:
+					params[SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTS] = {}
 
+				# forcely inject
+				for key in SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS:
+					# set key: key for generating injection map.
+					params[SublimeSocketAPISettings.REACTOR_INJECTS][key] = key
 
-				# default injection
-				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECTS)
 				break
 
 		keys = []
@@ -325,7 +326,7 @@ class SublimeSocketAPI:
 		# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
 		selectors = runnableParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
-		# add injectionMap
+		# inject
 		composedInjectParams = self.injectParams(runnableParams, zippedInjectiveParams, injectionMapKey)
 		
 		for selector in selectors:
@@ -2006,78 +2007,44 @@ class SublimeSocketAPI:
 		else:
 			sourceParams[injectKeyword] = {}
 
-		# 3種類のパラメータの面倒を見ている。
-		# APIDefinedで暗黙状態なパラメータ
-		# APIDefinedなんだけどinjects先が明示してあるパラメータ
-		# APIDefined外でinjects先が指定してあるパラメータ
+		# there are 3 kind of parameter-type that should be retrieve.
+		# check "sourceParams" and "sourceParams:{injects:{REVEALED-INJECTIVE-DICT}}" especially REVEALED-INJECTIVE-DICT's key.
 
-		# injectsの内容をチェック、パターンごとに値を置く。
-
-		# 含まれていない場合、独自にセットしてOK
-
-		# 含まれている+injectsがある場合、injectsの内容を優先する
-
-		# 含まれているのみの場合、APIDefinedに則って値を入れる
+		# key is...
+		
+		# 1.APIDefined-key, and not included "injects" param.	=> inject automatically.
+		# 2.APIDefined-key, but revealed in "injects" 				=> inject key-value to value:source[key].
+		# 3.not APIDefined-key									=> inject key-value to value:source[key].
 
 		injectDict = sourceParams[injectKeyword]
 
 		resultInjectDict = {}
 		for currentInjectsKey in injectDict.keys():
 
-			# 含まれている+injectsがある場合、injectsの内容を優先する
+			# type 2
 			if currentInjectsKey in APIDefinedInjectiveKeys:
-				# fromkey-tokeyに対して、tokey-fromvalueをセットする
+				
 				injectionTargetKey = injectDict[currentInjectsKey]
 				
-				# 該当する値が、params内に存在する場合と、APIDefinedにのみ存在する場合の2つがある。paramsにある場合はそちらを使う。
 				if currentInjectsKey in sourceParams:
 					resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
 
-				# paramsに無い場合、APIDefinedInjectiveKeysAndValuesを使う。
 				else:
 					resultInjectDict[injectionTargetKey] = APIDefinedInjectiveKeysAndValues[currentInjectsKey]
 
-			# 含まれていない場合、独自にセットしてOK
+			# type 3
 			else:
-				assert currentInjectsKey in sourceParams, "failed to inject:" + currentInjectsKey + " from:" + sourceParams
-				
-				# fromkey-tokeyに対して、tokey-fromvalueをセットする
+				assert currentInjectsKey in sourceParams, "failed to inject:" + currentInjectsKey + " from:" + str(sourceParams)
 				injectionTargetKey = injectDict[currentInjectsKey]
 				
 				resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
 
-		# この時点で、apiDefinedに含まれていて、resultに含まれていないものを補完する。
+		# else. type 1
 		nonInjectedKeys = set(APIDefinedInjectiveKeys) - set(resultInjectDict.keys())
 		for key in nonInjectedKeys:
 			resultInjectDict[key] = APIDefinedInjectiveKeysAndValues[key]
 
 		return resultInjectDict
-
-
-	# expand injected list.
-	# if already injected, never overwrite.
-	def insertInjectKeysToInjectionMap(self, params, injectionInterpolateKeys, injectKeyword):
-		# do nothing if user-setting injects exist.
-		if injectKeyword in params:
-			pass
-		else:
-			params[injectKeyword] = {}
-		
-
-		# user-setting fromkey->tokey injection relationship is here.
-		# "fromkey": "tokey" change to 
-
-
-		# append API's default injection keys and values.
-		for key in injectionInterpolateKeys:
-			if not key in params[injectKeyword]:
-				# set key: key for generating injection map.
-				params[injectKeyword][key] = key
-
-		return params
-
-
-
 
 
 
