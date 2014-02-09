@@ -5,6 +5,13 @@ TODO
 ST2/3　Both target mode launch
 	use six
 
+
+構造の説明
+	injectsをparamsにセットすると、selectors内のAPIに値をinjectする
+	injectされた値は、APIの実行直前にacceptする形で行われる
+	paramsはinjectによって上書きされる
+
+
 √	Write All API Tests
 	複合系のAPIはまとめてしまうのがいいような気がする。
 	Dobe

@@ -98,7 +98,8 @@ class SushiJSONParser():
 
 		# calc "<-" inject param.
 		if injects and SUSHIJSON_COMMAND_KEYWORD_INJECT in command:
-			
+			commandBase = command
+
 			splitted = command.split(SUSHIJSON_COMMAND_KEYWORD_INJECT, 1)
 			command = splitted[0]
 			
@@ -109,7 +110,7 @@ class SushiJSONParser():
 				accepts = list(injects)
 			
 			for acceptKey in accepts:
-				assert acceptKey in injects, "cannot inject not injected param:" + acceptKey + " in " + commandbase
+				assert acceptKey in injects, "cannot inject not injected param:" + acceptKey + " in " + commandBase
 				params[acceptKey] = injects[acceptKey]
 
 		return command, params

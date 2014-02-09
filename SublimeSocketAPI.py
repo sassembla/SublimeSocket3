@@ -295,7 +295,7 @@ class SublimeSocketAPI:
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				
 				# default injection
-				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECT)
+				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECTS)
 				break
 
 		keys = []
@@ -308,7 +308,7 @@ class SublimeSocketAPI:
 			params, 
 			keys, 
 			values,
-			SublimeSocketAPISettings.REACTOR_INJECT, 
+			SublimeSocketAPISettings.REACTOR_INJECTS, 
 			results)
 
 
@@ -318,10 +318,14 @@ class SublimeSocketAPI:
 		
 		runnableParams = params.copy()
 
+		# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
+		selectors = runnableParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
+
 		# add injectionMap
 		injectMapInjectedParams = self.insertInjectKeysToInjectionMap(runnableParams, injectiveKeys, injectionMapKey)
+		print("この時点で、params中にinjectsがあったら、そのキーと値はすでに入力されている必要がある。", injectMapInjectedParams)
 
-		selectors = injectMapInjectedParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
+		# zipしてある値の上書きをしている
 		injectParams = self.injectParams(injectMapInjectedParams, zippedInjectiveParams)
 		
 		for selector in selectors:
@@ -349,7 +353,7 @@ class SublimeSocketAPI:
 				params, 
 				keys, 
 				values, 
-				SublimeSocketAPISettings.REACTOR_INJECT, 
+				SublimeSocketAPISettings.REACTOR_INJECTS, 
 				results)
 
 
@@ -597,7 +601,7 @@ class SublimeSocketAPI:
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 						[view, path, selectedItem], 
-						SublimeSocketAPISettings.REACTOR_INJECT, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTS, 
 						results)
 			else:
 				if cancelled:
@@ -609,7 +613,7 @@ class SublimeSocketAPI:
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 						[view, path, selectedItem], 
-						SublimeSocketAPISettings.REACTOR_INJECT, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTS, 
 						results)
 
 			if finallyBlock:
@@ -621,7 +625,7 @@ class SublimeSocketAPI:
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
 					[view, path, selectedItem], 
-					SublimeSocketAPISettings.REACTOR_INJECT, 
+					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTS, 
 					results)
 
 			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
@@ -751,7 +755,7 @@ class SublimeSocketAPI:
 			params, 
 			keys, 
 			values, 
-			SublimeSocketAPISettings.REACTOR_INJECT, 
+			SublimeSocketAPISettings.REACTOR_INJECTS, 
 			results)
 
 
@@ -1218,7 +1222,7 @@ class SublimeSocketAPI:
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, 
 					[view, path, crossed, target, line, fromParam, toParam, messages], 
-					SublimeSocketAPISettings.SELECTEDREGIONS_INJECT, 
+					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTS, 
 					results)
 
 			# update current contained region for preventing double-run.
@@ -1323,11 +1327,11 @@ class SublimeSocketAPI:
 						paramsSource = executableDict[command]
 
 						params = None
-						# replace the keyword "groups[x]" to regexp-result value of the 'groups[x]', if params are string-array
+						# replace the keyword "groups[x]" to regexp-result value of the 'groups[x]', if params are list[dict:string]
 						if type(paramsSource) == list:
 							# before	APINAME:["sublime.message_dialog('groups[0]')"]
 							# after		APINAME:["sublime.message_dialog('THE_VALUE_OF_searched.groups()[0]')"]
-							
+							print("ここが書き換えられてほしいがそうはいってない。", paramsSource)
 							def replaceGroupsInListKeyword(param):
 								result = param
 								
@@ -1343,6 +1347,7 @@ class SublimeSocketAPI:
 							# replace "groups[x]" expression in the value of list to 'searched.groups()[x]' value
 							params = map(replaceGroupsInListKeyword, paramsSource)
 							
+						# replace the keyword "groups[x]" to regexp-result value of the 'groups[x]', if params are {string:string}
 						elif type(paramsSource) == dict:
 							# before {u'line': u'groups[1]', u'message': u'message is groups[0]'}
 							# after	 {u'line': u'THE_VALUE_OF_searched.groups()[1]', u'message': u'message is THE_VALUE_OF_searched.groups()[0]'}
@@ -1351,13 +1356,15 @@ class SublimeSocketAPI:
 								result = paramsSource[key]
 								
 								for index in range(currentGroupSize):
+									if type(result) != str:
+										continue
 									
 									# replace all expression
 									if re.findall(r'groups\[(' + str(index) + ')\]', result):
 										froms = searched.groups()[index]
 										result = re.sub(r'groups\[' + str(index) + '\]', froms, result)
 
-								result = re.sub(r'filterSource\[\]', filterSource, result)
+									result = re.sub(r'filterSource\[\]', filterSource, result)
 								return {key:result}
 							# replace "groups[x]" expression in the value of dictionary to 'searched.groups()[x]' value
 							params_dicts = list(map(replaceGroupsInDictionaryKeyword, paramsSource.keys()))
@@ -1451,7 +1458,7 @@ class SublimeSocketAPI:
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, 
 					[view, body, modifiedPath, rowColStr, identity], 
-					SublimeSocketAPISettings.VIEWEMIT_INJECT, 
+					SublimeSocketAPISettings.VIEWEMIT_INJECTS, 
 					results)
 
 				self.setResultsParams(results, self.viewEmit, {
@@ -1992,9 +1999,10 @@ class SublimeSocketAPI:
 
 	# if inject parameter exist, inject it by the "injet" information.
 	def injectParams(self, injectInfoDict, injectSourceDict):
-		if SublimeSocketAPISettings.REACTOR_INJECT in injectInfoDict:
-			
-			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECT].copy()
+		print("ここにくる前に、paramsに入っている値で、inject指定されたものも考慮される必要がある。")
+		if SublimeSocketAPISettings.REACTOR_INJECTS in injectInfoDict:
+			print("injectParams injectSourceDict", injectSourceDict)
+			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECTS].copy()
 			
 			# set the value of the name as vector.
 			keys = list(injectDict)
@@ -2016,11 +2024,18 @@ class SublimeSocketAPI:
 	# expand injected list.
 	# if already injected, never overwrite.
 	def insertInjectKeysToInjectionMap(self, params, injectionInterpolateKeys, injectKeyword):
+		# do nothing if user-setting injects exist.
 		if injectKeyword in params:
 			pass
 		else:
 			params[injectKeyword] = {}
-			
+		
+
+		# user-setting fromkey->tokey injection relationship is here.
+		# "fromkey": "tokey" change to 
+
+
+		# append API's default injection keys and values.
 		for key in injectionInterpolateKeys:
 			if not key in params[injectKeyword]:
 				# set key: key for generating injection map.
@@ -2221,8 +2236,8 @@ class SublimeSocketAPI:
 		reactDict[SublimeSocketAPISettings.REACTOR_SELECTORS] = selectorsArray
 		reactDict[SublimeSocketAPISettings.REACTOR_DELAY] = delay
 
-		if SublimeSocketAPISettings.REACTOR_INJECT in params:
-			reactDict[SublimeSocketAPISettings.REACTOR_INJECT] = params[SublimeSocketAPISettings.REACTOR_INJECT]
+		if SublimeSocketAPISettings.REACTOR_INJECTS in params:
+			reactDict[SublimeSocketAPISettings.REACTOR_INJECTS] = params[SublimeSocketAPISettings.REACTOR_INJECTS]
 
 		# already set or not-> spawn dictionary for name.
 		if not reactEventName in reactorsDict:			
@@ -2284,7 +2299,7 @@ class SublimeSocketAPI:
 							params, 
 							keys, 
 							values, 
-							SublimeSocketAPISettings.REACTOR_INJECT, 
+							SublimeSocketAPISettings.REACTOR_INJECTS, 
 							results)
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:

@@ -133,7 +133,7 @@ class SublimeSocketServer:
 	def appendOnConnectedTriggers(self, func):
 		for addedFunctionDict in self.onConnectedTriggers:
 			if func.__name__ in addedFunctionDict.keys():
-				print("duplicate trigger:"+func)
+				print("duplicate trigger:"+str(func))
 				return
 			
 		self.onConnectedTriggers.append({func.__name__:func})
