@@ -927,7 +927,7 @@ class SublimeSocketAPI:
 
 			# fail
 			if debug:
-				self.editorAPI.printMessage("failed assertResult 'contains' in" + identity)
+				self.editorAPI.printMessage("failed assertResult 'contains' in " + identity)
 
 			setAssertionResult(SublimeSocketAPISettings.ASSERTRESULT_VALUE_FAIL,
 				assertionIdentity, 
@@ -1997,47 +1997,61 @@ class SublimeSocketAPI:
 		return path
 
 	# if inject parameter exist, inject it by the "injet" information.
-	def injectParams(self, injectInfoDict, APIDefinedInjectiveKeysAndValues, injectKeyword):
+	def injectParams(self, sourceParams, APIDefinedInjectiveKeysAndValues, injectKeyword):
 		APIDefinedInjectiveKeys = APIDefinedInjectiveKeysAndValues.keys()
 
-
 		# do nothing if user-setting injects exist.
-		if injectKeyword in injectInfoDict:
+		if injectKeyword in sourceParams:
 			pass
 		else:
-			injectInfoDict[injectKeyword] = {}
-		
+			sourceParams[injectKeyword] = {}
 
-		# user-setting fromkey->tokey injection relationship is here.
-		# "fromkey": "tokey" があるので、そいつを、"tokey": "from-Value"にかきかえられればいい。
-		print("やるとしたら、ここで、置き換えられる予定の無いto:fromvalue組を作る必要がある。")
+		# 3種類のパラメータの面倒を見ている。
+		# APIDefinedで暗黙状態なパラメータ
+		# APIDefinedなんだけどinjects先が明示してあるパラメータ
+		# APIDefined外でinjects先が指定してあるパラメータ
 
+		# injectsの内容をチェック、パターンごとに値を置く。
 
-		# append API's default injection keys and values.
-		for key in APIDefinedInjectiveKeys:
-			# 既存のinjectsにAPI definedが存在しなければ、そのまま適応する。
-			if not key in injectInfoDict[injectKeyword]:
-				# set key: key for generating injection map.
-				injectInfoDict[injectKeyword][key] = key
+		# 含まれていない場合、独自にセットしてOK
 
+		# 含まれている+injectsがある場合、injectsの内容を優先する
 
-		print("ここで一度切る意味もないしな、、、")
+		# 含まれているのみの場合、APIDefinedに則って値を入れる
 
-		injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECTS]
-		
-		# set the value of the name as vector.
-		keys = list(injectDict)
-		
-		def replaceInject(key):
-			assert key in APIDefinedInjectiveKeysAndValues, "failed to inject parameter. parameter not found:"+key
-			value = APIDefinedInjectiveKeysAndValues[key]
+		injectDict = sourceParams[injectKeyword]
 
-			injectTargetKey = injectDict[key]
-			
-			injectDict[injectTargetKey] = value
+		resultInjectDict = {}
+		for currentInjectsKey in injectDict.keys():
 
-		[replaceInject(key) for key in keys]			
-		return injectDict
+			# 含まれている+injectsがある場合、injectsの内容を優先する
+			if currentInjectsKey in APIDefinedInjectiveKeys:
+				# fromkey-tokeyに対して、tokey-fromvalueをセットする
+				injectionTargetKey = injectDict[currentInjectsKey]
+				
+				# 該当する値が、params内に存在する場合と、APIDefinedにのみ存在する場合の2つがある。paramsにある場合はそちらを使う。
+				if currentInjectsKey in sourceParams:
+					resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
+
+				# paramsに無い場合、APIDefinedInjectiveKeysAndValuesを使う。
+				else:
+					resultInjectDict[injectionTargetKey] = APIDefinedInjectiveKeysAndValues[currentInjectsKey]
+
+			# 含まれていない場合、独自にセットしてOK
+			else:
+				assert currentInjectsKey in sourceParams, "failed to inject:" + currentInjectsKey + " from:" + sourceParams
+				
+				# fromkey-tokeyに対して、tokey-fromvalueをセットする
+				injectionTargetKey = injectDict[currentInjectsKey]
+				
+				resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
+
+		# この時点で、apiDefinedに含まれていて、resultに含まれていないものを補完する。
+		nonInjectedKeys = set(APIDefinedInjectiveKeys) - set(resultInjectDict.keys())
+		for key in nonInjectedKeys:
+			resultInjectDict[key] = APIDefinedInjectiveKeysAndValues[key]
+
+		return resultInjectDict
 
 
 	# expand injected list.

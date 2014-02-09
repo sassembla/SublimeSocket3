@@ -31,34 +31,33 @@ beforeafter>thebeforeafterselectors/selector: {
 }
 
 
-// test>injectsを反映させる/createBuffer: {
-//     "name": "inject.txt"
-// }->viewEmit: {
-//     "identity": "test",
-//     "name": "inject.txt",
-//     "injects": {
-//         "name": "message"
-//     },
-//     "selectors": [
-//         {
-//             "showAtLog<-message": {
+test>APIDefined以外のinjectsを反映させる/createBuffer: {
+    "name": "inject.txt"
+}->viewEmit: {
+    "identity": "test for out of APIDefined injection",
+    "name": "inject.txt",
+    "injects": {
+        "name": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
 
-//             }
-//         }
-//     ]
-// }->assertResult: {
-//     "id": "toolTipShouldShow",
-//     "contains": {
-//         "showAtLog": {
-//             "message": "kakaka"
-//         }
-//     },
-//     "description": "not match.",
-//     "debug": true
-// }
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "toolTipShouldShow",
+    "contains": {
+        "showAtLog": {
+            "output": "inject.txt"
+        }
+    },
+    "description": "not match."
+}
 
 
-test>nestしたfilterでのバグ、selectorの変更が効かない。/createBuffer: {
+test>nestしたfilterでのバグ、selectorの変更が効かない、かと思ったが、injectsの非交換バグだった。/createBuffer: {
     "name": "nestedFilterCase.txt"
 }->defineFilter: {
     "name": "quickfix",
@@ -76,14 +75,15 @@ name = inputs[\"injective-name\"]\n
 add = inputs[\"injective-add\"]\n
 line = inputs[\"injective-line\"]\n
 
-output({\"name\":name, \"add\":add, \"line\":line})",
+output({\"name\":name, \"add\":add, \"line\":line,\"message\":line})",
                             "selectors": [
                                 {
-                                    "showToolTip<-name, add, line": {
+                                    "showToolTip<-name, add, line, message": {
                                         "injects": {
                                             "name": "name",
                                             "add": "add",
-                                            "line": "line"
+                                            "line": "line",
+                                            "message": "message"
                                         },
                                         "onselected": [
                                             {
@@ -94,7 +94,7 @@ output({\"name\":name, \"add\":add, \"line\":line})",
                                                         }
                                                     },
                                                     {
-                                                        "forcelySave<-name": {
+                                                        "showAtLog<-message": {
                                                             
                                                         }
                                                     }
@@ -116,6 +116,14 @@ output({\"name\":name, \"add\":add, \"line\":line})",
 }->filtering: {
     "name": "quickfix",
     "source": "the1 test2 4a3 nestedFilterCase.txt4"
+}->assertResult: {
+    "id": "inject works with out of APIDefined injection.",
+    "contains": {
+        "showAtLog": {
+            "output": "4"
+        }
+    },
+    "description": "not match."
 }
 
 
