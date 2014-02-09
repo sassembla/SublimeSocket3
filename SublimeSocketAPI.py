@@ -91,8 +91,8 @@ class SublimeSocketAPI:
 
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, baseCommand, baseParams, clientId=None, injectParams=None, results=None):
-		command, params = SushiJSONParser.inject(baseCommand, baseParams, injectParams)
+	def runAPI(self, baseCommand, baseParams, clientId=None, injectedParams=None, results=None):
+		command, params = SushiJSONParser.inject(baseCommand, baseParams, injectedParams)
 		
   		# python-switch
 		for case in PythonSwitch(command):
@@ -294,6 +294,10 @@ class SublimeSocketAPI:
 				# add view param for react.
 				assert SublimeSocketAPISettings.REACTOR_VIEWKEY_VIEWSELF in eventParam, "reactorType:view require 'view' info."
 				
+				print("あとで弄る。viewのreactorのinjectsが効いてないかも。")
+				# assert False, "testing."
+
+
 				# default injection
 				params = self.insertInjectKeysToInjectionMap(params, SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS, SublimeSocketAPISettings.REACTOR_INJECTS)
 				break
@@ -312,9 +316,9 @@ class SublimeSocketAPI:
 			results)
 
 
-	def runAllSelector(self, params, injectiveKeys, injectiveValues, injectionMapKey, results):
-		assert len(injectiveKeys) == len(injectiveValues), "cannot generate inective-keys and values:"+str(injectiveKeys)+" vs injects:"+str(injectiveValues)
-		zippedInjectiveParams = dict(zip(injectiveKeys, injectiveValues))
+	def runAllSelector(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues, injectionMapKey, results):
+		assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
+		zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
 		
 		runnableParams = params.copy()
 
@@ -322,14 +326,10 @@ class SublimeSocketAPI:
 		selectors = runnableParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
 		# add injectionMap
-		injectMapInjectedParams = self.insertInjectKeysToInjectionMap(runnableParams, injectiveKeys, injectionMapKey)
-		print("この時点で、params中にinjectsがあったら、そのキーと値はすでに入力されている必要がある。", injectMapInjectedParams)
-
-		# zipしてある値の上書きをしている
-		injectParams = self.injectParams(injectMapInjectedParams, zippedInjectiveParams)
+		composedInjectParams = self.injectParams(runnableParams, zippedInjectiveParams, injectionMapKey)
 		
 		for selector in selectors:
-			[self.runAPI(eachCommand, eachParams, None, injectParams, results) for eachCommand, eachParams in selector.items()]
+			[self.runAPI(eachCommand, eachParams, None, composedInjectParams, results) for eachCommand, eachParams in selector.items()]
 
 		
 	def runFoundationEvent(self, eventName, eventParam, reactors, results):
@@ -1331,7 +1331,6 @@ class SublimeSocketAPI:
 						if type(paramsSource) == list:
 							# before	APINAME:["sublime.message_dialog('groups[0]')"]
 							# after		APINAME:["sublime.message_dialog('THE_VALUE_OF_searched.groups()[0]')"]
-							print("ここが書き換えられてほしいがそうはいってない。", paramsSource)
 							def replaceGroupsInListKeyword(param):
 								result = param
 								
@@ -1998,27 +1997,47 @@ class SublimeSocketAPI:
 		return path
 
 	# if inject parameter exist, inject it by the "injet" information.
-	def injectParams(self, injectInfoDict, injectSourceDict):
-		print("ここにくる前に、paramsに入っている値で、inject指定されたものも考慮される必要がある。")
-		if SublimeSocketAPISettings.REACTOR_INJECTS in injectInfoDict:
-			print("injectParams injectSourceDict", injectSourceDict)
-			injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECTS].copy()
+	def injectParams(self, injectInfoDict, APIDefinedInjectiveKeysAndValues, injectKeyword):
+		APIDefinedInjectiveKeys = APIDefinedInjectiveKeysAndValues.keys()
+
+
+		# do nothing if user-setting injects exist.
+		if injectKeyword in injectInfoDict:
+			pass
+		else:
+			injectInfoDict[injectKeyword] = {}
+		
+
+		# user-setting fromkey->tokey injection relationship is here.
+		# "fromkey": "tokey" があるので、そいつを、"tokey": "from-Value"にかきかえられればいい。
+		print("やるとしたら、ここで、置き換えられる予定の無いto:fromvalue組を作る必要がある。")
+
+
+		# append API's default injection keys and values.
+		for key in APIDefinedInjectiveKeys:
+			# 既存のinjectsにAPI definedが存在しなければ、そのまま適応する。
+			if not key in injectInfoDict[injectKeyword]:
+				# set key: key for generating injection map.
+				injectInfoDict[injectKeyword][key] = key
+
+
+		print("ここで一度切る意味もないしな、、、")
+
+		injectDict = injectInfoDict[SublimeSocketAPISettings.REACTOR_INJECTS]
+		
+		# set the value of the name as vector.
+		keys = list(injectDict)
+		
+		def replaceInject(key):
+			assert key in APIDefinedInjectiveKeysAndValues, "failed to inject parameter. parameter not found:"+key
+			value = APIDefinedInjectiveKeysAndValues[key]
+
+			injectTargetKey = injectDict[key]
 			
-			# set the value of the name as vector.
-			keys = list(injectDict)
-			
-			def replaceInject(key):
-				assert key in injectSourceDict, "failed to inject parameter. parameter not found:"+key
-				value = injectSourceDict[key]
+			injectDict[injectTargetKey] = value
 
-				injectTargetKey = injectDict[key]
-				
-				injectDict[injectTargetKey] = value
-
-			[replaceInject(key) for key in keys]			
-			return injectDict
-
-		return None
+		[replaceInject(key) for key in keys]			
+		return injectDict
 
 
 	# expand injected list.
