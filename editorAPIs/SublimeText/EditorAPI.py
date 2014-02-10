@@ -24,8 +24,10 @@ class EditorAPI:
 
 		# generate selected-region's (from, to) set.
 		for region in viewInstance.sel():
-			regionTupel = (region.a, region.b)
-			selecteds.append(regionTupel)
+			# don't count 0 width selection.
+			if region.a != region.b:
+				regionTupel = (region.a, region.b)
+				selecteds.append(regionTupel)
 
 		return {
 			viewKey : viewInstance,

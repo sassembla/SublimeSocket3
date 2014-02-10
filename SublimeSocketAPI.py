@@ -518,7 +518,6 @@ class SublimeSocketAPI:
 		target = params[SublimeSocketAPISettings.OUTPUT_TARGET]
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 		
-		print("monocastMessage", params)
 		succeeded, reason = self.server.sendMessage(target, message)
 
 		if succeeded:
@@ -1522,7 +1521,8 @@ class SublimeSocketAPI:
 		
 		selections = params[SublimeSocketAPISettings.SETSELECTION_SELECTIONS]
 		
-		for selection in selections:
+		
+		def appendSelection(selection):
 			regionFrom = selection[SublimeSocketAPISettings.SETSELECTION_FROM]
 			regionTo = selection[SublimeSocketAPISettings.SETSELECTION_TO]
 			
@@ -1533,8 +1533,11 @@ class SublimeSocketAPI:
 			region = self.editorAPI.generateRegion(regionFrom, regionTo)
 			
 			self.editorAPI.addSelectionToView(view, region)
-			selected = str(region)
-		
+
+			return [regionFrom, regionTo]
+
+		selecteds = [appendSelection(selection) for selection in selections]
+
 		# emit viewReactor
 		viewParams = self.editorAPI.generateSublimeViewInfo(
 			view,
@@ -1546,13 +1549,13 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.VIEW_VNAME,
 			SublimeSocketAPISettings.VIEW_SELECTEDS,
 			SublimeSocketAPISettings.VIEW_ISEXIST)
-		print("viewParams", viewParams)
+
 
 		emitIdentity = str(uuid.uuid4())
 		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
-		self.setResultsParams(results, self.setSelection, {"selected":selected})
+		self.setResultsParams(results, self.setSelection, {"selecteds":selecteds})
 
 
 	def clearSelection(self, params, results):
