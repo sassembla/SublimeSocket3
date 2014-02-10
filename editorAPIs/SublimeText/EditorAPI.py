@@ -155,6 +155,12 @@ class EditorAPI:
 			(row, col) = view.rowcol(selRegion.a)
 			return str(row)+","+str(col)
 
+	def scrollTo(self, view, line, count):
+		if line:
+			count = view.text_point(line, 0)
+		
+		view.show_at_center(count)
+
 	def getLineRegion(self, view, lineCount):
 		# Convert from 1 based to a 0 based line number
 		line = int(lineCount) - 1

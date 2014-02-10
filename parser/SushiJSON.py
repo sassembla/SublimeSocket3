@@ -110,7 +110,7 @@ class SushiJSONParser():
 				accepts = list(injects)
 			
 			for acceptKey in accepts:
-				assert acceptKey in injects, "cannot inject not injected param:" + acceptKey + " in " + commandBase
+				assert acceptKey in injects, "failed to inject non-injected param:" + acceptKey + " in:" + str(injects) + " at:" + commandBase
 				params[acceptKey] = injects[acceptKey]
 
 		return command, params

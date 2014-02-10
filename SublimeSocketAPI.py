@@ -223,6 +223,10 @@ class SublimeSocketAPI:
 				self.showToolTip(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_SCROLLTO):
+				self.scrollTo(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_TRANSFORM):
 				self.transform(params, results)
 				break
@@ -514,7 +518,7 @@ class SublimeSocketAPI:
 		target = params[SublimeSocketAPISettings.OUTPUT_TARGET]
 		message = params[SublimeSocketAPISettings.OUTPUT_MESSAGE]
 		
-		
+		print("monocastMessage", params)
 		succeeded, reason = self.server.sendMessage(target, message)
 
 		if succeeded:
@@ -632,6 +636,28 @@ class SublimeSocketAPI:
 			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
 
 		self.editorAPI.showPopupMenu(view, tooltipItemKeys, toolTipClosed)
+
+
+	def scrollTo(self, params, results):
+		assert SublimeSocketAPISettings.SCROLLTO_LINE in params or SublimeSocketAPISettings.SCROLLTO_COUNT in params, "scrollTo require 'line' or 'count' params."
+			
+		if SublimeSocketAPISettings.SCROLLTO_LINE in params and SublimeSocketAPISettings.SCROLLTO_COUNT in params:
+			del params[SublimeSocketAPISettings.SCROLLTO_COUNT]
+
+		view, path = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SCROLLTO_VIEW, SublimeSocketAPISettings.SCROLLTO_NAME)
+		assert view, "scrollTo require 'view' or 'name' params."
+
+		if SublimeSocketAPISettings.SCROLLTO_LINE in params:
+			line = params[SublimeSocketAPISettings.SCROLLTO_LINE]
+			count = 0
+
+		elif SublimeSocketAPISettings.SCROLLTO_COUNT in params:
+			line = None
+			count = params[SublimeSocketAPISettings.SCROLLTO_COUNT]
+			
+		self.editorAPI.scrollTo(view, line, count)
+		
+		self.setResultsParams(results, self.scrollTo, {})
 
 
 	def transform(self, params, results):
