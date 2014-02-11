@@ -209,6 +209,7 @@ API_MODIFYVIEW				= "modifyView"
 MODIFYVIEW_VIEW				= "view"
 MODIFYVIEW_NAME				= "name"
 MODIFYVIEW_ADD				= "add"
+MODIFYVIEW_TO				= "to"
 MODIFYVIEW_LINE				= "line"
 MODIFYVIEW_REDUCE			= "reduce"
 

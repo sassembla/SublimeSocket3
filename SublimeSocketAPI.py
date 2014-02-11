@@ -1498,13 +1498,20 @@ class SublimeSocketAPI:
 			if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
 				add = params[SublimeSocketAPISettings.MODIFYVIEW_ADD]
 
-				# no line set = append the text to next to the last character of the view.
-				if not SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
-					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":self.editorAPI.viewSize(view)})
-				else:
-					line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
-					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":line})
+				# insert text to the view with "to" or "line" param, or other.
+				if SublimeSocketAPISettings.MODIFYVIEW_TO in params:
+					to = params[SublimeSocketAPISettings.MODIFYVIEW_TO]
+					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
 
+				elif SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
+					line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
+					to = self.editorAPI.getTextPoint(view, line)
+					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
+
+				# no "line" set = append the text to next to the last character of the view.
+				else:
+					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":self.editorAPI.viewSize(view)})
+				
 			if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
 				self.editorAPI.runCommandOnView(view, 'reduce_text')
 

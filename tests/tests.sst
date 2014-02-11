@@ -221,27 +221,27 @@ test>nestしたfilterでのバグ、selectorの変更が効かない、かと思
                         "transform": {
                             "injective-name": "groups[3]",
                             "injective-add": "groups[1]",
-                            "injective-line": "groups[2]",
+                            "injective-to": "groups[2]",
                             "code": "
 name = inputs[\"injective-name\"]\n
 add = inputs[\"injective-add\"]\n
-line = inputs[\"injective-line\"]\n
+to = inputs[\"injective-to\"]\n
 
-output({\"name\":name, \"add\":add, \"line\":line,\"message\":line})",
+output({\"name\":name, \"add\":add, \"to\":to,\"message\":to})",
                             "selectors": [
                                 {
-                                    "showToolTip<-name, add, line, message": {
+                                    "showToolTip<-name, add, to, message": {
                                         "injects": {
                                             "name": "name",
                                             "add": "add",
-                                            "line": "line",
+                                            "to": "to",
                                             "message": "message"
                                         },
                                         "onselected": [
                                             {
                                                 "fix?": [
                                                     {
-                                                        "modifyView<-name, add, line": {
+                                                        "modifyView<-name, add, to": {
                                                             
                                                         }
                                                     },
@@ -550,6 +550,64 @@ test>組み合わせでエラーが出ていたのを解消したもの。view�
     "contains": {
         "showAtLog": {
             "output": "increased."
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
+test>modifyViewの行数指定バージョン/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->modifyView: {
+    "name": "sample.txt",
+    "add": "\n1",
+    "line": 3
+}->viewEmit: {
+    "name": "sample.txt",
+    "identity": "addToLine",
+    "selectors": [
+        {
+            "showAtLog<-body": {
+                "format": "body"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "view line increased",
+    "contains": {
+        "showAtLog": {
+            "output": "a\nb\nc\n1"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
+test>modifyViewのポイント指定バージョン/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->modifyView: {
+    "name": "sample.txt",
+    "add": "1",
+    "to": 2
+}->viewEmit: {
+    "name": "sample.txt",
+    "identity": "addToLine",
+    "selectors": [
+        {
+            "showAtLog<-body": {
+                "format": "body"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "view line increased",
+    "contains": {
+        "showAtLog": {
+            "output": "a\n1b\nc"
         }
     },
     "description": "not match."

@@ -173,4 +173,7 @@ class EditorAPI:
 			line = lines + line + 1
 
 		return view.line(view.text_point(line, 0))
+
+	def getTextPoint(self, view, line):
+		return view.text_point(line, 0)
 		
