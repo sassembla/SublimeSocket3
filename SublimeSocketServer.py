@@ -250,7 +250,6 @@ class SublimeSocketServer:
 	# reactor and KVS
 	def reactorsDict(self):
 		reactorsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REACTORS)
-
 		if reactorsDict:
 			return reactorsDict
 

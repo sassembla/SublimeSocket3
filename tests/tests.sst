@@ -31,6 +31,30 @@ beforeafter>thebeforeafterselectors/selector: {
 }
 
 
+test>バッファを作り、appendRegionし、閉じて、eraseAllRegionssする/createBuffer: {
+    "name": "bufferForAddRegionThenEraseAfterClosed.txt"
+}->appendRegion: {
+    "name": "bufferForAddRegionThenEraseAfterClosed.txt",
+    "line": "1",
+    "message": "test",
+    "condition": "keyword"
+}->closeAllBuffer: {
+
+}->eraseAllRegions: {
+
+}->assertResult: {
+    "id": "eraseAllRegionss never run.",
+    "contains": {
+        "eraseAllRegions": {
+            "erasedIdentities": {
+                
+            }
+        }
+    },
+    "description": "not match."
+}
+
+
 test>setSelectionと合わせて、toolTipの箇所にscrollする/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample3.txt"
 }->setViewReactor: {
@@ -2284,6 +2308,8 @@ test>ファイル内容を特定クライアントに配信する。/openFile: {
         }
     },
     "description": "faild to monocast."
+}->closeFile: {
+    "name": "sample4.txt"
 }
 
 
@@ -2653,7 +2679,7 @@ test>適当な名前のファイルを開き、regionの追加に失敗(noViewFo
 }
 
 
-test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregionを追加する。/createBuffer: {
+test>eraseAllRegionsのテスト。複数のファイルを開き、各1つのregionを追加する。/createBuffer: {
     "name": "notexistfileA.txt"
 }->appendRegion: {
     "line": "1",
@@ -2667,12 +2693,12 @@ test>eraseAlRegionのテスト。複数のファイルを開き、各1つのregi
     "message": "test",
     "condition": "keyword",
     "name": "notexistfileB.txt"
-}->eraseAllRegion: {
+}->eraseAllRegions: {
     
 }->assertResult: {
-    "id": "eraseAllRegion, two file and each 1 regions will become empty",
+    "id": "eraseAllRegions, two file and each 1 regions will become empty",
     "contains": {
-        "eraseAllRegion": {
+        "eraseAllRegions": {
             "erasedIdentities": {
                 "notexistfileB.txt": [
                     "ss_(0, 0)"
@@ -2699,12 +2725,12 @@ test>eraseのテスト、特定のviewのregionすべてを削除する。/creat
     "message": "test",
     "condition": "keyword",
     "name": "notexistFileC.txt"
-}->eraseAllRegion: {
+}->eraseAllRegions: {
     "name": "notexistFileC.txt"
 }->assertResult: {
     "id": "erase specific view regions",
     "contains": {
-        "eraseAllRegion": {
+        "eraseAllRegions": {
             "erasedIdentities": {
                 "notexistFileC.txt": [
                     "ss_(0, 0)"
@@ -2716,19 +2742,60 @@ test>eraseのテスト、特定のviewのregionすべてを削除する。/creat
 }
 
 
-test>eraseのテスト、存在しないビューのregionを削除しようとして、何も起こらない。/createBuffer: {
+test>eraseのテスト、存在しないファイルのregionを消す/eraseAllRegions: {
+    "name": "notExistFile.txt"
+}->assertResult: {
+    "id": "eraseAllRegions against not exist target. nothing happens",
+    "contains": {
+        "eraseAllRegions": {
+            "erasedIdentities": {
+                
+            }
+        }
+    },
+    "description": "not match."
+}
+
+
+test>eraseのテスト、直前に閉じられて存在しないファイルのregionを削除しようとして、何も起こらない。/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample3.txt"
+}->appendRegion: {
+    "line": "1",
+    "message": "test",
+    "condition": "keyword",
+    "name": "someBuffer.txt"
+}->closeFile: {
+    "name": "sample3.txt"
+}->eraseAllRegions: {
+
+}->assertResult: {
+    "id": "open, append region, close file then eraseAllRegions. nothing includes",
+    "contains": {
+        "eraseAllRegions": {
+            "erasedIdentities": {
+                
+            }
+        }
+    },
+    "description": "not match."
+}
+
+
+test>eraseのテスト、直前に閉じられて存在しないバッファのregionを削除しようとして、何も起こらない。/createBuffer: {
     "name": "someBuffer.txt"
 }->appendRegion: {
     "line": "1",
     "message": "test",
     "condition": "keyword",
     "name": "someBuffer.txt"
-}->eraseAllRegion: {
-    "name": "notExistFile.txt"
+}->closeAllBuffer: {
+
+}->eraseAllRegions: {
+
 }->assertResult: {
-    "id": "nothing happen",
+    "id": "create, append region, close file then eraseAllRegions. nothing includes",
     "contains": {
-        "eraseAllRegion": {
+        "eraseAllRegions": {
             "erasedIdentities": {
                 
             }

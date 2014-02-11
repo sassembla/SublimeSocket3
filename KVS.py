@@ -17,13 +17,11 @@ class KVS:
 			pass
 
 		self.keyValueDict[key] = value
-		return self.keyValueDict[key]
 
 	## get value for key
 	def get(self, key):
 		if key in self.keyValueDict:
 			return self.keyValueDict[key]
-
 
 	## get all key-value
 	def items(self):

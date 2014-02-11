@@ -35,7 +35,6 @@ class SublimeSocketAPI:
 		self.counts = {}
 
 		self.setSublimeSocketWindowBasePath(None)
-		
 
 	## initialize results as the part of globalResults.
 	def initResult(self, resultIdentity):
@@ -93,7 +92,7 @@ class SublimeSocketAPI:
 	## run the specified API with JSON parameters. Dict or Array of JSON.
 	def runAPI(self, baseCommand, baseParams, clientId=None, injectedParams=None, results=None):
 		command, params = SushiJSONParser.inject(baseCommand, baseParams, injectedParams)
-		
+		  		
   		# python-switch
 		for case in PythonSwitch(command):
 			if case(SublimeSocketAPISettings.API_CONNECTEDCALL):
@@ -275,8 +274,8 @@ class SublimeSocketAPI:
 				self.showStatusMessage(params, results)
 				break
 
-			if case(SublimeSocketAPISettings.API_ERASEALLREGION):
-				self.eraseAllRegion(params, results)
+			if case(SublimeSocketAPISettings.API_ERASEALLREGIONS):
+				self.eraseAllRegions(params, results)
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
@@ -286,7 +285,7 @@ class SublimeSocketAPI:
 			if case():
 				self.editorAPI.printMessage("unknown command "+ command + " /")
 				break
-
+				
 
 	def runReactor(self, reactorType, params, eventParam, results):
 		for case in PythonSwitch(reactorType):
@@ -307,6 +306,7 @@ class SublimeSocketAPI:
 
 				break
 
+		
 		keys = []
 		values = []
 		for key, val in eventParam.items():
@@ -324,18 +324,17 @@ class SublimeSocketAPI:
 	def runAllSelector(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues, injectionMapKey, results):
 		assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
 		zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
-		
-		runnableParams = params.copy()
 
 		# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
-		selectors = runnableParams[SublimeSocketAPISettings.REACTOR_SELECTORS]
+		selectors = params[SublimeSocketAPISettings.REACTOR_SELECTORS]
 
 		# inject
-		composedInjectParams = self.injectParams(runnableParams, zippedInjectiveParams, injectionMapKey)
+		composedInjectParams = self.injectParams(params, zippedInjectiveParams, injectionMapKey)
 		
 		for selector in selectors:
-			[self.runAPI(eachCommand, eachParams, None, composedInjectParams, results) for eachCommand, eachParams in selector.items()]
-
+			for eachCommand, eachParams in selector.items():
+				self.runAPI(eachCommand, eachParams.copy(), None, composedInjectParams, results)
+			
 		
 	def runFoundationEvent(self, eventName, eventParam, reactors, results):
 		for case in PythonSwitch(eventName):
@@ -1197,6 +1196,7 @@ class SublimeSocketAPI:
 
 	# run selected regions.
 	def selectedRegions(self, params, results):
+		assert not "0x" in str(self.server.reactorsDict()), "2-1-1 stop."
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS in params, "selectedRegions require 'selecteds' param."
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_TARGET in params, "selectedRegions require 'target' param."
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTORS in params, "selectedRegions require 'selectors' param."
@@ -1226,10 +1226,8 @@ class SublimeSocketAPI:
 				return False
 
 			latestContainedRegionIdentities = [regionIdentity for regionIdentity, regionData in regionsDictOfThisView.items() if isRegionSelected(regionData)]
-			
 			# run each region's each regionDatas.
 			for containedRegionId in latestContainedRegionIdentities:
-				
 				if containedRegionId in currentSelectedRegionIdsSet:
 					continue
 				else:
@@ -1474,6 +1472,7 @@ class SublimeSocketAPI:
 
 			else:
 				body = self.editorAPI.bodyOfView(view)
+
 				modifiedPath = path.replace(":","&").replace("\\", "/")
 
 				# get modifying line num
@@ -1492,7 +1491,6 @@ class SublimeSocketAPI:
 						"result": "done"
 					}
 				)
-
 
 	def modifyView(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
@@ -1580,6 +1578,7 @@ class SublimeSocketAPI:
 
 	## append region on ST
 	def appendRegion(self, params, results):
+		print("appendRegion", params)
 		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param."
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param."
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param."
@@ -1613,6 +1612,7 @@ class SublimeSocketAPI:
 
 		# raise no view found
 		else:
+			print("viewが見つからなかったので、noviewfoundが流れている。ということは、search網へのinが甘い？", params)
 			# use name param to notify the name of the view which not opened in editor.
 			if SublimeSocketAPISettings.APPENDREGION_NAME in params:
 				name = params[SublimeSocketAPISettings.APPENDREGION_NAME]
@@ -1958,16 +1958,16 @@ class SublimeSocketAPI:
 
 
 	## erase all regions of view/condition
-	def eraseAllRegion(self, params, results):
-		
+	def eraseAllRegions(self, params, results):
 		regionsDict = self.server.regionsDict()
+		
+		deletes = {}
 		if regionsDict:
-			deletes = {}
 			deleteTargetPaths = []
 
 			# if target view specified and it exist, should erase specified view's regions only.
-			if SublimeSocketAPISettings.ERASEALLREGION_NAME in params:
-				(view, path) = self.internal_getViewAndPathFromViewOrName(params, None, SublimeSocketAPISettings.ERASEALLREGION_NAME)
+			if SublimeSocketAPISettings.API_ERASEALLREGIONS in params:
+				(view, path) = self.internal_getViewAndPathFromViewOrName(params, None, SublimeSocketAPISettings.ERASEALLREGIONS_NAME)
 				
 				if path in regionsDict:
 					deleteTargetPaths.append(path)
@@ -1980,13 +1980,15 @@ class SublimeSocketAPI:
 				deleteTargetPaths = list(regionsDict)
 
 		
-			def eraseAllRegions(path):
+			def eraseRegions(path):
 				targetRegionsDict = regionsDict[path]
 				
 				deletedRegionIdentities = []
 				for regionIdentity in targetRegionsDict:
-					assert regionIdentity, "regionIdentity is None."
 					view = self.internal_detectViewInstance(path)
+					
+					print("viewが存在しないとか、identityが存在しないとか。", view, regionIdentity)
+
 					self.editorAPI.removeRegionFromView(view, regionIdentity)
 
 					deletedRegionIdentities.append(regionIdentity)
@@ -1995,14 +1997,14 @@ class SublimeSocketAPI:
 				if deletedRegionIdentities:
 					deletes[path] = deletedRegionIdentities
 
-			[eraseAllRegions(path) for path in deleteTargetPaths]
+			[eraseRegions(path) for path in deleteTargetPaths]
 			
 			for delPath in deletes:
 				del regionsDict[delPath]
 
 			self.server.updateRegionsDict(regionsDict)
 			
-			self.setResultsParams(results, self.eraseAllRegion, {"erasedIdentities":deletes})
+		self.setResultsParams(results, self.eraseAllRegions, {"erasedIdentities":deletes})
 
 	
 	def formattingMessageParameters(self, params, formatKey, outputKey):
@@ -2299,6 +2301,7 @@ class SublimeSocketAPI:
 
 
 	def fireReactor(self, reactorType, eventName, eventParam, results):
+
 		reactorsDict = self.server.reactorsDict()
 		reactorsLogDict = self.server.reactorsLogDict()
 
@@ -2354,6 +2357,7 @@ class SublimeSocketAPI:
 					else:
 						reactorParams = reactorDict[reactorKey]
 						self.runReactor(reactorType, reactorParams, eventParam, results)
+						
 
 
 	# completion series
