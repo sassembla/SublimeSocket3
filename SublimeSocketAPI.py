@@ -1578,7 +1578,6 @@ class SublimeSocketAPI:
 
 	## append region on ST
 	def appendRegion(self, params, results):
-		print("appendRegion", params)
 		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param."
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param."
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param."
@@ -1612,7 +1611,6 @@ class SublimeSocketAPI:
 
 		# raise no view found
 		else:
-			print("viewが見つからなかったので、noviewfoundが流れている。ということは、search網へのinが甘い？", params)
 			# use name param to notify the name of the view which not opened in editor.
 			if SublimeSocketAPISettings.APPENDREGION_NAME in params:
 				name = params[SublimeSocketAPISettings.APPENDREGION_NAME]
@@ -1986,8 +1984,6 @@ class SublimeSocketAPI:
 				deletedRegionIdentities = []
 				for regionIdentity in targetRegionsDict:
 					view = self.internal_detectViewInstance(path)
-					
-					print("viewが存在しないとか、identityが存在しないとか。", view, regionIdentity)
 
 					self.editorAPI.removeRegionFromView(view, regionIdentity)
 
