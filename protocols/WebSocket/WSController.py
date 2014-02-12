@@ -72,8 +72,8 @@ class WSController:
 
 	## Check API-adoptable or not
 	def isApi(self, data):
-		headerAndParam = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)
-		return headerAndParam[0] == SublimeSocketAPISettings.API_PREFIX or headerAndParam[0] == SublimeSocketAPISettings.API_PREFIX_SUB
+		headerAndParam = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)
+		return headerAndParam[0] == SublimeSocketAPISettings.SSAPI_PREFIX or headerAndParam[0] == SublimeSocketAPISettings.SSAPI_PREFIX_SUB
 		
 	## Send a ping
 	def ping(self):

@@ -65,7 +65,7 @@ class SublimeSocketServer:
 		# react to renew
 		self.onTransferRenew()
 
-	def transferConnected(self):
+	def transferConnected(self, clientId):
 		if self.onConnectedTriggers:
 			for funcDict in self.onConnectedTriggers:
 				for _, func in funcDict.items():
@@ -75,7 +75,7 @@ class SublimeSocketServer:
 
 	# main API data incoming method.
 	def transferInputted(self, data, clientId):
-		apiData = data.split(SublimeSocketAPISettings.API_DEFINE_DELIM, 1)[1]
+		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
 
 		# gen result id of toplevel
 		resultIdentity = "callAPI:"+str(uuid.uuid4())

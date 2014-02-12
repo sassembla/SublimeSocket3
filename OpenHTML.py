@@ -52,7 +52,7 @@ class Openhtml(sublime_plugin.TextCommand):
             html = html.replace(target, str(value))
 
     # replace version
-    html = html.replace(SublimeSocketAPISettings.SS_VERSION_REPLACE, SublimeSocketAPISettings.API_VERSION)
+    html = html.replace(SublimeSocketAPISettings.SS_VERSION_REPLACE, SublimeSocketAPISettings.SSAPI_VERSION)
 
     # generate preference
     with open(outputPath, mode='w', encoding='utf-8') as htmlFile:

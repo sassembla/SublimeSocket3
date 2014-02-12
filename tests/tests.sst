@@ -31,6 +31,30 @@ beforeafter>thebeforeafterselectors/selector: {
 }
 
 
+test>readFileからselectors/readFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt",
+    "injects": {
+        "data": "data",
+        "originalpath": "originalpath"
+    }, 
+    "selectors": [
+        {
+            "showAtLog<-data, originalpath": {
+                "format": "originalpath, data"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "get file's contents, then show at log.",
+    "contains": {
+        "showAtLog": {
+            "output": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt, a\nb\nc"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>バッファを作り、appendRegionし、閉じて、eraseAllRegionssする/createBuffer: {
     "name": "bufferForAddRegionThenEraseAfterClosed.txt"
 }->appendRegion: {
@@ -910,6 +934,34 @@ test>basePathを足がかりに特定のファイルが含まれるフォルダ�
 }
 
 
+test>selectorsと/countUp: {
+    "label": "testCount",
+    "default": 0,
+    "injects": {
+        "result": "result",
+        "label": "label"
+    },
+    "selectors": [
+        {
+            "showAtLog<-result, label": {
+                "format": "label:result"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "count up with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "testCount:0"
+        }
+    },
+    "description": "not match.",
+    "debug": true
+}->resetCounts: {
+    
+}
+
+
 test>countUp: {
     "label": "testCount",
     "default": 0
@@ -967,6 +1019,35 @@ test>countUp: {
         }
     },
     "description": "not match."
+}->resetCounts: {
+    
+}
+
+
+test>resetCountsのselectors/countUp: {
+    "label": "test",
+    "default": -1
+}->resetCounts:{
+    "injects": {
+        "resetted": "theLast"
+    },
+    "selectors": [    
+        {
+            "showAtLog<-theLast": {
+                "format": "the resetted param is theLast"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "resetted labels are here.",
+    "contains": {
+        "showAtLog": {
+            "output": "the resetted param is ['test']"
+        }
+    },
+    "description": "not match."
+}->resetCounts: {
+    
 }
 
 
@@ -1944,6 +2025,29 @@ test>SublimeSocketとしての現在のbasePathを指定する/createBuffer: {
 }
 
 
+test>createBuffer: {
+    "name": "bufferForSelectors.txt",
+    "injects": {
+        "name": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "createBuffer with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "bufferForSelectors.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>delayのチェック。イベントを2件発生させ、delayによって先行したものだけを実行させる/createBuffer: {
     "name": "delayTarget.txt"
 }->viewEmit: {
@@ -2063,19 +2167,6 @@ test>特定のviewに対するreactorのテスト。途中でイベントの出�
     "contains": {
         "showAtLog": {
             "output": "eventEmit2 over."
-        }
-    },
-    "description": "not match."
-}
-
-
-test>Sublimeにあまり依存せず、ファイルのデータを読み出す/readFileData: {
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample2.txt"
-}->assertResult: {
-    "id": "read collect data",
-    "contains": {
-        "readFileData": {
-            "data": "sample2.txt"
         }
     },
     "description": "not match."
@@ -2322,6 +2413,35 @@ test>filterのパターンを試す/defineFilter: {
         }
     },
     "description": "not match 4."
+}
+
+
+test>Clientのidentityを変更する/changeIdentity: {
+    "from": "sublimesockettest",
+    "to": "test",
+    "injects": {
+        "from": "from",
+        "to": "to"
+    },
+    "selectors": [
+        {
+            "showAtLog<-from, to": {
+                "format": "from becomes to."
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "changeIdentity with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "sublimesockettest becomes test."
+        }
+    },
+    "description": "not match",
+    "debug": true
+}->changeIdentity: {
+    "from": "test",
+    "to": "sublimesockettest"
 }
 
 
@@ -2618,6 +2738,27 @@ test>複数件の同名のevent-別のtargetreactorをセットして、増加�
 }
 
 
+test>settingからのselectors/runSetting: {
+    "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt",
+    "injects": {
+        "path": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {}
+        }
+    ]
+}->assertResult: {
+    "id": "setting with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
+        }
+    },
+    "description": "not match"
+}
+
+
 test>設定の実行が実行されきったかどうか/runSetting: {
     "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt"
 }->assertResult: {
@@ -2863,6 +3004,31 @@ test>eraseのテスト、直前に閉じられて存在しないバッファのr
 }
 
 
+test>バージョンの出力/versionVerify: {
+    "socketVersion": 3,
+    "apiVersion": "1.-1.0",
+    "injects": {
+        "code": "code",
+        "message": "theMessage"
+    },
+    "selectors": [
+        {
+            "showAtLog<-code, theMessage": {
+                "format": "code theMessage"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "code and message will enable.",
+    "contains": {
+        "showAtLog": {
+            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.0, this client requires api version = 1.-1.0, please update this client if possible."
+        }
+    },
+    "description": "not match."
+}
+
+
 test>バージョンの精査、apiVersionmajorが一致、minorが低いのでクライアントのUpdateを勧められる+突破/versionVerify: {
     "socketVersion": 3,
     "apiVersion": "1.-1.0"
@@ -2870,7 +3036,8 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
     "id": "situation-please update possible",
     "contains": {
         "versionVerify": {
-            "result": 2
+            "code": 2,
+            "message": "VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.0, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -2884,7 +3051,8 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     "id": "situation-latest version",
     "contains": {
         "versionVerify": {
-            "result": 1
+            "code": 1,
+            "message": "VERIFIED:\tThe current running SublimeSocket api version = 1.4.0, SublimeSocket 3"
         }
     },
     "description": "not match."
@@ -2899,7 +3067,8 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
     "id": "situation-should update ss",
     "contains": {
         "versionVerify": {
-            "result": -1
+            "code": -1,
+            "message": "REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -2914,7 +3083,8 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     "id": "situation-should update client",
     "contains": {
         "versionVerify": {
-            "result": -2
+            "code": -2,
+            "message": "REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.4.0, this client requires api version = 0.0.0, required api version is too old. please update this client."
         }
     },
     "description": "not match."
@@ -2929,7 +3099,8 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
     "id": "situation-should update ss",
     "contains": {
         "versionVerify": {
-            "result": -1
+            "code": -1,
+            "message": "REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."

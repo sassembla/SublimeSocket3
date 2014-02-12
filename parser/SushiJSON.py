@@ -14,6 +14,9 @@ SUSHIJSON_API_SETTESTBEFOREAFTER	= "setTestBeforeAfter"
 SETTESTBEFOREAFTER_BEFORESELECTORS	= "beforeselectors"
 SETTESTBEFOREAFTER_AFTERSELECTORS	= "afterselectors"
 
+SUSHIJSON_KEYWORD_SELECTORS			= "selectors"
+SUSHIJSON_KEYWORD_INJECTS			= "injects"
+
 
 class SushiJSONParser():
 
@@ -86,7 +89,7 @@ class SushiJSONParser():
 
 
 	@classmethod
-	def inject(self, command, params, injects):
+	def composeParams(self, command, params, injects):
 		
 		# erase comment
 		if SUSHIJSON_COMMENT_DELIM in command:
@@ -114,3 +117,56 @@ class SushiJSONParser():
 				params[acceptKey] = injects[acceptKey]
 
 		return command, params
+
+
+	@classmethod
+	# if inject parameter exist, inject it by the "inject" key information.
+	def injectParams(self, sourceParams, APIDefinedInjectiveKeysAndValues):
+		APIDefinedInjectiveKeys = APIDefinedInjectiveKeysAndValues.keys()
+
+		# do nothing if user-setting injects exist.
+		if SUSHIJSON_KEYWORD_INJECTS in sourceParams:
+			pass
+		else:
+			sourceParams[SUSHIJSON_KEYWORD_INJECTS] = {}
+
+		# there are 3 kind of parameter-type that should be retrieve.
+		# check "sourceParams" and "sourceParams:{injects:{REVEALED-INJECTIVE-DICT}}" especially REVEALED-INJECTIVE-DICT's key.
+
+		# key is...
+		
+		# 1.APIDefined-key, and not included "injects" param.	=> inject automatically.
+		# 2.APIDefined-key, but revealed in "injects" 			=> inject key-value to value:source[key].
+		# 3.not APIDefined-key									=> inject key-value to value:source[key].
+
+		injectDict = sourceParams[SUSHIJSON_KEYWORD_INJECTS]
+
+		resultInjectDict = {}
+		for currentInjectsKey in injectDict.keys():
+
+			# type 2
+			if currentInjectsKey in APIDefinedInjectiveKeys:
+				
+				injectionTargetKey = injectDict[currentInjectsKey]
+				
+				if currentInjectsKey in sourceParams:
+					resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
+
+				else:
+					resultInjectDict[injectionTargetKey] = APIDefinedInjectiveKeysAndValues[currentInjectsKey]
+
+			# type 3
+			else:
+				assert currentInjectsKey in sourceParams, "failed to inject:" + currentInjectsKey + " from:" + str(sourceParams)
+				injectionTargetKey = injectDict[currentInjectsKey]
+				
+				resultInjectDict[injectionTargetKey] = sourceParams[currentInjectsKey]
+
+		# else. type 1
+		nonInjectedKeys = set(APIDefinedInjectiveKeys) - set(resultInjectDict.keys())
+		for key in nonInjectedKeys:
+			resultInjectDict[key] = APIDefinedInjectiveKeysAndValues[key]
+
+		return resultInjectDict
+
+
