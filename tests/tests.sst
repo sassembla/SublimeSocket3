@@ -582,6 +582,32 @@ test>組み合わせでエラーが出ていたのを解消したもの。view�
 }
 
 
+test>modifyView と selectors/createBuffer: {
+    "name": "bufferForModifyThenRunSelectors"
+}->modifyView: {
+    "name": "bufferForModifyThenRunSelectors",
+    "count": 1,
+    "add": "some",
+    "injects": {
+        "add": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {}
+        }
+    ]
+}->assertResult: {
+    "id": "modifyView with selectors.",
+    "contains": {
+        "showAtLog": {
+            "output": "some"
+        }
+    },
+    "description": "not match.",
+    "debug": true
+}
+
+
 test>modifyViewの行数指定バージョン/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->modifyView: {
@@ -1944,6 +1970,34 @@ test>ツールチップ選択orキャンセル後、最終的に動作するfina
 }
 
 
+test>setSelectionとselectors/createBuffer: {
+    "name": "setSelectionWithSelectors.txt"
+}->setSelection: {
+    "name": "setSelectionWithSelectors.txt",
+    "selections": [
+        {
+            "from": 0,
+            "to": 1
+        }
+    ],
+    "selectors": [
+        {
+            "showAtLog<-selecteds, path": {
+                "format": "selecteds are in the path"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "setSelection with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "[[0, 1]] are in the setSelectionWithSelectors.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>選択範囲を解消する/createBuffer: {
     "name": "clearSelection.txt"
 }->setSelection: {
@@ -1961,6 +2015,29 @@ test>選択範囲を解消する/createBuffer: {
     "contains": {
         "clearSelection": {
             "cleared": true
+        }
+    },
+    "description": "not match."
+}
+
+
+test>ファイルを閉じる/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->closeFile: {
+    "name": "sample.txt",
+    "injects": {
+        "name": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {}
+        }
+    ]
+}->assertResult: {
+    "id": "close file with selector",
+    "contains": {
+        "showAtLog": {
+            "output": "sample.txt"
         }
     },
     "description": "not match."
@@ -3101,6 +3178,28 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
         "versionVerify": {
             "code": -1,
             "message": "REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>closeAllBufferとselectors/createBuffer: {
+    "name": "bufferForCloseAll.txt"
+}->closeAllBuffer: {
+    "injects": {
+        "closed": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {}
+        }
+    ]
+}->assertResult: {
+    "id": "closeAllBuffer with selectors.",
+    "contains": {
+        "showAtLog": {
+            "output": ["bufferForCloseAll.txt"]
         }
     },
     "description": "not match."

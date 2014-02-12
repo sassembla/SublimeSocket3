@@ -149,7 +149,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_CLOSEALLBUFFER):
-				self.closeAllBuffer(results)
+				self.closeAllBuffer(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_SELECTEDREGIONS):
@@ -294,7 +294,7 @@ class SublimeSocketAPI:
 					params[SushiJSON.SUSHIJSON_KEYWORD_INJECTS] = {}
 
 				# forcely inject
-				for key in SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONKEYS:
+				for key in SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONS:
 					# set key: key for generating injection map.
 					params[SushiJSON.SUSHIJSON_KEYWORD_INJECTS][key] = key
 
@@ -372,7 +372,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params, 
-			SublimeSocketAPISettings.COUNTUP_INJECTIONKEYS,
+			SublimeSocketAPISettings.COUNTUP_INJECTIONS,
 			[result],
 			results
 		)
@@ -393,7 +393,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.RESETCOUNTS_INJECTIONKEYS,
+			SublimeSocketAPISettings.RESETCOUNTS_INJECTIONS,
 			[resetted],
 			results
 		)
@@ -435,7 +435,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.RUNSETTING_INJECTIONKEYS,
+			SublimeSocketAPISettings.RUNSETTING_INJECTIONS,
 			[filePath],
 			results
 		)
@@ -627,7 +627,7 @@ class SublimeSocketAPI:
 					
 					self.runAllSelector(
 						selectorInsideParams, 
-						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
 						[view, path, selectedItem], 
 						results)
 			else:
@@ -638,7 +638,7 @@ class SublimeSocketAPI:
 					
 					self.runAllSelector(
 						selectorInsideParams, 
-						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
 						[view, path, selectedItem], 
 						results)
 
@@ -649,7 +649,7 @@ class SublimeSocketAPI:
 
 				self.runAllSelector(
 					selectorInsideParams, 
-					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONKEYS, 
+					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
 					[view, path, selectedItem], 
 					results)
 
@@ -1087,7 +1087,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.CHANGEIDENTITY_INJECTIONKEYS,
+			SublimeSocketAPISettings.CHANGEIDENTITY_INJECTIONS,
 			[currentIdentityCandicate, newIdentity],
 			results
 		)
@@ -1147,7 +1147,7 @@ class SublimeSocketAPI:
 		
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.CREATEBUFFER_INJECTIONKEYS,
+			SublimeSocketAPISettings.CREATEBUFFER_INJECTIONS,
 			[name],
 			results
 		)
@@ -1204,7 +1204,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.OPENFILE_INJECTIONKEYS,
+			SublimeSocketAPISettings.OPENFILE_INJECTIONS,
 			[original_path],
 			results
 		)
@@ -1221,8 +1221,14 @@ class SublimeSocketAPI:
 		self.editorAPI.closeView(view)
 		self.setResultsParams(results, self.closeFile, {"name":name})
 
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.CLOSEFILE_INJECTIONS,
+			[name],
+			results
+		)
 
-	def closeAllBuffer(self, results):
+	def closeAllBuffer(self, params, results):
 		closed = []
 
 		def close(window):
@@ -1234,6 +1240,13 @@ class SublimeSocketAPI:
 					self.editorAPI.closeView(view)
 
 		[close(window) for window in self.editorAPI.windows()]
+
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.CLOSEALLBUFFER_INJECTIONS,
+			[closed],
+			results
+		)
 
 		self.setResultsParams(results, self.closeAllBuffer, {"closed":closed})
 
@@ -1285,7 +1298,7 @@ class SublimeSocketAPI:
 
 				self.runAllSelector(
 					params, 
-					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONKEYS, 
+					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONS, 
 					[view, path, crossed, target, line, fromParam, toParam, messages], 
 					results)
 
@@ -1526,7 +1539,7 @@ class SublimeSocketAPI:
 
 				self.runAllSelector(
 					params, 
-					SublimeSocketAPISettings.VIEWEMIT_INJECTIONKEYS, 
+					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
 					[view, body, modifiedPath, rowColStr, identity], 
 					results)
 
@@ -1539,27 +1552,34 @@ class SublimeSocketAPI:
 
 	def modifyView(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
-		if view:
-			if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
-				add = params[SublimeSocketAPISettings.MODIFYVIEW_ADD]
+		assert view and path, "modifyView require 'view' or 'name' params."
 
-				# insert text to the view with "to" or "line" param, or other.
-				if SublimeSocketAPISettings.MODIFYVIEW_TO in params:
-					to = params[SublimeSocketAPISettings.MODIFYVIEW_TO]
-					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
+		if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
+			add = params[SublimeSocketAPISettings.MODIFYVIEW_ADD]
 
-				elif SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
-					line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
-					to = self.editorAPI.getTextPoint(view, line)
-					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
+			# insert text to the view with "to" or "line" param, or other.
+			if SublimeSocketAPISettings.MODIFYVIEW_TO in params:
+				to = params[SublimeSocketAPISettings.MODIFYVIEW_TO]
+				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
 
-				# no "line" set = append the text to next to the last character of the view.
-				else:
-					self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":self.editorAPI.viewSize(view)})
-				
-			if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
-				self.editorAPI.runCommandOnView(view, 'reduce_text')
+			elif SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
+				line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
+				to = self.editorAPI.getTextPoint(view, line)
+				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
 
+			# no "line" set = append the text to next to the last character of the view.
+			else:
+				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":self.editorAPI.viewSize(view)})
+			
+		if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
+			self.editorAPI.runCommandOnView(view, 'reduce_text')
+
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.MODIFYVIEW_INJECTIONS,
+			[path],
+			results
+		)
 
 	## generate selection to view
 	def setSelection(self, params, results):
@@ -1605,6 +1625,14 @@ class SublimeSocketAPI:
 		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.SETSELECTION_INJECTIONS,
+			[path, selecteds],
+			results
+		)
+
 		self.setResultsParams(results, self.setSelection, {"selecteds":selecteds})
 
 
@@ -1807,7 +1835,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params, 
-			SublimeSocketAPISettings.READFILE_INJECTIONKEYS, 
+			SublimeSocketAPISettings.READFILE_INJECTIONS, 
 			[original_path, path, data], 
 			results)
 
@@ -1963,7 +1991,7 @@ class SublimeSocketAPI:
 
 		self.runAllSelector(
 			params,
-			SublimeSocketAPISettings.VERSIONVERIFY_INJECTIONKEYS, 
+			SublimeSocketAPISettings.VERSIONVERIFY_INJECTIONS, 
 			[code, message], 
 			results
 		)
@@ -2297,7 +2325,6 @@ class SublimeSocketAPI:
 
 		self.server.updateReactorsDict(reactorsDict)
 		self.server.updateReactorsLogDict(reactorsLogDict)
-			
 
 		return reactorsDict
 
