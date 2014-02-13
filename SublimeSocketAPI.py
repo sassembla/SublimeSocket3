@@ -297,8 +297,11 @@ class SublimeSocketAPI:
 				# forcely inject
 				for key in SublimeSocketAPISettings.REACTOR_VIEWKEY_INJECTIONS:
 					# set key: key for generating injection map.
-					params[SushiJSON.SUSHIJSON_KEYWORD_INJECTS][key] = key
-
+					if key in params[SushiJSON.SUSHIJSON_KEYWORD_INJECTS]:
+						pass
+					else:
+						params[SushiJSON.SUSHIJSON_KEYWORD_INJECTS][key] = key
+				
 				break
 
 
@@ -593,8 +596,9 @@ class SublimeSocketAPI:
 			finallyBlock = params[SublimeSocketAPISettings.SHOWTOOLTIP_FINALLY]
 
 		view, path = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SHOWTOOLTIP_VIEW, SublimeSocketAPISettings.SHOWTOOLTIP_NAME)
-
 		assert view, "showToolTip require 'view' or 'name' param."
+
+		name = os.path.basename(path)
 
 		def getItemKey(item):
 			itemList = list(item)
@@ -622,7 +626,7 @@ class SublimeSocketAPI:
 					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-						[view, path, selectedItem], 
+						[path, name, selectedItem], 
 						results)
 			else:
 				if cancelled:
@@ -633,7 +637,7 @@ class SublimeSocketAPI:
 					self.runAllSelector(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-						[view, path, selectedItem], 
+						[path, name, selectedItem], 
 						results)
 
 			if finallyBlock:
@@ -644,7 +648,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-					[view, path, selectedItem], 
+					[path, name, selectedItem], 
 					results)
 
 			self.setResultsParams(results, self.showToolTip, {"items":tooltipItemKeys})
@@ -1251,6 +1255,8 @@ class SublimeSocketAPI:
 		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SELECTEDREGIONS_VIEW, SublimeSocketAPISettings.SELECTEDREGIONS_NAME)
 		
+		name = os.path.basename(path)
+
 		selecteds = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
 		regionsDict = self.server.regionsDict()
 		
@@ -1293,7 +1299,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONS, 
-					[view, path, crossed, target, line, fromParam, toParam, messages], 
+					[path, name, crossed, target, line, fromParam, toParam, messages], 
 					results)
 
 			# update current contained region for preventing double-run.
@@ -1517,13 +1523,15 @@ class SublimeSocketAPI:
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
 		
-		name = os.path.basename(path)
+		name = ""
+
+		if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
+			name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
+		else:
+			name = os.path.basename(path)
 		
 		if view:
-			name = path
-			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
-					name = params[SublimeSocketAPISettings.VIEWEMIT_NAME]
-
+	
 			if not self.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
 				self.setResultsParams(results, self.viewEmit, {
 						SublimeSocketAPISettings.VIEWEMIT_IDENTITY:identity, 
@@ -1539,7 +1547,7 @@ class SublimeSocketAPI:
 
 				# get modifying line num
 				rowColStr = self.editorAPI.selectionAsStr(view)
-
+				
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
@@ -1636,7 +1644,7 @@ class SublimeSocketAPI:
 		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
-
+		
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.SETSELECTION_INJECTIONS,
