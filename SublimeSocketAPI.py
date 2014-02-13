@@ -433,13 +433,6 @@ class SublimeSocketAPI:
 		currentResults = {}
 		self.innerParse(commands, clientId, currentResults)
 
-		self.runAllSelector(
-			params,
-			SublimeSocketAPISettings.RUNSETTING_INJECTIONS,
-			[filePath],
-			results
-		)
-
 		self.setResultsParams(results, self.runSetting, {"result":"done"})
 		return "runSettings:"+str(removeCRLF_setting)
 
@@ -1501,7 +1494,14 @@ class SublimeSocketAPI:
 	def resetReactors(self, params, results):
 		deletedReactors = self.removeAllReactors()
 
-		self.setResultsParams(results, self.resetReactors, {"deletedReactors":deletedReactors})
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.RESETREACTORS_INJECTIONS,
+			[deletedReactors],
+			results
+		)
+
+		self.setResultsParams(results, self.resetReactors, {"deleteds":deletedReactors})
 
 
 	def viewEmit(self, params, results):
@@ -1540,7 +1540,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
-					[view, body, modifiedPath, rowColStr, identity], 
+					[body, modifiedPath, rowColStr, identity], 
 					results)
 
 				self.setResultsParams(results, self.viewEmit, {
@@ -1640,9 +1640,9 @@ class SublimeSocketAPI:
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CLEARSELECTION_VIEW, SublimeSocketAPISettings.CLEARSELECTION_NAME)
 		assert view, "clearSelection require 'view' or 'name' param."
 		
-		# self.editorAPI.clearSelectionOfView(view)
-		self.editorAPI.runCommandOnView(view, 'clear_selection')
-		self.setResultsParams(results, self.clearSelection, {"cleared":True})
+		self.editorAPI.clearSelectionOfView(view)
+		
+		self.setResultsParams(results, self.clearSelection, {"cleareds":cleards})
 
 
 
@@ -1681,8 +1681,14 @@ class SublimeSocketAPI:
 			# store region
 			regionFrom, regionTo = self.editorAPI.convertRegionToTuple(regions[0])
 			
-
 			self.server.storeRegion(path, identity, line, regionFrom, regionTo, message)
+
+			self.runAllSelector(
+				params,
+				SublimeSocketAPISettings.APPENDREGION_INJECTIONS,
+				[path, identity, line, regionFrom, regionTo, message],
+				results
+			)
 
 			self.setResultsParams(results, self.appendRegion, {"result":"appended", 
 				SublimeSocketAPISettings.APPENDREGION_LINE:line, 
@@ -1849,13 +1855,22 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.EVENTEMIT_TARGET in params, "eventEmit require 'target' param."
 		assert SublimeSocketAPISettings.EVENTEMIT_EVENT in params, "eventEmit require 'eventemit' param."
 
+		target = params[SublimeSocketAPISettings.EVENTEMIT_TARGET]
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
+
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.EVENTEMIT_INJECTIONS,
+			[target, eventName],
+			results
+		)
+
 		self.setResultsParams(results, 
 			self.eventEmit, 
-			{SublimeSocketAPISettings.EVENTEMIT_TARGET:params[SublimeSocketAPISettings.EVENTEMIT_TARGET], SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
+			{SublimeSocketAPISettings.EVENTEMIT_TARGET:target, SublimeSocketAPISettings.EVENTEMIT_EVENT:params[SublimeSocketAPISettings.EVENTEMIT_EVENT]})
 
 
 	def cancelCompletion(self, params, results):
@@ -2092,8 +2107,15 @@ class SublimeSocketAPI:
 				del regionsDict[delPath]
 
 			self.server.updateRegionsDict(regionsDict)
-			
-		self.setResultsParams(results, self.eraseAllRegions, {"erasedIdentities":deletes})
+		
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.ERASEALLREGIONS_INJECTIONS,
+			[deletes],
+			results
+		)
+
+		self.setResultsParams(results, self.eraseAllRegions, {"deletes":deletes})
 
 	
 	def formattingMessageParameters(self, params, formatKey, outputKey):
@@ -2330,13 +2352,21 @@ class SublimeSocketAPI:
 
 
 	def removeAllReactors(self):
-		reactorsDict = self.server.reactorsDict()
-		deletedReactorsDict = reactorsDict.copy()
+		deletedReactorsList = []
 
+		reactorsDict = self.server.reactorsDict()
+		
+		# from {'on_post_save': {'someone': {'delay': 0, 'selectors': []}}}
+		# to [{on_post_save:someone}]
+		for react, value in reactorsDict.items():
+			for target in list(value):
+				deletedReactorsList.append({react:target})
+		
+		# erase all
 		self.server.updateReactorsDict({})
 		self.server.updateReactorsLogDict({})
 		
-		return deletedReactorsDict
+		return deletedReactorsList
 
 
 	def fireReactor(self, reactorType, eventName, eventParam, results):

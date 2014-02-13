@@ -132,7 +132,17 @@ class EditorAPI:
 		return view.substr(region)
 		
 	def clearSelectionOfView(self, view):
+		cleards = []
+		cleardsSources = view.sel()
+		for cleardsSource in cleardsSources:
+			key = (cleardsSource.a, cleardsSource.b)
+			value = view.substr(cleardsSource)
+			
+			cleards.append({key:value})
+
 		view.sel().clear()
+
+		return cleards
 		
 	def isRegionContained(self, region, selecteds):
 		selectionRegionList = [self.generateRegion(regionParam[0], regionParam[1]) for regionParam in selecteds]
