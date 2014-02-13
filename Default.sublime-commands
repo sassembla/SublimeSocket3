@@ -22,6 +22,17 @@
     {
         "caption": "SublimeSocket: transfer: information",
         "command": "transfer_info"
+    },
+
+
+    {
+        "caption": "SublimeSocket: kvs: show",
+        "command": "kvs_show"
+    },
+
+    {
+        "caption": "SublimeSocket: kvs: flush",
+        "command": "kvs_flush"
     }
 
 ]
