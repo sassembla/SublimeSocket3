@@ -194,6 +194,21 @@ class SublimeSocketThread(threading.Thread):
 
 
 
+
+# kvs control
+
+class Kvs_show(sublime_plugin.TextCommand):
+  def run(self, edit):
+    print("kvsのgetとかやる、broadcastかな。")
+
+class Kvs_flush(sublime_plugin.TextCommand):
+  def run(self, edit):
+    print("kvsのflushとかやる")
+
+
+
+
+
 # view listeners
 class CaptureEditing(sublime_plugin.EventListener):
   def __init__(self):

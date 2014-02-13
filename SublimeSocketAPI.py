@@ -158,7 +158,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
-				self.collectViews(results)
+				self.collectViews(params, results)
 				break
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
@@ -320,19 +320,20 @@ class SublimeSocketAPI:
 
 	# core of API.
 	def runAllSelector(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues, results):
-		assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
-		zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
+		if params:
+			assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
+			zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
 
-		# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
-		if SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params:
-			selectors = params[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
+			# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
+			if SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params:
+				selectors = params[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
 
-			# inject
-			composedInjectParams = SushiJSONParser.injectParams(params, zippedInjectiveParams)
-			
-			for selector in selectors:
-				for eachCommand, eachParams in selector.items():
-					self.runAPI(eachCommand, eachParams.copy(), None, composedInjectParams, results)
+				# inject
+				composedInjectParams = SushiJSONParser.injectParams(params, zippedInjectiveParams)
+				
+				for selector in selectors:
+					for eachCommand, eachParams in selector.items():
+						self.runAPI(eachCommand, eachParams.copy(), None, composedInjectParams, results)
 			
 		
 	def runFoundationEvent(self, eventName, eventParam, reactors, results):
@@ -1782,15 +1783,6 @@ class SublimeSocketAPI:
 	def getAllFilePath(self, params, results):
 		assert SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR in params, "getAllFilePath require 'anchor' param."
 
-		header = ""
-		if SublimeSocketAPISettings.GETALLFILEPATH_HEADER in params:
-			header = params[SublimeSocketAPISettings.GETALLFILEPATH_HEADER]
-
-		footer = ""
-		if SublimeSocketAPISettings.GETALLFILEPATH_FOOTER in params:
-			footer = params[SublimeSocketAPISettings.GETALLFILEPATH_FOOTER]
-
-
 		anchor = params[SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR]
 
 		self.setSublimeSocketWindowBasePath(results)
@@ -1800,7 +1792,7 @@ class SublimeSocketAPI:
 		if filePath:
 			pass
 		else:
-			self.setResultsParams(results, self.getAllFilePath, {"result":"notexist"})
+			self.setResultsParams(results, self.getAllFilePath, {"paths": [], "basedir": ""})
 			return
 
 		folderPath = os.path.dirname(filePath)
@@ -1834,7 +1826,7 @@ class SublimeSocketAPI:
 
 			
 			if limitation == 0:
-				self.setResultsParams(results, self.getAllFilePath, {"result":"depthover"})
+				self.setResultsParams(results, self.getAllFilePath, {"paths": [], "basedir": ""})
 				return
 
 			limitation = limitation - 1
@@ -1847,18 +1839,26 @@ class SublimeSocketAPI:
 		baseDir = os.path.dirname(basePath)
 
 
-		pathArray = []
+		paths = []
+		fullpaths = []
 		for r,d,f in os.walk(baseDir):
 			for files in f:
-				pathArray.append(os.path.join(r,files))
+				fullPath = os.path.join(r,files)
+				
+				partialPath = fullPath.replace(baseDir, "")
 
-		delim = ","
-		if SublimeSocketAPISettings.GETALLFILEPATH_DELIM in params:
-			delim = params[SublimeSocketAPISettings.GETALLFILEPATH_DELIM]
+				paths.append(partialPath)
+				fullpaths.append(fullPath)
 
-		joinedPathsStr = delim.join(pathArray)
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.GETALLFILEPATH_INJECTIONS,
+			[baseDir, paths, fullpaths],
+			results
+		)
 
-		self.setResultsParams(results, self.getAllFilePath, {"result":joinedPathsStr, SublimeSocketAPISettings.GETALLFILEPATH_HEADER:header, SublimeSocketAPISettings.GETALLFILEPATH_FOOTER:footer, SublimeSocketAPISettings.GETALLFILEPATH_DELIM:delim})
+		self.setResultsParams(results, self.getAllFilePath, {"paths": paths, "basedir": baseDir})
+
 
 	def readFile(self, params, results):
 		assert SublimeSocketAPISettings.READFILE_PATH in params, "readFile require 'path' param."
@@ -1958,8 +1958,21 @@ class SublimeSocketAPI:
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)
 
 		assert view, "forcelySave require 'view' or 'path' params."
+		
+		regions = view.get_regions()
+		print("regions", regions)
+
+		name = os.path.basename(path)
 
 		self.editorAPI.runCommandOnView(view, 'forcely_save')
+
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.FORCELYSAVE_INJECTIONS,
+			[path, name],
+			results
+		)
+
 		self.setResultsParams(results, self.forcelySave, {})
 		
 
@@ -2259,8 +2272,8 @@ class SublimeSocketAPI:
 
 
 	## collect current views
-	def collectViews(self, results):
-		collectedViews = []
+	def collectViews(self, params, results):
+		collecteds = []
 		for views in [window.views() for window in self.editorAPI.windows()]:
 			for view in views:
 				viewParams = self.editorAPI.generateSublimeViewInfo(
@@ -2286,9 +2299,16 @@ class SublimeSocketAPI:
 					results
 				)
 
-				collectedViews.append(viewParams[SublimeSocketAPISettings.VIEW_PATH])
+				collecteds.append(viewParams[SublimeSocketAPISettings.VIEW_PATH])
 
-		self.setResultsParams(results, self.collectViews, {"collected":collectedViews})
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.COLLECTVIEWS_INJECTIONS,
+			[collecteds],
+			results
+		)
+
+		self.setResultsParams(results, self.collectViews, {"collecteds":collecteds})
 	
 
 	def runRenew(self, eventParam):

@@ -913,6 +913,33 @@ test>そのビューの文字列が減ったら、ss_v_decreasedイベントが�
 }
 
 
+test>openFileしてforcelySave/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->forcelySave: {
+    "name": "sample.txt",
+    "injects": {
+        "name": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+      
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "forcelySave with selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "sample.txt"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
 test>強制セーブ/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->forcelySave: {
@@ -930,6 +957,27 @@ test>強制セーブ/openFile: {
 }
 
 
+test>getAllFilePathとselectors/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->getAllFilePath: {
+    "anchor": "tests.html",
+    "limit": 1,
+    "selectors": [
+        {
+            "showAtLog<-paths, fullpaths, basedir": {
+                "format": "the basedir + paths + fullpaths"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "getAllFilePath with selectors",
+    "isnotempty": "showAtLog",
+    "description": "not match."
+}->closeFile: {
+    "name": "sample.txt"
+}
+
+
 test>存在しないファイルのパスを指定して、getAllFilePathがnotexistを発生させる/createBuffer: {
     "name": "notFoundFile.txt"
 }->getAllFilePath: {
@@ -939,7 +987,8 @@ test>存在しないファイルのパスを指定して、getAllFilePathがnote
     "id": "the getAllFilePath testing",
     "contains": {
         "getAllFilePath": {
-            "result": "notexist"
+            "paths": [],
+            "basedir": ""
         }
     },
     "description": "not match."
@@ -2066,7 +2115,27 @@ test>ファイルを閉じる/openFile: {
 }
 
 
-test>ファイルが存在するviewを集める。一つ以上のファイルパスがあるはず/openFile: {
+test>collectしたviewに対してselectors/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->collectViews: {
+    "injects": {
+        "collecteds": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "collectViews with selectors",
+    "isnotempty": "showAtLog",
+    "description": "not match."
+}
+
+
+test>現在開いているviewを集める。一つ以上のファイルパスがあるはず/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->collectViews: {
     
