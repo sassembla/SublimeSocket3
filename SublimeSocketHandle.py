@@ -158,7 +158,7 @@ class SublimeSocketThread(threading.Thread):
         SublimeSocketAPISettings.REACTOR_VIEWKEY_ID,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_PATH,
-        SublimeSocketAPISettings.REACTOR_VIEWKEY_BASENAME,
+        SublimeSocketAPISettings.REACTOR_VIEWKEY_NAME,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_SELECTEDS,
         SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST

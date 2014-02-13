@@ -8,17 +8,17 @@ from ... import SublimeSocketAPISettings
 
 ## sublime dependents apis and functions.
 class EditorAPI:
-	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewBaseNameKey, viewVNameKey, viewSelectedsKey, isViewExist):
+	def generateSublimeViewInfo(self, viewInstance, viewKey, viewIdKey, viewBufferIdKey, viewPathKey, viewNameKey, viewVNameKey, viewSelectedsKey, isViewExist):
 		existOrNot = False
 
 		if self.isBuffer(viewInstance.file_name()):
 			fileName = viewInstance.name()
-			baseName = fileName
+			name = fileName
 			
 		else:
 			existOrNot = True
 			fileName = viewInstance.file_name()
-			baseName = os.path.basename(fileName)
+			name = os.path.basename(fileName)
 		
 		selecteds = []
 
@@ -34,7 +34,7 @@ class EditorAPI:
 			viewIdKey: viewInstance.id(),
 			viewBufferIdKey: viewInstance.buffer_id(),
 			viewPathKey: fileName,
-			viewBaseNameKey: baseName,
+			viewNameKey: name,
 			viewVNameKey: viewInstance.name(),
 			viewSelectedsKey: selecteds,
 			isViewExist: existOrNot
@@ -187,3 +187,5 @@ class EditorAPI:
 	def getTextPoint(self, view, line):
 		return view.text_point(line, 0)
 		
+	def getLineFromPoint(self, view, count):
+		return view.rowcol(count)

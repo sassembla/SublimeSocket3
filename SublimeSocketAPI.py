@@ -91,6 +91,7 @@ class SublimeSocketAPI:
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
 	def runAPI(self, baseCommand, baseParams, clientId=None, injectedParams=None, results=None):
+
 		command, params = SushiJSONParser.composeParams(baseCommand, baseParams, injectedParams)
 		  		
   		# python-switch
@@ -300,7 +301,7 @@ class SublimeSocketAPI:
 
 				break
 
-		
+
 		keys = []
 		values = []
 		for key, val in eventParam.items():
@@ -341,7 +342,7 @@ class SublimeSocketAPI:
 	def foundation_noViewFound(self, reactDicts, eventParam, results):
 		for target in list(reactDicts):
 			params = reactDicts[target]
-			
+
 			keys = []
 			values = []
 			for key, val in eventParam.items():
@@ -780,12 +781,10 @@ class SublimeSocketAPI:
 
 		if debug:
 			print("resultParam:"+str(resultParam))
+		
 
-		# run selector.
-		# inject all keys and values.
 		keys = []
 		values = []
-
 		for key, val in resultParam.items():
 			keys.append(key)
 			values.append(val)
@@ -1117,7 +1116,7 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.VIEW_ID,
 			SublimeSocketAPISettings.VIEW_BUFFERID,
 			SublimeSocketAPISettings.VIEW_PATH,
-			SublimeSocketAPISettings.VIEW_BASENAME,
+			SublimeSocketAPISettings.VIEW_NAME,
 			SublimeSocketAPISettings.VIEW_VNAME,
 			SublimeSocketAPISettings.VIEW_SELECTEDS,
 			SublimeSocketAPISettings.VIEW_ISEXIST
@@ -1179,7 +1178,7 @@ class SublimeSocketAPI:
 							SublimeSocketAPISettings.VIEW_ID,
 							SublimeSocketAPISettings.VIEW_BUFFERID,
 							SublimeSocketAPISettings.VIEW_PATH,
-							SublimeSocketAPISettings.VIEW_BASENAME,
+							SublimeSocketAPISettings.VIEW_NAME,
 							SublimeSocketAPISettings.VIEW_VNAME,
 							SublimeSocketAPISettings.VIEW_SELECTEDS,
 							SublimeSocketAPISettings.VIEW_ISEXIST
@@ -1198,7 +1197,7 @@ class SublimeSocketAPI:
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.OPENFILE_INJECTIONS,
-			[original_path],
+			[original_path, os.path.basename(original_path)],
 			results
 		)
 
@@ -1211,24 +1210,26 @@ class SublimeSocketAPI:
 		name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
 		view = self.internal_detectViewInstance(name)
 		
+		path = self.internal_detectViewPath(view)
+
 		self.editorAPI.closeView(view)
 		self.setResultsParams(results, self.closeFile, {"name":name})
 
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.CLOSEFILE_INJECTIONS,
-			[name],
+			[path, name],
 			results
 		)
 
 	def closeAllBuffer(self, params, results):
-		closed = []
+		closeds = []
 
 		def close(window):
 			for view in self.editorAPI.viewsOfWindow(window):
 				path = self.internal_detectViewPath(view)
 				if self.editorAPI.isBuffer(path):
-					closed.append(path)
+					closeds.append(path)
 
 					self.editorAPI.closeView(view)
 
@@ -1237,11 +1238,11 @@ class SublimeSocketAPI:
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.CLOSEALLBUFFER_INJECTIONS,
-			[closed],
+			[closeds],
 			results
 		)
 
-		self.setResultsParams(results, self.closeAllBuffer, {"closed":closed})
+		self.setResultsParams(results, self.closeAllBuffer, {"closeds":closeds})
 
 	# run selected regions.
 	def selectedRegions(self, params, results):
@@ -1516,6 +1517,8 @@ class SublimeSocketAPI:
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
 		
+		name = os.path.basename(path)
+		
 		if view:
 			name = path
 			if SublimeSocketAPISettings.VIEWEMIT_NAME in params:
@@ -1540,7 +1543,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
-					[body, modifiedPath, rowColStr, identity], 
+					[body, path, name, modifiedPath, rowColStr, identity], 
 					results)
 
 				self.setResultsParams(results, self.viewEmit, {
@@ -1554,17 +1557,24 @@ class SublimeSocketAPI:
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
 		assert view and path, "modifyView require 'view' or 'name' params."
 
+		name = os.path.basename(path)
+		line = 0
+		to = 0
+
 		if SublimeSocketAPISettings.MODIFYVIEW_ADD in params:
 			add = params[SublimeSocketAPISettings.MODIFYVIEW_ADD]
 
 			# insert text to the view with "to" or "line" param, or other.
 			if SublimeSocketAPISettings.MODIFYVIEW_TO in params:
-				to = params[SublimeSocketAPISettings.MODIFYVIEW_TO]
+				to = int(params[SublimeSocketAPISettings.MODIFYVIEW_TO])
+				line = self.editorAPI.getLineFromPoint(view, to)
+
 				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
 
 			elif SublimeSocketAPISettings.MODIFYVIEW_LINE in params:
-				line = params[SublimeSocketAPISettings.MODIFYVIEW_LINE]
+				line = int(params[SublimeSocketAPISettings.MODIFYVIEW_LINE])
 				to = self.editorAPI.getTextPoint(view, line)
+
 				self.editorAPI.runCommandOnView(view, 'insert_text', {'string': add, "fromParam":to})
 
 			# no "line" set = append the text to next to the last character of the view.
@@ -1577,14 +1587,15 @@ class SublimeSocketAPI:
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.MODIFYVIEW_INJECTIONS,
-			[path],
+			[path, name, line, to],
 			results
 		)
 
 	## generate selection to view
 	def setSelection(self, params, results):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
-		
+		name = os.path.basename(path)
+
 		assert view, "setSelection require 'view' or 'name' param."
 		
 		assert SublimeSocketAPISettings.SETSELECTION_SELECTIONS in params, "setSelection require 'selections' param."
@@ -1615,7 +1626,7 @@ class SublimeSocketAPI:
 			SublimeSocketAPISettings.VIEW_ID,
 			SublimeSocketAPISettings.VIEW_BUFFERID,
 			SublimeSocketAPISettings.VIEW_PATH,
-			SublimeSocketAPISettings.VIEW_BASENAME,
+			SublimeSocketAPISettings.VIEW_NAME,
 			SublimeSocketAPISettings.VIEW_VNAME,
 			SublimeSocketAPISettings.VIEW_SELECTEDS,
 			SublimeSocketAPISettings.VIEW_ISEXIST)
@@ -1629,7 +1640,7 @@ class SublimeSocketAPI:
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.SETSELECTION_INJECTIONS,
-			[path, selecteds],
+			[path, name, selecteds],
 			results
 		)
 
@@ -1640,8 +1651,17 @@ class SublimeSocketAPI:
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CLEARSELECTION_VIEW, SublimeSocketAPISettings.CLEARSELECTION_NAME)
 		assert view, "clearSelection require 'view' or 'name' param."
 		
-		self.editorAPI.clearSelectionOfView(view)
+		name = os.path.basename(path)
+
+		cleards = self.editorAPI.clearSelectionOfView(view)
 		
+		self.runAllSelector(
+			params,
+			SublimeSocketAPISettings.CLEARSELECTION_INJECTIONS,
+			[path ,name, cleards],
+			results
+		)
+
 		self.setResultsParams(results, self.clearSelection, {"cleareds":cleards})
 
 
@@ -1667,7 +1687,13 @@ class SublimeSocketAPI:
 		condition = params[SublimeSocketAPISettings.APPENDREGION_CONDITION]
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.APPENDREGION_VIEW, SublimeSocketAPISettings.APPENDREGION_NAME)
-			
+		
+
+		if SublimeSocketAPISettings.APPENDREGION_NAME in params:
+			name = params[SublimeSocketAPISettings.APPENDREGION_NAME]
+		else:
+			name = os.path.basename(path)
+
 		# add region
 		if view:
 			regions = []
@@ -1697,12 +1723,12 @@ class SublimeSocketAPI:
 
 		# raise no view found
 		else:
+			print("このへん気になる。")
 			# use name param to notify the name of the view which not opened in editor.
 			if SublimeSocketAPISettings.APPENDREGION_NAME in params:
 				name = params[SublimeSocketAPISettings.APPENDREGION_NAME]
 			else:
 				return
-
 			currentParams = {}
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_PATH] = name
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_LINE] = line
@@ -2216,7 +2242,7 @@ class SublimeSocketAPI:
 			
 			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
-				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_BASENAME]
+				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_NAME]
 				if viewBasename in viewSearchSource:
 					return viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]
 
@@ -2235,7 +2261,7 @@ class SublimeSocketAPI:
 					SublimeSocketAPISettings.VIEW_ID,
 					SublimeSocketAPISettings.VIEW_BUFFERID,
 					SublimeSocketAPISettings.VIEW_PATH,
-					SublimeSocketAPISettings.VIEW_BASENAME,
+					SublimeSocketAPISettings.VIEW_NAME,
 					SublimeSocketAPISettings.VIEW_VNAME,
 					SublimeSocketAPISettings.VIEW_SELECTEDS,
 					SublimeSocketAPISettings.VIEW_ISEXIST
@@ -2279,7 +2305,7 @@ class SublimeSocketAPI:
 		viewInfo[SublimeSocketAPISettings.VIEW_ISEXIST] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_ISEXIST]
 		viewInfo[SublimeSocketAPISettings.VIEW_ID] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_ID]
 		viewInfo[SublimeSocketAPISettings.VIEW_BUFFERID] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_BUFFERID]
-		viewInfo[SublimeSocketAPISettings.VIEW_BASENAME] = filePath
+		viewInfo[SublimeSocketAPISettings.VIEW_NAME] = filePath
 		viewInfo[SublimeSocketAPISettings.VIEW_VNAME] = eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_VNAME]
 		viewInfo[SublimeSocketAPISettings.VIEW_SELF] = viewInstance
 
@@ -2388,18 +2414,10 @@ class SublimeSocketAPI:
 					if not self.isExecutableWithDelay(eventName, target, delay):
 						pass
 					else:
-						# inject all keys and values.
-						keys = []
-						values = []
-
-						for key, val in eventParam.items():
-							keys.append(key)
-							values.append(val)
-
 						self.runAllSelector(
 							params, 
-							keys, 
-							values, 
+							eventParam.keys(), 
+							eventParam.values(), 
 							results)
 
 		elif eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
