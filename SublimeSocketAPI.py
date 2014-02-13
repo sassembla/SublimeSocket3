@@ -1959,9 +1959,6 @@ class SublimeSocketAPI:
 
 		assert view, "forcelySave require 'view' or 'path' params."
 		
-		regions = view.get_regions()
-		print("regions", regions)
-
 		name = os.path.basename(path)
 
 		self.editorAPI.runCommandOnView(view, 'forcely_save')

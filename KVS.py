@@ -23,6 +23,11 @@ class KVS:
 		if key in self.keyValueDict:
 			return self.keyValueDict[key]
 
+
+	def getAll(self):
+		return self.keyValueDict
+
+
 	## get all key-value
 	def items(self):
 		return self.keyValueDict.items()

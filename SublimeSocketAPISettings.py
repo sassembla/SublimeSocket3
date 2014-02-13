@@ -59,8 +59,6 @@ REGION_UUID_PREFIX			= "ss_"
 
 
 
-
-
 # API
 
 SSAPI_PREFIX				= "sublimesocket"

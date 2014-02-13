@@ -169,6 +169,9 @@ class SublimeSocketServer:
 		self.kvs.clear()
 
 
+	def showAllKeysAndValues(self):
+		everything = self.kvs.getAll()
+		print("everything", everything)
 
 
 	# views and KVS

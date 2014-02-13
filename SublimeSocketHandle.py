@@ -140,8 +140,16 @@ class SublimeSocketThread(threading.Thread):
     self.server.resetServer()
 
 
+
+  def showKVS(self):
+    self.server.showAllKeysAndValues()
+
+  def flushKVS(self):
+    self.server.clearAllKeysAndValues()
+
+
   # send eventName and data to server. gen results from here for view-oriented-event-fireing.
-  def toSublimeSocketServer(self, eventName, view):
+  def viewEmitViaSublime(self, eventName, view):
     if self.server:
 
       if not view:
@@ -199,14 +207,26 @@ class SublimeSocketThread(threading.Thread):
 
 class Kvs_show(sublime_plugin.TextCommand):
   def run(self, edit):
-    print("kvsのgetとかやる、broadcastかな。")
+    global thread
+
+    if thread and thread.is_alive():
+      thread.showKVS()
+    else:
+      message = "SublimeSocket not yet activated."
+      sublime.status_message(message)
+      print("ss:", message)
+
 
 class Kvs_flush(sublime_plugin.TextCommand):
   def run(self, edit):
-    print("kvsのflushとかやる")
+    global thread
 
-
-
+    if thread and thread.is_alive():
+      thread.flushKVS()
+    else:
+      message = "SublimeSocket not yet activated."
+      sublime.status_message(message)
+      print("ss:", message)
 
 
 # view listeners
@@ -251,7 +271,7 @@ class CaptureEditing(sublime_plugin.EventListener):
     global thread
 
     if thread and thread.is_alive():
-      thread.toSublimeSocketServer(eventName, view)
+      thread.viewEmitViaSublime(eventName, view)
 
 
   def updateViewInfo(self, view):
