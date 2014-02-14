@@ -373,7 +373,7 @@ class SublimeSocketAPI:
 		else:
 			self.counts[label] = params[SublimeSocketAPISettings.COUNTUP_DEFAULT]
 
-		result = self.counts[label]
+		result = {label:self.counts[label]}
 
 		self.runAllSelector(
 			params, 
@@ -1732,7 +1732,6 @@ class SublimeSocketAPI:
 
 		# raise no view found
 		else:
-			print("このへん気になる。")
 			# use name param to notify the name of the view which not opened in editor.
 			if SublimeSocketAPISettings.APPENDREGION_NAME in params:
 				name = params[SublimeSocketAPISettings.APPENDREGION_NAME]
