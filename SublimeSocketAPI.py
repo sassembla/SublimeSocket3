@@ -373,12 +373,12 @@ class SublimeSocketAPI:
 		else:
 			self.counts[label] = params[SublimeSocketAPISettings.COUNTUP_DEFAULT]
 
-		result = {label:self.counts[label]}
+		result = self.counts[label]
 
 		self.runAllSelector(
 			params, 
 			SublimeSocketAPISettings.COUNTUP_INJECTIONS,
-			[result],
+			[label, result],
 			results
 		)
 
@@ -1523,7 +1523,7 @@ class SublimeSocketAPI:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
-		
+		assert view, "no view," + str(view) + str(path)
 		name = ""
 
 		if SublimeSocketAPISettings.VIEWEMIT_NAME in params:

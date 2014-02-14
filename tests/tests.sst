@@ -1009,13 +1009,54 @@ test>basePathを足がかりに特定のファイルが含まれるフォルダ�
 }
 
 
+test>countUpとresetCount/countUp: {
+    "label": "testCount3",
+    "default": 0
+}->countUp: {
+    "label": "testCount3",
+    "default": 0,
+    "selectors": [
+        {
+            "showAtLog<-result": {
+                "format": "one, result"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "
+    . is 1",
+    "contains": {
+        "showAtLog": {
+            "output": "one, 1"
+        }
+    },
+    "description": "not match."
+}->resetCounts: {
+    "label": "testCount3"
+}->countUp: {
+    "label": "testCount3",
+    "default": -100,
+    "selectors": [
+        {
+            "showAtLog<-result": {
+                "format": "two, result"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "reset count is done. is 0",
+    "contains": {
+        "showAtLog": {
+            "output": "two, -100"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>selectorsと/countUp: {
     "label": "testCount",
     "default": 0,
-    "injects": {
-        "result": "result",
-        "label": "label"
-    },
     "selectors": [
         {
             "showAtLog<-result, label": {
@@ -2799,8 +2840,7 @@ test>空のreactorをリセットする/resetReactors: {
             "deleteds": []
         }
     },
-    "description": "not match",
-    "debug": true
+    "description": "not match"
 }
 
 
