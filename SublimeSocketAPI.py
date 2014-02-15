@@ -118,6 +118,10 @@ class SublimeSocketAPI:
 				self.assertResult(params, results)
 				break
 
+			if case(SublimeSocketAPISettings.API_AFTERASYNC):
+				self.afterAsync(params, results)
+				break
+
 			if case(SublimeSocketAPISettings.API_COUNTUP):
 				self.countUp(params, results)
 				break			
@@ -370,6 +374,30 @@ class SublimeSocketAPI:
 				values, 
 				results)
 
+	def afterAsync(self, params, results):
+		assert SublimeSocketAPISettings.ASYNC_IDENTITY in params, "afterAsync require 'identity' param."
+		assert SublimeSocketAPISettings.ASYNC_MS in params, "afterAsync require 'ms' param."
+
+		assert SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params, "afterAsync require 'selectors' param."
+
+		identity = params[SublimeSocketAPISettings.ASYNC_IDENTITY]
+		ms = params[SublimeSocketAPISettings.ASYNC_MS]
+		
+		msNum = int(ms)
+
+		def afterWait(params):
+			self.runAllSelector(
+				params, 
+				[],
+				[],
+				None
+			)
+
+		# 実戦したい物事は、こいつが何回か起こったとき、threadでイグナイターが走っても何も起こらない、というもの。
+		self.asyncDict[identity] = {}
+		self.asyncDict[identity][currentIdentity] = afterWait
+
+		
 
 	## count up specified labelled param.
 	def countUp(self, params, results):
@@ -688,12 +716,18 @@ class SublimeSocketAPI:
 			line = None
 			count = params[SublimeSocketAPISettings.SCROLLTO_COUNT]
 			
-		self.editorAPI.scrollTo(view, line, count)
+
+		lineNum = int(line)
+		countNum = int(count)
+
+		self.editorAPI.scrollTo(view, lineNum, countNum)
 		
 		self.setResultsParams(results, self.scrollTo, {})
 
 
 	def transform(self, params, results):
+		assert SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params, "transform require 'selectors' param."
+
 		code = None
 
 		if SublimeSocketAPISettings.TRANSFORM_PATH in params:
