@@ -100,22 +100,23 @@ class SushiJSONParser():
 		command = command.replace(" ", "")
 
 		# calc "<-" inject param.
-		if injects and SUSHIJSON_COMMAND_KEYWORD_INJECT in command:
+		if SUSHIJSON_COMMAND_KEYWORD_INJECT in command:
 			commandBase = command
 
 			splitted = command.split(SUSHIJSON_COMMAND_KEYWORD_INJECT, 1)
 			command = splitted[0]
-			
-			accepts = splitted[1].split(SUSHIJSON_COMMAND_KEYWORD_DELIM)
-			
-			# empty "<-" means all injective will be inject.
-			if len(accepts) == 1 and accepts[0] == "":
-				accepts = list(injects)
-			
-			for acceptKey in accepts:
-				assert acceptKey in injects, "failed to inject non-injected param:" + acceptKey + " in:" + str(injects) + " at:" + commandBase
-				params[acceptKey] = injects[acceptKey]
 
+			if injects:
+				accepts = splitted[1].split(SUSHIJSON_COMMAND_KEYWORD_DELIM)
+			
+				# empty "<-" means all injective will be inject.
+				if len(accepts) == 1 and accepts[0] == "":
+					accepts = list(injects)
+				
+				for acceptKey in accepts:
+					assert acceptKey in injects, "failed to inject non-injected param:" + acceptKey + " in:" + str(injects) + " at:" + commandBase
+					params[acceptKey] = injects[acceptKey]
+			
 		return command, params
 
 

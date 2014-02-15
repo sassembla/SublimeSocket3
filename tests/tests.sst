@@ -603,8 +603,7 @@ test>modifyView と selectors/createBuffer: {
             "output": "some"
         }
     },
-    "description": "not match.",
-    "debug": true
+    "description": "not match."
 }
 
 
@@ -1009,7 +1008,7 @@ test>basePathを足がかりに特定のファイルが含まれるフォルダ�
 }
 
 
-test>countUpとresetCount/countUp: {
+test>countUpとresetCounts/countUp: {
     "label": "testCount3",
     "default": 0
 }->countUp: {
@@ -1017,8 +1016,8 @@ test>countUpとresetCount/countUp: {
     "default": 0,
     "selectors": [
         {
-            "showAtLog<-result": {
-                "format": "one, result"
+            "showAtLog<-count": {
+                "format": "one, count"
             }
         }
     ]
@@ -1038,8 +1037,8 @@ test>countUpとresetCount/countUp: {
     "default": -100,
     "selectors": [
         {
-            "showAtLog<-result": {
-                "format": "two, result"
+            "showAtLog<-count": {
+                "format": "two, count"
             }
         }
     ]
@@ -1059,8 +1058,8 @@ test>selectorsと/countUp: {
     "default": 0,
     "selectors": [
         {
-            "showAtLog<-result, label": {
-                "format": "label:result"
+            "showAtLog<-count, label": {
+                "format": "label:count"
             }
         }
     ]
@@ -1071,8 +1070,7 @@ test>selectorsと/countUp: {
             "output": "testCount:0"
         }
     },
-    "description": "not match.",
-    "debug": true
+    "description": "not match."
 }->resetCounts: {
     
 }
@@ -2325,6 +2323,34 @@ test>現在開いているファイルに対するviewEmitのテスト。特定�
 }
 
 
+test>eventEmitでのaccepts機構のテスト、eventEmit側にinjectsが無いver/setEventReactor: {
+    "target": "acceptTest",
+    "react": "event_accept_event",
+    "accepts":[
+        "messageFromEventEmit"
+    ],
+    "selectors": [
+        {
+            "showAtLog<-messageFromEventEmit": {
+                "format": "from messageFromEventEmit"
+            }
+        }
+    ]
+}->eventEmit: {
+    "target": "acceptTest",
+    "event": "event_accept_event",
+    "messageFromEventEmit": "the message from eventEmit"
+}->assertResult: {
+    "id": "eventEmit with accepts",
+    "contains": {
+        "showAtLog": {
+            "output": "from the message from eventEmit"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>eventEmitでselectors/eventEmit: {
     "target": "myEvent",
     "event": "event_testSelectors",
@@ -2667,8 +2693,7 @@ test>Clientのidentityを変更する/changeIdentity: {
             "output": "sublimesockettest becomes test."
         }
     },
-    "description": "not match",
-    "debug": true
+    "description": "not match"
 }->changeIdentity: {
     "from": "test",
     "to": "sublimesockettest"
