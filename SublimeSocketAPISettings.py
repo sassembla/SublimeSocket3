@@ -138,6 +138,10 @@ AFTERASYNC_IDENTITY			= "identity"
 AFTERASYNC_MS				= "ms"
 
 
+API_WAIT					= "wait"
+WAIT_MS						= "ms"
+
+
 API_COUNTUP					= "countUp"
 COUNTUP_LABEL				= "label"
 COUNTUP_DEFAULT				= "default"

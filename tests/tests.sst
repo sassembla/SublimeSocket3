@@ -3609,3 +3609,180 @@ test>ダイアログをフォーマット付きで表示/showDialog: {
     },
     "description": "not match."
 }
+
+
+test>afterAsyncのtest/afterAsync: {
+    "identity": "testIdentity",
+    "ms": 100,
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "hello after 100"
+            }
+        }
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check simple afterAsync",
+    "contains": {
+        "showAtLog": {
+            "output": "hello after 100"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>afterAsyncの多重動作test/afterAsync: {
+    "identity": "testIdentity",
+    "ms": 100,
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "hello after 100"
+            }
+        }
+    ]
+}->afterAsync: {
+    "identity": "testIdentity",
+    "ms": 150,
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "hello after 150"
+            }
+        }
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check dual afterAsync 1",
+    "notcontains": {
+        "showAtLog": {
+            "output": "hello after 100"
+        }
+    },
+    "description": "not match."
+}->assertResult: {
+    "id": "check dual afterAsync 2",
+    "contains": {
+        "showAtLog": {
+            "output": "hello after 150"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>afterAsyncとinjects/afterAsync: {
+    "identity": "testIdentity",
+    "ms": 100,
+    "message": "message after 100!",
+    "selectors": [
+        {
+            "showAtLog<-message": {
+
+            }
+        }
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check with simple injects for afterAsync",
+    "contains": {
+        "showAtLog": {
+            "output": "message after 100!"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>afterAsyncとinjects その2/afterAsync: {
+    "identity": "testIdentity",
+    "ms": 100,
+    "currentMessage": "message after 100! take2",
+    "injects": {
+        "currentMessage": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {
+
+            }
+        }
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check with injects for afterAsync",
+    "contains": {
+        "showAtLog": {
+            "output": "message after 100! take2"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>afterAsyncのcancel動作/afterAsync: {
+    "identity": "testIdentity",
+    "ms": 100,
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "hello after 100"
+            }
+        }
+    ]
+}->afterAsync: {
+    "identity": "testIdentity",
+    "ms": 150,
+    "selectors": [
+        
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check cancel afterAsync",
+    "notcontains": {
+        "showAtLog": {
+            "output": "hello after 100"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>afterAsyncの他selectorsからの動作/createBuffer: {
+    "name": "bufferForAsync.txt"
+}->viewEmit: {
+    "identity": "identityOfAfterAsync",
+    "name": "bufferForAsync.txt",
+    "selectors": [
+        {
+            "afterAsync": {
+                "identity": "testIdentity",
+                "ms": 100,
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "hello after 100 take3"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->wait:{
+    "ms": 200
+}->assertResult: {
+    "id": "check afterAsync from other selectors",
+    "contains": {
+        "showAtLog": {
+            "output": "hello after 100 take3"
+        }
+    },
+    "description": "not match."
+}

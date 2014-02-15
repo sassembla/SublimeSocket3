@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import threading
 import shlex
 import os
 import time
@@ -32,6 +33,7 @@ class SublimeSocketAPI:
 		self.isTesting = False
 		self.globalResults = []
 
+		self.asyncDict = {}
 		self.counts = {}
 
 		self.setSublimeSocketWindowBasePath(None)
@@ -120,6 +122,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_AFTERASYNC):
 				self.afterAsync(params, results)
+				break
+
+			if case(SublimeSocketAPISettings.API_WAIT):
+				self.wait(params, results)
 				break
 
 			if case(SublimeSocketAPISettings.API_COUNTUP):
@@ -374,30 +380,49 @@ class SublimeSocketAPI:
 				values, 
 				results)
 
+
 	def afterAsync(self, params, results):
-		assert SublimeSocketAPISettings.ASYNC_IDENTITY in params, "afterAsync require 'identity' param."
-		assert SublimeSocketAPISettings.ASYNC_MS in params, "afterAsync require 'ms' param."
+		assert SublimeSocketAPISettings.AFTERASYNC_IDENTITY in params, "afterAsync require 'identity' param."
+		assert SublimeSocketAPISettings.AFTERASYNC_MS in params, "afterAsync require 'ms' param."
 
 		assert SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params, "afterAsync require 'selectors' param."
 
-		identity = params[SublimeSocketAPISettings.ASYNC_IDENTITY]
-		ms = params[SublimeSocketAPISettings.ASYNC_MS]
+		currentParams = params
+		identity = params[SublimeSocketAPISettings.AFTERASYNC_IDENTITY]
+		ms = params[SublimeSocketAPISettings.AFTERASYNC_MS]
 		
 		msNum = int(ms)
 
-		def afterWait(params):
-			self.runAllSelector(
-				params, 
-				[],
-				[],
-				None
-			)
+		def afterWait(asyncedIdentity, runtimeIdentity, results):
+			if identity != asyncedIdentity:
+				return
 
-		# 実戦したい物事は、こいつが何回か起こったとき、threadでイグナイターが走っても何も起こらない、というもの。
-		self.asyncDict[identity] = {}
-		self.asyncDict[identity][currentIdentity] = afterWait
+			if identity in self.asyncDict:
+				if runtimeIdentity == self.asyncDict[identity]["runtimeIdentity"]:
+					self.runAllSelector(
+						currentParams, 
+						currentParams.keys(),
+						currentParams.values(),
+						results
+					)
 
-		
+				else:
+					self.editorAPI.printMessage("updated by new same-identity afterAsync:"+identity)
+
+		runtimeIdentity = str(uuid.uuid4())
+		self.asyncDict[identity] = {"runtimeIdentity":runtimeIdentity}
+
+		threading.Timer(msNum*0.001, afterWait, [identity, runtimeIdentity, results]).start()
+
+
+	def wait(self, params, results):
+		assert SublimeSocketAPISettings.WAIT_MS in params, "wait require 'ms' param."
+
+		waitMS = params[SublimeSocketAPISettings.WAIT_MS]
+		waitMSNum = int(waitMS)
+
+		time.sleep(waitMSNum*0.001)
+
 
 	## count up specified labelled param.
 	def countUp(self, params, results):
@@ -709,18 +734,15 @@ class SublimeSocketAPI:
 			return
 
 		if SublimeSocketAPISettings.SCROLLTO_LINE in params:
-			line = params[SublimeSocketAPISettings.SCROLLTO_LINE]
+			line = int(params[SublimeSocketAPISettings.SCROLLTO_LINE])
 			count = 0
 
 		elif SublimeSocketAPISettings.SCROLLTO_COUNT in params:
 			line = None
-			count = params[SublimeSocketAPISettings.SCROLLTO_COUNT]
+			count = int(params[SublimeSocketAPISettings.SCROLLTO_COUNT])
 			
 
-		lineNum = int(line)
-		countNum = int(count)
-
-		self.editorAPI.scrollTo(view, lineNum, countNum)
+		self.editorAPI.scrollTo(view, line, count)
 		
 		self.setResultsParams(results, self.scrollTo, {})
 
