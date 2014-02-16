@@ -40,7 +40,7 @@ test>readFileからselectors/readFile: {
     "selectors": [
         {
             "showAtLog<-data, originalpath": {
-                "format": "originalpath, data"
+                "format": "[originalpath], [data]"
             }
         }
     ]
@@ -100,7 +100,7 @@ output({\"name\":name, \"tail\":tail, \"message\":str(tail)})
                 "selectors": [
                     {
                         "showAtLog<-name, tail": {
-                            "format": "name and tail."
+                            "format": "[name] and [tail]."
                         }
                     },
                     {
@@ -233,6 +233,36 @@ test>APIDefined以外のinjectsを反映させる/createBuffer: {
 }
 
 
+test>defineFilterでinjectsを使わない場合/defineFilter: {
+    "name": "defineFilterWithoutInjects",
+    "patterns": [
+        {
+            "(.*), (.*)": {
+                "selectors": [
+                    {
+                        "showAtLog<-groups[0], groups[1]": {
+                            "format": "hahaha, [groups[0]], [groups[1]]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->filtering: {
+    "name": "defineFilterWithoutInjects",
+    "source": "a, b",
+    "debug": true
+}->assertResult: {
+    "id": "defineFilter without injects.",
+    "contains": {
+        "showAtLog": {
+            "output": "hahaha, a, b"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>nestしたfilterでのバグ、selectorの変更が効かない、かと思ったが、injectsの非交換バグだった。/createBuffer: {
     "name": "nestedFilterCase.txt"
 }->defineFilter: {
@@ -240,48 +270,37 @@ test>nestしたfilterでのバグ、selectorの変更が効かない、かと思
     "patterns": [
         {
             "(.*)1 (.*)2 ([0-9].*?)a3 (.*)4": {
+                "injects": {
+                    "groups[3]": "name",
+                    "groups[1]": "add",
+                    "groups[2]": "to"
+                },
                 "selectors": [
                     {
-                        "transform": {
-                            "injective-name": "groups[3]",
-                            "injective-add": "groups[1]",
-                            "injective-to": "groups[2]",
-                            "code": "
-name = inputs[\"injective-name\"]\n
-add = inputs[\"injective-add\"]\n
-to = inputs[\"injective-to\"]\n
-
-output({\"name\":name, \"add\":add, \"to\":to,\"message\":to})",
-                            "selectors": [
+                        "showToolTip<-name, add, to": {
+                            "injects": {
+                                "name": "name",
+                                "add": "add",
+                                "to": "to"
+                            },
+                            "onselected": [
                                 {
-                                    "showToolTip<-name, add, to, message": {
-                                        "injects": {
-                                            "name": "name",
-                                            "add": "add",
-                                            "to": "to",
-                                            "message": "message"
-                                        },
-                                        "onselected": [
-                                            {
-                                                "fix?": [
-                                                    {
-                                                        "modifyView<-name, add, to": {
-                                                            
-                                                        }
-                                                    },
-                                                    {
-                                                        "showAtLog<-message": {
-                                                            
-                                                        }
-                                                    }
-                                                ]
+                                    "fix?": [
+                                        {
+                                            "modifyView<-name, add, to": {
+                                                
                                             }
-                                        ],
-                                        "oncancelled": [
-                                            
-                                        ]
-                                    }
+                                        },
+                                        {
+                                            "showAtLog<-add": {
+                                                "format": "the [add] will be add-ed."
+                                            }
+                                        }
+                                    ]
                                 }
+                            ],
+                            "oncancelled": [
+                                
                             ]
                         }
                     }
@@ -296,7 +315,7 @@ output({\"name\":name, \"add\":add, \"to\":to,\"message\":to})",
     "id": "inject works with out of APIDefined injection.",
     "contains": {
         "showAtLog": {
-            "output": "4"
+            "output": "the test will be add-ed."
         }
     },
     "description": "not match."
@@ -424,8 +443,8 @@ test>quickFix的な機構のテスト、appendRegionからのToolTip、filterで
             "^(.*)": {
                 "selectors": [
                     {
-                        "showAtLog": {
-                            "message": "quickfix ready. groups[0]"
+                        "showAtLog<-groups[0]": {
+                            "format": "quickfix ready. [groups[0]]"
                         }
                     }
                 ]
@@ -502,7 +521,7 @@ test>parameterInjectの上書き内容に関するaccept制約のテスト。bod
     "selectors": [
         {
             "showAtLog<-body": {
-                "format": "path body."
+                "format": "path [body]."
             }
         }
     ]
@@ -619,7 +638,7 @@ test>modifyViewの行数指定バージョン/openFile: {
     "selectors": [
         {
             "showAtLog<-body": {
-                "format": "body"
+                "format": "[body]"
             }
         }
     ]
@@ -648,7 +667,7 @@ test>modifyViewのポイント指定バージョン/openFile: {
     "selectors": [
         {
             "showAtLog<-body": {
-                "format": "body"
+                "format": "[body]"
             }
         }
     ]
@@ -964,7 +983,7 @@ test>getAllFilePathとselectors/openFile: {
     "selectors": [
         {
             "showAtLog<-paths, fullpaths, basedir": {
-                "format": "the basedir + paths + fullpaths"
+                "format": "the [basedir] + [paths] + [fullpaths]"
             }
         }
     ]
@@ -1017,7 +1036,7 @@ test>countUpとresetCounts/countUp: {
     "selectors": [
         {
             "showAtLog<-count": {
-                "format": "one, count"
+                "format": "one, [count]"
             }
         }
     ]
@@ -1038,7 +1057,7 @@ test>countUpとresetCounts/countUp: {
     "selectors": [
         {
             "showAtLog<-count": {
-                "format": "two, count"
+                "format": "two, [count]"
             }
         }
     ]
@@ -1059,7 +1078,7 @@ test>selectorsと/countUp: {
     "selectors": [
         {
             "showAtLog<-count, label": {
-                "format": "label:count"
+                "format": "[label]:[count]"
             }
         }
     ]
@@ -1148,7 +1167,7 @@ test>resetCountsのselectors/countUp: {
     "selectors": [    
         {
             "showAtLog<-theLast": {
-                "format": "the resetted param is theLast"
+                "format": "the resetted param is [theLast]"
             }
         }
     ]
@@ -1246,7 +1265,7 @@ test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き�
                             "selectors": [
                                 {
                                     "showAtLog<-body": {
-                                        "format": "the 'body' emitted with parameter"
+                                        "format": "the '[body]' emitted with parameter"
                                     }
                                 }
                             ]
@@ -1322,7 +1341,7 @@ output({\"tail\":str(listOfSelecteds[-1])})
                 "selectors": [
                     {
                         "showAtLog<-tail": {
-                            "format": "the tail is last of selections."
+                            "format": "the [tail] is last of selections."
                         }
                     }
                 ]
@@ -1365,7 +1384,7 @@ output({\"tail\":str(listOfSelecteds[-1])})
                 "selectors": [
                     {
                         "showAtLog<-tail": {
-                            "format": "the tail is last of selections."
+                            "format": "the [tail] is last of selections."
                         }
                     }
                 ]
@@ -1412,7 +1431,7 @@ output({\"tail\":str(listOfSelecteds[-1])})
                 "selectors": [
                     {
                         "showAtLog<-tail": {
-                            "format": "the tail is last of selections."
+                            "format": "the [tail] is last of selections."
                         }
                     }
                 ]
@@ -1517,7 +1536,7 @@ test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起
                 "selectors": [
                     {
                         "showAtLog<-datas": {
-                            "format": "the datas"
+                            "format": "the [datas]"
                         }
                     }
                 ]
@@ -1567,7 +1586,7 @@ test>selectedRegionsからの値変形チェック/setViewReactor: {
                 "selectors": [
                     {
                         "showAtLog<-line, from, to": {
-                            "format": "L:line, (from, to)"
+                            "format": "L:[line], ([from], [to])"
                         }
                     }
                 ]
@@ -2067,7 +2086,7 @@ test>setSelectionとselectors/createBuffer: {
     "selectors": [
         {
             "showAtLog<-selecteds, path": {
-                "format": "selecteds are in the path"
+                "format": "[selecteds] are in the [path]"
             }
         }
     ]
@@ -2096,8 +2115,8 @@ test>clearSelectionとselectors/createBuffer: {
     "name": "clearSelection.txt",
     "selectors": [
         {
-            "showAtLog<-path, name, cleards": {
-                "format": "name + cleards."
+            "showAtLog<-name, cleards": {
+                "format": "[name] + [cleards]."
             }
         }
     ]
@@ -2197,7 +2216,7 @@ test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
         {
             "showAtLog<-0": {
                 "message": "no view found",
-                "format": "view 0 not found."
+                "format": "view [0] not found."
             }
         }
     ]
@@ -2308,7 +2327,7 @@ test>現在開いているファイルに対するviewEmitのテスト。特定�
         {
             "showAtLog<-path, rowcol, body": {
                 "message": "dummy",
-                "format": "p:path, r:rowcol, b:body."
+                "format": "p:[path], r:[rowcol], b:[body]."
             }
         }
     ]
@@ -2332,7 +2351,7 @@ test>eventEmitでのaccepts機構のテスト、eventEmit側にinjectsが無いv
     "selectors": [
         {
             "showAtLog<-messageFromEventEmit": {
-                "format": "from messageFromEventEmit"
+                "format": "from [messageFromEventEmit]"
             }
         }
     ]
@@ -2357,7 +2376,7 @@ test>eventEmitでselectors/eventEmit: {
     "selectors": [
         {
             "showAtLog<-target, event": {
-                "format": "target + event"
+                "format": "[target] + [event]"
             }
         }
     ]
@@ -2485,7 +2504,7 @@ test>ログ出力のテスト/showAtLog: {
 
 test>フォーマット付きログ出力のテスト/showAtLog: {
     "message": "testLogMessage",
-    "format": "formatted log",
+    "format": "[formatted] [log]",
     "formatted": "works",
     "log": "fine."
 }->assertResult: {
@@ -2547,8 +2566,8 @@ test>filteringのテスト。フィルタをセット、改行指定ありで、
             "(.*)dummyline": {
                 "selectors": [
                     {
-                        "showStatusMessage": {
-                            "message": "should be 1/2:groups[0] in filterSource[]/."
+                        "showAtLog<-groups[0], source": {
+                            "format": "should be 1/2:[groups[0]] in [source]/."
                         }
                     }
                 ],
@@ -2559,17 +2578,13 @@ test>filteringのテスト。フィルタをセット、改行指定ありで、
 }->filtering: {
     "name": "filter_13/12/04 18:16:49",
     "source": "1\\n2 dummyline",
-    "debug": false
+    "debug": true
 }->assertResult: {
     "id": "filter hit values",
     "contains": {
-        "filtering": [
-            {
-                "filter_13/12/04 18:16:49": {
-                    "message": "should be 1/2:1\n2  in 1\n2 dummyline/."
-                }
-            }
-        ]
+        "showAtLog": {
+            "output": "should be 1/2:1\\n2  in 1\\n2 dummyline/."
+        }
     },
     "description": "not match."
 }
@@ -2616,8 +2631,8 @@ test>filterのパターンを試す/defineFilter: {
             "^.*?NullReferenceException: (.*?)\n.*? in (.*?):([0-9].*?) \n.*?": {
                 "selectors": [
                     {
-                        "showAtLog": {
-                            "message": "groups[0] groups[1]:groups[2]"
+                        "showAtLog<-groups[0], groups[1], groups[2]": {
+                            "format": "[groups[0]] [groups[1]]:[groups[2]]"
                         }
                     }
                 ],
@@ -2682,7 +2697,7 @@ test>Clientのidentityを変更する/changeIdentity: {
     "selectors": [
         {
             "showAtLog<-from, to": {
-                "format": "from becomes to."
+                "format": "[from] becomes [to]."
             }
         }
     ]
@@ -2764,7 +2779,7 @@ test>メッセージを特定クライアントに配信する。/monocastMessag
 test>フォーマットを使用したmonocast/monocastMessage: {
     "target": "sublimesockettest",
     "message": "monocasting",
-    "format": "0:a1 b1 c1 d1",
+    "format": "[0]:[a1] [b1] [c1] [d1]",
     "0": "header",
     "a1": "the",
     "b1": "test",
@@ -3058,7 +3073,7 @@ test>適当な名前のファイルを開き、region追加、selectorsを発動
     "selectors": [
         {
             "showAtLog<-line, message, from, to, identity, path": {
-                "format": "line + message + from + to + identity + path"
+                "format": "[line] + [message] + [from] + [to] + [identity] + [path]"
             }
         }
     ]
@@ -3344,7 +3359,7 @@ test>バージョンの出力/versionVerify: {
     "selectors": [
         {
             "showAtLog<-code, theMessage": {
-                "format": "code theMessage"
+                "format": "[code] [theMessage]"
             }
         }
     ]
@@ -3594,7 +3609,7 @@ test>ダイアログを表示/showDialog: {
 
 test>ダイアログをフォーマット付きで表示/showDialog: {
     "message": "formatting",
-    "format": "0:a1 b1 c1 d1",
+    "format": "[0]:[a1] [b1] [c1] [d1]",
     "0": "header",
     "a1": "the",
     "b1": "test",

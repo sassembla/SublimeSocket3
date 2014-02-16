@@ -6,7 +6,7 @@ SUSHIJSON_COMMAND_PARAMS_DELIM		= ":"	# only first ":" will be evaluated as deli
 SUSHIJSON_COMMAND_KEYWORD_INJECT	= "<-"
 SUSHIJSON_COMMAND_KEYWORD_DELIM		= ","
 
-SUSHIJSON_COMMENT_DELIM				= "/"	# comment expression in API. ss@COMMENT/API...
+SUSHIJSON_COMMENT_DELIM				= "/"	# comment expression in API. COMMENT/API...
 
 SUSHIJSON_TEST_BEFOREAFTER_DELIM	= "beforeafter>" #delimiter of the slectors of "befrore" and "after"
 SUSHIJSON_TESTCASE_DELIM			= "test>"	# test commands delim.

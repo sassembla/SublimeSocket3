@@ -1403,43 +1403,38 @@ class SublimeSocketAPI:
 		
 
 	def filtering(self, params, results):
-		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'filterName' param."
+		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'name' param."
+		assert SublimeSocketAPISettings.FILTERING_SOURCE in params, "filtering require 'source' param."
+
 		filterName = params[SublimeSocketAPISettings.FILTERING_NAME]
+		filterSource = params[SublimeSocketAPISettings.FILTERING_SOURCE]
 
 
 		debug = False
 		if SublimeSocketAPISettings.FILTERING_DEBUG in params:
 			debug = params[SublimeSocketAPISettings.FILTERING_DEBUG]
 
-
-
 		filtersDict = self.server.filtersDict()
+
 		if filterName in filtersDict:
 			pass
 
 		else:
 			self.editorAPI.printMessage("filterName:"+str(filterName) + " " + "is not yet defined.")
 			return
-
-		filterSource = params[SublimeSocketAPISettings.FILTERING_SOURCE]
-
+		
 		# get filter key-values array
 		filterPatternsArray = filtersDict[filterName]
 
-		# print "filterPatternsArray", filterPatternsArray
-		currentResults = []
 		for pattern in filterPatternsArray:
-			
-			# only one item is inside.
-			for key_executableDictPair in pattern.items():
-				(key, executablesDict) = key_executableDictPair
 
+			key = list(pattern)[0]
+			executablesDict = pattern[key]
 			
 			if debug:
 				self.editorAPI.printMessage("filterName:"+str(filterName))
-				self.editorAPI.printMessage("pattern:" + pattern)
-				self.editorAPI.printMessage("executablesDict:" + executablesDict)
-
+				self.editorAPI.printMessage("pattern:" + str(pattern))
+				self.editorAPI.printMessage("executablesDict:" + str(executablesDict))
 
 			if SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in executablesDict:
 				pass
@@ -1459,106 +1454,54 @@ class SublimeSocketAPI:
 			
 			for searched in searchResult:
 				if searched:
-					executablesArray = executablesDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
+					
+					if SushiJSON.SUSHIJSON_KEYWORD_INJECTS in executablesDict:
+						injectionDict = executablesDict[SushiJSON.SUSHIJSON_KEYWORD_INJECTS].copy()
+					else:
+						injectionDict = {}
+
 					
 					if debug:
-						self.editorAPI.printMessage("matched defineFilter selectors:" + executablesArray)
+						executablesArray = executablesDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
+					
+						self.editorAPI.printMessage("matched defineFilter selectors:" + str(executablesArray))
 						self.editorAPI.printMessage("filterSource\n---------------------\n" + filterSource + "\n---------------------")
-						self.editorAPI.printMessage("matched group():" + searched.group())
-						self.editorAPI.printMessage("matched groups():" + searched.groups())
+						self.editorAPI.printMessage("matched group():" + str(searched.group()))
+						self.editorAPI.printMessage("matched groups():" + str(searched.groups()))
 					
 						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in executablesDict:
 							self.editorAPI.printMessage("matched defineFilter comment:" + executablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
 
-					currentGroupSize = len(searched.groups())
-					
-					# run
-					for executableDict in executablesArray:
+					for index in range(len(searched.groups())):
+						searchedValue = searched.groups()[index]
 						
-						# execute
-						for executableDictKey in executableDict.keys():
-							command = executableDictKey
-							break
-						
-						
-						paramsSource = executableDict[command]
+						searchedKey = "groups[" + str(index) + "]"
+						executablesDict[searchedKey] = searchedValue
 
-						params = None
-						# replace the keyword "groups[x]" to regexp-result value of the 'groups[x]', if params are list[dict:string]
-						if type(paramsSource) == list:
-							# before	APINAME:["sublime.message_dialog('groups[0]')"]
-							# after		APINAME:["sublime.message_dialog('THE_VALUE_OF_searched.groups()[0]')"]
-							def replaceGroupsInListKeyword(param):
-								result = param
-								
-								for index in range(currentGroupSize):
-									# replace all expression
-									if re.findall(r'groups\[(' + str(index) + ')\]', result):
-										result = re.sub(r'groups\[' + str(index) + '\]', searched.groups()[index], result)
-
-								result = re.sub(r'filterSource\[\]', filterSource, result)
-								return result
-								
-
-							# replace "groups[x]" expression in the value of list to 'searched.groups()[x]' value
-							params = map(replaceGroupsInListKeyword, paramsSource)
-							
-						# replace the keyword "groups[x]" to regexp-result value of the 'groups[x]', if params are {string:string}
-						elif type(paramsSource) == dict:
-							# before {u'line': u'groups[1]', u'message': u'message is groups[0]'}
-							# after	 {u'line': u'THE_VALUE_OF_searched.groups()[1]', u'message': u'message is THE_VALUE_OF_searched.groups()[0]'}
-
-							def replaceGroupsInDictionaryKeyword(key):
-								result = paramsSource[key]
-								
-								for index in range(currentGroupSize):
-									if type(result) != str:
-										continue
-									
-									# replace all expression
-									if re.findall(r'groups\[(' + str(index) + ')\]', result):
-										froms = searched.groups()[index]
-										result = re.sub(r'groups\[' + str(index) + '\]', froms, result)
-
-									result = re.sub(r'filterSource\[\]', filterSource, result)
-								return {key:result}
-							# replace "groups[x]" expression in the value of dictionary to 'searched.groups()[x]' value
-							params_dicts = list(map(replaceGroupsInDictionaryKeyword, paramsSource.keys()))
-
-							if not params_dicts:
-								pass
-							elif 1 == len(params_dicts):
-								params = params_dicts[0]
-							else:
-								def reduceLeft(before, next):
-									# append all key-value pair.
-									for key in next.keys():
-										before[key] = next[key]
-									return before
-								
-								params = reduce(reduceLeft, params_dicts[1:], params_dicts[0])
-							
+						# inject if not revealed yet.
+						if searchedKey in injectionDict:
+							pass
 						else:
-							self.editorAPI.printMessage("filtering warning:unknown type")
-						
-						if debug:
-							self.editorAPI.printMessage("filtering command:" + command + " params:" + params)
+							injectionDict[searchedKey] = searchedValue
 
-						# execute
-						self.runAPI(command, params, None, None, results)
-						
-						# report
-						currentResults.append({filterName:params})
+					executablesDict["group"] = searched.group()
+					if "group" in injectionDict:
+						pass
+					else:
+						injectionDict["group"] = searched.group()
+
+					injectionDict[SublimeSocketAPISettings.FILTERING_SOURCE] = filterSource
+
+					self.runAllSelector(
+						executablesDict,
+						injectionDict.keys(),
+						injectionDict.values(),
+						results
+					)
 
 				else:
 					if debug:
 						self.editorAPI.printMessage("filtering not match")
-
-		# return succeded signal
-		if 0 < len(currentResults):
-			# set params into results
-			self.setResultsParams(results, self.filtering, currentResults)
-
 
 	## set reactor for reactive-event
 	def setEventReactor(self, params, clientId, results):
@@ -2247,7 +2190,7 @@ class SublimeSocketAPI:
 		for key in params:
 			if key != formatKey:
 				currentParam = str(params[key])
-				currentFormat = currentFormat.replace(key, currentParam)
+				currentFormat = currentFormat.replace("["+key+"]", currentParam)
 
 		
 		params[outputKey] = currentFormat
