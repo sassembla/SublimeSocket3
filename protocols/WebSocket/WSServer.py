@@ -159,10 +159,12 @@ class WSServer:
 
 		# broadcast to specific clients.
 		if targetIds:
-			for client in clients:
-				if client.clientId in targetIds:
-					client.send(buf)
-					targets.append(client.clientId)
+			idAndClient = [(client.clientId, client) for client in clients]
+			for targetId in targetIds:
+				for clientId, client in idAndClient:
+					if targetId == clientId:
+						client.send(buf)
+						targets.append(clientId)
 
 		# broadcast
 		else:

@@ -486,8 +486,7 @@ class SublimeSocketAPI:
 		runResults = self.parse(data, None, self.initResult(resultIdentity))
 
 		logs = ["done"]
-		print("logs", logs)
-		
+
 		self.runAllSelector(
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
@@ -732,15 +731,16 @@ class SublimeSocketAPI:
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
 					[path, name, tooltipTitles, selectedTitle], 
 					results)
-			
-
-		self.editorAPI.showPopupMenu(view, tooltipTitles, toolTipClosed)
-
+		
+		# run before lock
 		self.runAllSelector(
 			params, 
 			SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
 			[path, name, tooltipTitles, selectedTitle], 
 			results)
+
+		self.editorAPI.showPopupMenu(view, tooltipTitles, toolTipClosed)
+
 
 	def scrollTo(self, params, results):
 		assert SublimeSocketAPISettings.SCROLLTO_LINE in params or SublimeSocketAPISettings.SCROLLTO_COUNT in params, "scrollTo require 'line' or 'count' params."
@@ -1538,7 +1538,13 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.SETREACTOR_REACT in params, "setEventReactor require 'react' param."
 		
 		reactEventName = params[SublimeSocketAPISettings.SETREACTOR_REACT]
-		assert reactEventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "setEventReactor only emit 'user-defined' event such as starts with 'event_' keyword."
+
+		check = False
+		for prefix in SublimeSocketAPISettings.REACTIVE_PREFIXIES:
+			if reactEventName.startswith(prefix):
+				check = True
+
+		assert check, "setEventReactor can only set the 'react' param which starts with 'ss_f_' or 'event_' prefix."
 		
 		self.setReactor(params, results)
 
@@ -1720,6 +1726,11 @@ class SublimeSocketAPI:
 
 	## show message
 	def showStatusMessage(self, params, results):
+		if SublimeSocketAPISettings.LOG_FORMAT in params:
+			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
+			self.showStatusMessage(params, results)
+			return
+
 		assert SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE in params, "showStatusMessage require 'message' param."
 		message = params[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_MESSAGE]
 		self.editorAPI.statusMessage(message)
@@ -1731,6 +1742,11 @@ class SublimeSocketAPI:
 
 	## append region
 	def appendRegion(self, params, results):
+		if SublimeSocketAPISettings.LOG_FORMAT in params:
+			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
+			self.appendRegion(params, results)
+			return
+			
 		assert SublimeSocketAPISettings.APPENDREGION_LINE in params, "appendRegion require 'line' param."
 		assert SublimeSocketAPISettings.APPENDREGION_MESSAGE in params, "appendRegion require 'message' param."
 		assert SublimeSocketAPISettings.APPENDREGION_CONDITION in params, "appendRegion require 'condition' param."
