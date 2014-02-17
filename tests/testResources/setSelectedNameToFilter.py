@@ -1,5 +1,5 @@
-assert "selecteditem" in inputs, "not included in:"+str(inputs)
+assert "selectedtitle" in inputs, "not included in:"+str(inputs)
 
-selectedItemName = inputs["selecteditem"]
+selectedTitle = inputs["selectedtitle"]
 
-output({"source":selectedItemName})
+output({"source":selectedTitle})

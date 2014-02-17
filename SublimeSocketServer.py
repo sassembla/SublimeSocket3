@@ -143,8 +143,8 @@ class SublimeSocketServer:
 	def sendMessage(self, targetId, message):
 		return self.transfer.sendMessage(targetId, message)
 
-	def broadcastMessage(self, message):
-		return self.transfer.broadcastMessage(message)
+	def broadcastMessage(self, targetIds, message):
+		return self.transfer.broadcastMessage(targetIds, message)
 
 
 

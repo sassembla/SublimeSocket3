@@ -1,10 +1,8 @@
-// Unity filter
-// ver 1.0.2
-
-defineFilter:
-{
+//Unityfilter
+//ver 1.1.0
+defineFilter: {
     "name": "unity",
-    "patterns": [
+    "filters": [
         {
             "[(]([0-9].*?),.*:(.*)": {
                 "selectors": [
@@ -21,7 +19,9 @@ defineFilter:
             "Compilation failed:(.*)": {
                 "selectors": [
                     {
-                        "eraseAllRegion": {}
+                        "eraseAllRegion": {
+                            
+                        }
                     },
                     {
                         "showStatusMessage": {
@@ -35,7 +35,9 @@ defineFilter:
             "(^Mono: successfully reloaded assembly)": {
                 "selectors": [
                     {
-                        "eraseAllRegion": {}
+                        "eraseAllRegion": {
+                            
+                        }
                     },
                     {
                         "showStatusMessage": {
@@ -46,13 +48,10 @@ defineFilter:
             }
         }
     ]
-}
-
-->setViewReactor:
-{
+}->setViewReactor: {
     "target": "UnityEditor",
     "react": "on_selection_modified",
-    "selectors": [
+    "reactors": [
         {
             "containsRegions": {
                 "view": "will be replace to specific view",
@@ -66,4 +65,6 @@ defineFilter:
         "view": "view"
     },
     "interval": 100
+}->showAtLog: {
+    "message": "done."
 }

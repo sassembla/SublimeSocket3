@@ -150,16 +150,27 @@ class WSServer:
 		return (False, "no target found in:" + str(self.clientIds))
 
 
-	def broadcastMessage(self, message):
+	def broadcastMessage(self, targetIds, message):
 		buf = self.encoder.text(str(message), mask=0)
 		
 		clients = self.clientIds.values()
 
-		clientNames = list(self.clientIds.keys())
-		
-		for client in clients:
-			client.send(buf)
+		targets = []
 
-		return clientNames
+		# broadcast to specific clients.
+		if targetIds:
+			for client in clients:
+				if client.clientId in targetIds:
+					client.send(buf)
+					targets.append(client.clientId)
+
+		# broadcast
+		else:
+			for client in clients:
+				client.send(buf)
+
+				targets.append(client.clientId)
+
+		return targets
 
 		
