@@ -144,11 +144,17 @@ class EditorAPI:
 
 		return cleards
 		
-	def isRegionContained(self, region, selecteds):
+	def isRegionContained(self, region, selecteds, isExactly):
 		selectionRegionList = [self.generateRegion(regionParam[0], regionParam[1]) for regionParam in selecteds]
 
-		for selectinRegion in selectionRegionList:
-			if selectinRegion.contains(region):
+		for selectionRegion in selectionRegionList:
+			if selectionRegion.contains(region):
+				if isExactly:
+					if selectionRegion.a == region.a and selectionRegion.b-1 == region.b:
+						return True
+					else:
+						return False
+
 				return True
 
 		return False

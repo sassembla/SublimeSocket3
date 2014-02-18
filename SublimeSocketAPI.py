@@ -1343,12 +1343,12 @@ class SublimeSocketAPI:
 	# run selected regions.
 	def selectedRegions(self, params, results):
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS in params, "selectedRegions require 'selecteds' param."
-		assert SublimeSocketAPISettings.SELECTEDREGIONS_TARGET in params, "selectedRegions require 'target' param."
 		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SELECTEDREGIONS_VIEW, SublimeSocketAPISettings.SELECTEDREGIONS_NAME)
 		if not view:
 			return
 
+		isExactly = True
 		name = os.path.basename(path)
 
 		selecteds = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
@@ -1356,8 +1356,6 @@ class SublimeSocketAPI:
 		
 		# run selector if selected region contains 
 		if path in regionsDict:
-			target = params[SublimeSocketAPISettings.SELECTEDREGIONS_TARGET]
-
 			# if already sekected, no event running.
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
 
@@ -1369,7 +1367,7 @@ class SublimeSocketAPI:
 				regionTo = regionData[SublimeSocketAPISettings.REGION_TO]
 				region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-				if self.editorAPI.isRegionContained(region, selecteds):
+				if self.editorAPI.isRegionContained(region, selecteds, isExactly):
 					return True
 				return False
 
@@ -1393,7 +1391,7 @@ class SublimeSocketAPI:
 				self.runAllSelector(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONS, 
-					[path, name, crossed, target, line, fromParam, toParam, messages], 
+					[path, name, crossed, line, fromParam, toParam, messages], 
 					results)
 
 			# update current contained region for preventing double-run.

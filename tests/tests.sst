@@ -1284,7 +1284,6 @@ test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "viewEmit<-name": {
@@ -1477,7 +1476,6 @@ test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "eventEmit": {
@@ -1536,7 +1534,6 @@ test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起
                 "injects": {
                     "messages": "datas"
                 },
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "showAtLog<-datas": {
@@ -1586,7 +1583,6 @@ test>selectedRegionsからの値変形チェック/setViewReactor: {
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "showAtLog<-line, from, to": {
@@ -1636,7 +1632,6 @@ test>transormの応用例、2件のregionDataをそれぞれToolTipに変形す�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "transform<-path, crossed": {
@@ -1705,7 +1700,6 @@ test>試験的なtransormerの応用例、2件のregionDataをToolTipに変形�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "showToolTip<-name, messages": {
@@ -1765,7 +1759,6 @@ test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "showToolTip<-name": {
@@ -1835,7 +1828,6 @@ test>setSelectionでselectedRegionsを引き起こそうとするが、regionが
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
-                "target": "containsregiontarget",
                 "selectors": [
                     {
                         "showAtLog": {
