@@ -613,7 +613,6 @@ test>完了通知が出ない。突破してはいる。組み合わせでエラ
     "name": "sample.txt",
     "add": "1"
 }->assertResult: {
-    "context": "view",
     "id": "view text increased",
     "contains": {
         "showAtLog": {
@@ -934,7 +933,6 @@ test>そのビューの文字列が増えたら、ss_v_increasedイベントが�
 }->closeFile: {
     "name": "sample.txt"
 }->assertResult: {
-    "context": "view",
     "id": "view text increased2",
     "contains": {
         "showAtLog": {
@@ -966,7 +964,6 @@ test>そのビューの文字列が減ったら、ss_v_decreasedイベントが�
 }->closeFile: {
     "name": "sample.txt"
 }->assertResult: {
-    "context": "view",
     "id": "view text decreased",
     "contains": {
         "showAtLog": {
@@ -1284,6 +1281,7 @@ test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "selectors": [
                     {
                         "viewEmit<-name": {
@@ -1317,7 +1315,7 @@ test>setSelectionでselectedRegionsを引き起こし、selectorに値を引き�
         }
     ]
 }->assertResult: {
-    "id": "viewReactor, fire event_showAtLog",
+    "id": "viewReactor, fire event_showAtLog 2",
     "contains": {
         "showAtLog": {
             "output": "the 'a\nb\nc' emitted with parameter"
@@ -1476,6 +1474,7 @@ test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "selectors": [
                     {
                         "eventEmit": {
@@ -1513,7 +1512,7 @@ test>setSelectionでselectedRegionsを引き起こす/setViewReactor: {
         }
     ]
 }->assertResult: {
-    "id": "viewReactor, fire event_showAtLog",
+    "id": "viewReactor, fire event_showAtLog 1",
     "contains": {
         "showAtLog": {
             "output": "here comes!!"
@@ -1531,6 +1530,7 @@ test>regionの2contentsに対して、setSelectionでselectedRegionsを引き起
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "injects": {
                     "messages": "datas"
                 },
@@ -1583,6 +1583,7 @@ test>selectedRegionsからの値変形チェック/setViewReactor: {
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "selectors": [
                     {
                         "showAtLog<-line, from, to": {
@@ -1632,6 +1633,7 @@ test>transormの応用例、2件のregionDataをそれぞれToolTipに変形す�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "selectors": [
                     {
                         "transform<-path, crossed": {
@@ -1759,6 +1761,7 @@ test>setSelectionでselectedRegionsを引き起こし、tooltipへと値を引�
     "reactors": [
         {
             "selectedRegions<-name, selecteds": {
+                "isexactly": false,
                 "selectors": [
                     {
                         "showToolTip<-name": {
@@ -2446,33 +2449,25 @@ test>eventEmitのテスト/setEventReactor: {
 }
 
 
-test>特定のviewに対するreactorのテスト。途中でイベントの出元が変わるので、contextを指定する。/openFile: {
+test>特定のviewに対するreactorのテスト。/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setViewReactor: {
     "target": "event_testTarget",
     "react": "on_close",
     "reactors": [
         {
-            "viewEmit<-name": {
-                "identity": "testTargetId",
-                "selectors": [
-                    {
-                        "showAtLog": {
-                            "message": "eventEmit2 over."
-                        }
-                    }
-                ]
+           "showAtLog<-name": {
+                "format": "name is [name]"
             }
         }
     ]
 }->このイベントでcloseイベントを発生させる/closeFile: {
     "name": "sample.txt"
 }->assertResult: {
-    "context": "view",
     "id": "close then run viewEmit to specific file",
     "contains": {
         "showAtLog": {
-            "output": "eventEmit2 over."
+            "output": "name is sample.txt"
         }
     },
     "description": "not match."
@@ -2689,7 +2684,8 @@ test>filterのパターンを試す/defineFilter: {
         }
     },
     "description": "not match 2."
-}->filtering: {
+}
+->filtering: {
     "name": "testDotAll",
     "source": "System.NullReferenceException: reason3\nsomething\nsomething\n  at dummy3 in place3:300 \n  at dummy4 in place4:400 \ndummy5"
 }->assertResult: {

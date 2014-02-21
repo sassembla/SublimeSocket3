@@ -144,7 +144,7 @@ class EditorAPI:
 
 		return cleards
 		
-	def isRegionContained(self, region, selecteds, isExactly):
+	def isRegionContained(self, region, selecteds, isExactly, isSameLine):
 		selectionRegionList = [self.generateRegion(regionParam[0], regionParam[1]) for regionParam in selecteds]
 
 		for selectionRegion in selectionRegionList:
@@ -154,6 +154,8 @@ class EditorAPI:
 						return True
 					else:
 						return False
+				elif isSameLine:
+					pass
 
 				return True
 

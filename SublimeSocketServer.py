@@ -81,7 +81,7 @@ class SublimeSocketServer:
 		resultIdentity = "callAPI:"+str(uuid.uuid4())
 	
 		results = self.api.initResult(resultIdentity)
-		self.api.parse(apiData, clientId, results)
+		self.api.parse(apiData, clientId)
 
 	def showTransferInfo(self):
 		if self.transfer:
@@ -151,12 +151,9 @@ class SublimeSocketServer:
 	# other series
 
 	def onTransferRenew(self):
-		# initialize API-results buffer for load-settings.
-		results = self.api.initResult("onTransferRenew:"+str(uuid.uuid4()))
-
 		settingCommands = self.api.editorAPI.loadSettings("onTransferRenew")
 		for command in settingCommands:
-			self.api.runAPI(command, None, None, None, results)
+			self.api.runAPI(command, None, None)
 
 
 

@@ -29,14 +29,12 @@ class SublimeSocketAPI:
 		self.server = server
 
 		self.editorAPI = EditorAPI()
-
-		self.isTesting = False
 		self.globalResults = []
 
 		self.asyncDict = {}
 		self.counts = {}
 
-		self.setSublimeSocketWindowBasePath({}, None)
+		self.setSublimeSocketWindowBasePath({})
 
 	## initialize results as the part of globalResults.
 	def initResult(self, resultIdentity):
@@ -45,12 +43,12 @@ class SublimeSocketAPI:
 
 		return self.globalResults[-1]
 
-	def setResultsParams(self, results, apiFunc, value):
-		if not self.isTesting:
-			return results
-
-		if not results:
-			return results
+	def setResultsParams(self, apiFunc, value):
+		
+		if self.globalResults:
+			results = self.globalResults[0]
+		else:
+			return
 
 		# only one key capable.
 		
@@ -68,22 +66,18 @@ class SublimeSocketAPI:
 
 
 	## Parse the API command
-	def parse(self, data, clientId=None, results=None):
+	def parse(self, data, clientId=None):
 		
 		runnable = SushiJSONParser.parseStraight(data)
 
 		if runnable:
 			for command, params in runnable:
-				self.runAPI(command, params, clientId, None, results)
-
-		return results
+				self.runAPI(command, params, clientId)
 		
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, baseCommand, baseParams, clientId=None, injectedParams=None, results=None):
-
-		command, params = SushiJSONParser.composeParams(baseCommand, baseParams, injectedParams)
-		  		
+	def runAPI(self, command, params, clientId=None):
+						
   		# python-switch
 		for case in PythonSwitch(command):
 			if case(SublimeSocketAPISettings.API_CONNECTEDCALL):
@@ -92,40 +86,40 @@ class SublimeSocketAPI:
 
 			if case(SushiJSON.SETTESTBEFOREAFTER_BEFORESELECTORS):
 				for selector in params:
-					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
+					[self.runAPI(eachCommand, eachParams) for eachCommand, eachParams in selector.items()]
 				break
 				
 			if case(SushiJSON.SETTESTBEFOREAFTER_AFTERSELECTORS):
 				for selector in params:
-					[self.runAPI(eachCommand, eachParams, None, None, results) for eachCommand, eachParams in selector.items()]
+					[self.runAPI(eachCommand, eachParams) for eachCommand, eachParams in selector.items()]
 				break
 
 			if case(SublimeSocketAPISettings.API_CHANGEIDENTITY):
-				self.changeIdentity(params, clientId, results)
+				self.changeIdentity(params, clientId)
 				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
-				self.assertResult(params, results)
+				self.assertResult(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_AFTERASYNC):
-				self.afterAsync(params, results)
+				self.afterAsync(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_WAIT):
-				self.wait(params, results)
+				self.wait(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_COUNTUP):
-				self.countUp(params, results)
+				self.countUp(params)
 				break			
 
 			if case(SublimeSocketAPISettings.API_RESETCOUNTS):
-				self.resetCounts(params, results)
+				self.resetCounts(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSUSHIJSON):
-				self.runSushiJSON(params, results)
+				self.runSushiJSON(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
@@ -133,143 +127,143 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_CREATEBUFFER):
-				self.createBuffer(params, results)
+				self.createBuffer(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_OPENFILE):
-				self.openFile(params, results)
+				self.openFile(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_CLOSEFILE):
-				self.closeFile(params, results)
+				self.closeFile(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_CLOSEALLBUFFER):
-				self.closeAllBuffer(params, results)
+				self.closeAllBuffer(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SELECTEDREGIONS):
-				self.selectedRegions(params, results)
+				self.selectedRegions(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_COLLECTVIEWS):
-				self.collectViews(params, results)
+				self.collectViews(params)
 				break
 				
 			if case(SublimeSocketAPISettings.API_DEFINEFILTER):
-				self.defineFilter(params, results)
+				self.defineFilter(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_FILTERING):
-				self.filtering(params, results)
+				self.filtering(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETEVENTREACTOR):
-				self.setEventReactor(params, results)
+				self.setEventReactor(params)
 				break
 				
 			if case(SublimeSocketAPISettings.API_SETVIEWREACTOR):
-				self.setViewReactor(params, results)
+				self.setViewReactor(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_RESETREACTORS):
-				self.resetReactors(params, results)
+				self.resetReactors(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_VIEWEMIT):
-				self.viewEmit(params, results)
+				self.viewEmit(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_MODIFYVIEW):
-				self.modifyView(params, results)
+				self.modifyView(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETSELECTION):
-				self.setSelection(params, results)
+				self.setSelection(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_CLEARSELECTION):
-				self.clearSelection(params, results)
+				self.clearSelection(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSHELL):
-				self.runShell(params, results)
+				self.runShell(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_BROADCASTMESSAGE):
-				self.broadcastMessage(params, results)
+				self.broadcastMessage(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_MONOCASTMESSAGE):
-				self.monocastMessage(params, results)
+				self.monocastMessage(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWATLOG):
-				self.showAtLog(params, results)
+				self.showAtLog(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWDIALOG):
-				self.showDialog(params, results)
+				self.showDialog(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWTOOLTIP):
-				self.showToolTip(params, results)
+				self.showToolTip(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SCROLLTO):
-				self.scrollTo(params, results)
+				self.scrollTo(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_TRANSFORM):
-				self.transform(params, results)
+				self.transform(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_APPENDREGION):
-				self.appendRegion(params, results)
+				self.appendRegion(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_NOTIFY):
-				self.notify(params, results)
+				self.notify(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_GETALLFILEPATH):
-				self.getAllFilePath(params, results)
+				self.getAllFilePath(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_READFILE):
-				self.readFile(params, results)
+				self.readFile(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_EVENTEMIT):
-				self.eventEmit(params, results)
+				self.eventEmit(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_CANCELCOMPLETION):
-				self.cancelCompletion(params, results)
+				self.cancelCompletion(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
-				self.runCompletion(params, results)
+				self.runCompletion(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_FORCELYSAVE):
-				self.forcelySave(params, results)
+				self.forcelySave(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETSUBLIMESOCKETWINDOWBASEPATH):
-				self.setSublimeSocketWindowBasePath(params, results)
+				self.setSublimeSocketWindowBasePath(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWSTATUSMESSAGE):
-				self.showStatusMessage(params, results)
+				self.showStatusMessage(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_ERASEALLREGIONS):
-				self.eraseAllRegions(params, results)
+				self.eraseAllRegions(params)
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
-				self.versionVerify(params, clientId, results)
+				self.versionVerify(params, clientId)
 				break
 
 			if case():
@@ -277,7 +271,7 @@ class SublimeSocketAPI:
 				break
 				
 
-	def runReactor(self, reactorType, params, eventParams, results):
+	def runReactor(self, reactorType, params, eventParams):
 		if SushiJSON.SUSHIJSON_KEYWORD_INJECTS in params:
 			pass
 		else:
@@ -316,20 +310,17 @@ class SublimeSocketAPI:
 			keys.append(key)
 			values.append(val)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params, 
 			keys, 
-			values,
-			results)
+			values
+		)
 
-
-	# core of API.
-	def runAllSelector(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues, results):
+	def runAllSelectors(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues):
 		if params:
 			assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
 			zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
 
-			# get selectors (because of get selectors here, the selectors itself NEVER BE INJECTED.)
 			if SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params:
 				selectors = params[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
 
@@ -338,17 +329,18 @@ class SublimeSocketAPI:
 				
 				for selector in selectors:
 					for eachCommand, eachParams in selector.items():
-						self.runAPI(eachCommand, eachParams.copy(), None, composedInjectParams, results)
-			
+						command, params = SushiJSONParser.composeParams(eachCommand, eachParams, composedInjectParams)
+						self.runAPI(command, params, None)
+
 		
-	def runFoundationEvent(self, eventName, eventParam, reactors, results):
+	def runFoundationEvent(self, eventName, eventParam, reactors):
 		for case in PythonSwitch(eventName):
 			if case(SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND):
-				self.foundation_noViewFound(reactors, eventParam, results)
+				self.foundation_noViewFound(reactors, eventParam)
 				break
 
 
-	def foundation_noViewFound(self, reactDicts, eventParam, results):
+	def foundation_noViewFound(self, reactDicts, eventParam):
 		for target in list(reactDicts):
 			params = reactDicts[target]
 
@@ -358,14 +350,13 @@ class SublimeSocketAPI:
 				keys.append(key)
 				values.append(val)
 
-			self.runAllSelector(
+			self.runAllSelectors(
 				params, 
 				keys, 
-				values, 
-				results)
+				values)
 
 
-	def afterAsync(self, params, results):
+	def afterAsync(self, params):
 		assert SublimeSocketAPISettings.AFTERASYNC_IDENTITY in params, "afterAsync require 'identity' param."
 		assert SublimeSocketAPISettings.AFTERASYNC_MS in params, "afterAsync require 'ms' param."
 
@@ -377,17 +368,16 @@ class SublimeSocketAPI:
 		
 		msNum = int(ms)
 
-		def afterWait(asyncedIdentity, runtimeIdentity, results):
+		def afterWait(asyncedIdentity, runtimeIdentity):
 			if identity != asyncedIdentity:
 				return
 
 			if identity in self.asyncDict:
 				if runtimeIdentity == self.asyncDict[identity]["runtimeIdentity"]:
-					self.runAllSelector(
+					self.runAllSelectors(
 						currentParams, 
 						currentParams.keys(),
-						currentParams.values(),
-						results
+						currentParams.values()
 					)
 
 				else:
@@ -396,10 +386,10 @@ class SublimeSocketAPI:
 		runtimeIdentity = str(uuid.uuid4())
 		self.asyncDict[identity] = {"runtimeIdentity":runtimeIdentity}
 
-		threading.Timer(msNum*0.001, afterWait, [identity, runtimeIdentity, results]).start()
+		threading.Timer(msNum*0.001, afterWait, [identity, runtimeIdentity]).start()
 
 
-	def wait(self, params, results):
+	def wait(self, params):
 		assert SublimeSocketAPISettings.WAIT_MS in params, "wait require 'ms' param."
 
 		waitMS = params[SublimeSocketAPISettings.WAIT_MS]
@@ -409,7 +399,7 @@ class SublimeSocketAPI:
 
 
 	## count up specified labelled param.
-	def countUp(self, params, results):
+	def countUp(self, params):
 		assert SublimeSocketAPISettings.COUNTUP_LABEL in params, "countUp requre 'label' param."
 		assert SublimeSocketAPISettings.COUNTUP_DEFAULT in params, "countUp requre 'default' param."
 
@@ -423,17 +413,16 @@ class SublimeSocketAPI:
 
 		count = self.counts[label]
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params, 
 			SublimeSocketAPISettings.COUNTUP_INJECTIONS,
-			[label, count],
-			results
+			[label, count]
 		)
 
 		
 
 
-	def resetCounts(self, params, results):
+	def resetCounts(self, params):
 		resetted = []
 		if SublimeSocketAPISettings.RESETCOUNTS_LABEL in params:
 			target = params[SublimeSocketAPISettings.RESETCOUNTS_LABEL]
@@ -444,16 +433,15 @@ class SublimeSocketAPI:
 			resetted = list(self.counts)
 			self.counts = {}
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.RESETCOUNTS_INJECTIONS,
-			[resetted],
-			results
+			[resetted]
 		)
 
 		
 	## run specific setting.txt file or data on API.
-	def runSushiJSON(self, params, results):
+	def runSushiJSON(self, params):
 		assert SublimeSocketAPISettings.RUNSUSHIJSON_PATH in params or SublimeSocketAPISettings.RUNSUSHIJSON_DATA in params, "runSushiJSON require 'path' or 'data' params."
 		
 		if SublimeSocketAPISettings.RUNSUSHIJSON_PATH in params:
@@ -482,22 +470,22 @@ class SublimeSocketAPI:
 
 		# parse with specific result
 		resultIdentity = "runSushiJSON"
+		self.initResult(resultIdentity)
 		
-		runResults = self.parse(data, None, self.initResult(resultIdentity))
+		runResults = self.parse(data, None)
 
 		logs = ["done"]
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
-			[logs],
-			results
+			[logs]
 		)
 
 
 	## run shellScript
 	# params is array that will be evaluated as commandline parameters.
-	def runShell(self, params, results=None):
+	def runShell(self, params):
 		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param."
 
 		if SublimeSocketAPISettings.RUNSHELL_DELAY in params:
@@ -561,7 +549,7 @@ class SublimeSocketAPI:
 			debugFlag = params[SublimeSocketAPISettings.RUNSHELL_DEBUG]
 
 		if debugFlag:
-			self.showAtLog({"message":runnable}, results)
+			self.showAtLog({"message":runnable})
 		
 		if len(runnable):
 			subprocess.call(runnable, shell=True)
@@ -569,10 +557,10 @@ class SublimeSocketAPI:
 			
 
 	## emit message to all clients.
-	def broadcastMessage(self, params, results):
+	def broadcastMessage(self, params):
 		if SublimeSocketAPISettings.BROADCASTMESSAGE_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.BROADCASTMESSAGE_FORMAT, SublimeSocketAPISettings.BROADCASTMESSAGE_MESSAGE)
-			self.broadcastMessage(params, results)
+			self.broadcastMessage(params)
 			return
 
 		assert SublimeSocketAPISettings.BROADCASTMESSAGE_MESSAGE in params, "broadcastMessage require 'message' param."
@@ -586,20 +574,19 @@ class SublimeSocketAPI:
 		else:
 			sendedTargetIds = self.server.broadcastMessage([], message)
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.BROADCASTMESSAGE_INJECTIONS,
-			[sendedTargetIds, message],
-			results
+			[sendedTargetIds, message]
 		)
 		
 	
 
 	## send message to the specific client.
-	def monocastMessage(self, params, results):
+	def monocastMessage(self, params):
 		if SublimeSocketAPISettings.MONOCASTMESSAGE_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.MONOCASTMESSAGE_FORMAT, SublimeSocketAPISettings.MONOCASTMESSAGE_MESSAGE)
-			self.monocastMessage(params, results)
+			self.monocastMessage(params)
 			return
 
 		assert SublimeSocketAPISettings.MONOCASTMESSAGE_TARGET in params, "monocastMessage require 'target' param."
@@ -611,11 +598,10 @@ class SublimeSocketAPI:
 		succeeded, reason = self.server.sendMessage(target, message)
 
 		if succeeded:
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.MONOCASTMESSAGE_INJECTIONS,
-				[target, message],
-				results
+				[target, message]
 			)
 
 		else:
@@ -623,23 +609,23 @@ class SublimeSocketAPI:
 			
 	
 
-	def showAtLog(self, params, results=None):
+	def showAtLog(self, params):
 		if SublimeSocketAPISettings.LOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
-			self.showAtLog(params, results)
+			self.showAtLog(params)
 			return
 
 		assert SublimeSocketAPISettings.LOG_MESSAGE in params, "showAtLog require 'message' param."
 		message = params[SublimeSocketAPISettings.LOG_MESSAGE]
 		self.editorAPI.printMessage(message)
 
-		self.setResultsParams(results, self.showAtLog, {"output":message})
+		self.setResultsParams(self.showAtLog, {"output":message})
 
 
-	def showDialog(self, params, results):
+	def showDialog(self, params):
 		if SublimeSocketAPISettings.SHOWDIALOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.SHOWDIALOG_FORMAT, SublimeSocketAPISettings.SHOWDIALOG_MESSAGE)
-			self.showDialog(params, results)
+			self.showDialog(params)
 			return
 
 		assert SublimeSocketAPISettings.SHOWDIALOG_MESSAGE in params, "showDialog require 'message' param."
@@ -647,15 +633,14 @@ class SublimeSocketAPI:
 
 		self.editorAPI.showMessageDialog(message)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.SHOWDIALOG_INJECTIONS,
-			[message],
-			results
+			[message]
 		)
 
 
-	def showToolTip(self, params, results):
+	def showToolTip(self, params):
 		assert SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED in params, "showToolTip require 'onselected' params."
 		selects = params[SublimeSocketAPISettings.SHOWTOOLTIP_ONSELECTED]
 
@@ -704,21 +689,19 @@ class SublimeSocketAPI:
 					selectorInsideParams = params
 					selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = itemDict[key]
 					
-					self.runAllSelector(
+					self.runAllSelectors(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-						[path, name, tooltipTitles, selectedTitle], 
-						results)
+						[path, name, tooltipTitles, selectedTitle])
 			else:
 				# rename from "cancelled" to "selector".
 				selectorInsideParams = params
 				selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = cancelled
 				
-				self.runAllSelector(
+				self.runAllSelectors(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-					[path, name, tooltipTitles, selectedTitle], 
-					results)
+					[path, name, tooltipTitles, selectedTitle])
 
 
 			if finallyBlock:
@@ -726,23 +709,21 @@ class SublimeSocketAPI:
 				selectorInsideParams = params
 				selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = finallyBlock
 
-				self.runAllSelector(
+				self.runAllSelectors(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-					[path, name, tooltipTitles, selectedTitle], 
-					results)
+					[path, name, tooltipTitles, selectedTitle])
 		
 		# run before lock
-		self.runAllSelector(
+		self.runAllSelectors(
 			params, 
 			SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-			[path, name, tooltipTitles, selectedTitle], 
-			results)
+			[path, name, tooltipTitles, selectedTitle])
 
 		self.editorAPI.showPopupMenu(view, tooltipTitles, toolTipClosed)
 
 
-	def scrollTo(self, params, results):
+	def scrollTo(self, params):
 		assert SublimeSocketAPISettings.SCROLLTO_LINE in params or SublimeSocketAPISettings.SCROLLTO_COUNT in params, "scrollTo require 'line' or 'count' params."
 			
 		if SublimeSocketAPISettings.SCROLLTO_LINE in params and SublimeSocketAPISettings.SCROLLTO_COUNT in params:
@@ -763,17 +744,16 @@ class SublimeSocketAPI:
 
 		self.editorAPI.scrollTo(view, line, count)
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.SCROLLTO_INJECTIONS,
-			[],
-			results
+			[]
 		)
 
 		
 
 
-	def transform(self, params, results):
+	def transform(self, params):
 		assert SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params, "transform require 'selectors' param."
 
 		code = None
@@ -890,11 +870,10 @@ class SublimeSocketAPI:
 			keys.append(key)
 			values.append(val)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params, 
 			keys, 
-			values, 
-			results)
+			values)
 
 
 
@@ -922,18 +901,16 @@ class SublimeSocketAPI:
 			failedCount = 0
 
 			# start test
-			self.isTesting = True
-		
+			
 			# reset globalResults
 			self.globalResults = []
 
 			currentTestResults = self.initResult("test:"+str(uuid.uuid4()))
 
 			for testCommand, testParams in testCase:
-				self.runAPI(testCommand, testParams, clientId, None, currentTestResults)
+				command, params = SushiJSONParser.composeParams(testCommand, testParams, None)
+				self.runAPI(command, params, clientId)
 
-			# end test
-			self.isTesting = False
 
 			# reduce results
 			for resultKey in currentTestResults:
@@ -974,7 +951,8 @@ class SublimeSocketAPI:
 
 
 	## assertions
-	def assertResult(self, params, currentResults):
+	def assertResult(self, params):
+		currentResults = self.globalResults[0]
 		assert SublimeSocketAPISettings.ASSERTRESULT_ID in params, "assertResult require 'id' param."
 		assert SublimeSocketAPISettings.ASSERTRESULT_DESCRIPTION in params, "assertResult require 'description' param."
 		
@@ -988,35 +966,6 @@ class SublimeSocketAPI:
 		
 
 		results = currentResults
-		
-		
-		if SublimeSocketAPISettings.ASSERTRESULT_CONTEXT in params:
-			contextKeyword = params[SublimeSocketAPISettings.ASSERTRESULT_CONTEXT]
-			
-			def checkIsResultsOf(currentContext, currentContextKeyword):
-				key = list(currentContext)[0]
-				
-				if currentContextKeyword in key:
-					return True
-					
-				return False
-
-			def collectResultsContextValues(currentContext):
-				key = list(currentContext)[0]
-				value = currentContext[key]
-
-				return value
-				
-			unmergedResultsList = [collectResultsContextValues(context) for context in self.globalResults if checkIsResultsOf(context, contextKeyword)]
-
-			resultValues = {}
-			mergedResults = {}
-			
-			for item in unmergedResultsList:
-				for key in list(item):
-					resultValues[key] = item[key]
-			
-			results = {contextKeyword:resultValues}
 			
 		# load results for check
 		resultBodies = self.resultBody(results)
@@ -1038,7 +987,7 @@ class SublimeSocketAPI:
 								assertionIdentity, 
 								message)
 			
-			self.setResultsParams(results, self.assertResult, {SublimeSocketAPISettings.ASSERTRESULT_RESULT:resultMessage, SublimeSocketAPISettings.ASSERTRESULT_PASSEDORFAILED:passedOrFailed})			
+			self.setResultsParams(self.assertResult, {SublimeSocketAPISettings.ASSERTRESULT_RESULT:resultMessage, SublimeSocketAPISettings.ASSERTRESULT_PASSEDORFAILED:passedOrFailed})			
 
 		# contains
 		if SublimeSocketAPISettings.ASSERTRESULT_CONTAINS in params:
@@ -1165,7 +1114,7 @@ class SublimeSocketAPI:
 		
 	
 	## change identity of client.
-	def changeIdentity(self, params, currentClientIdentity, results):
+	def changeIdentity(self, params, currentClientIdentity):
 		assert SublimeSocketAPISettings.CHANGEIDENTITY_TO in params, "updateClientId requre 'to' param"
 		
 		currentIdentityCandicate = currentClientIdentity
@@ -1177,17 +1126,16 @@ class SublimeSocketAPI:
 
 		self.server.transfer.updateClientId(currentIdentityCandicate, newIdentity)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.CHANGEIDENTITY_INJECTIONS,
-			[currentIdentityCandicate, newIdentity],
-			results
+			[currentIdentityCandicate, newIdentity]
 		)
 
 		
 
 	## create buffer then set contents if exist.
-	def createBuffer(self, params, results):
+	def createBuffer(self, params):
 		assert SublimeSocketAPISettings.CREATEBUFFER_NAME in params, "createBuffer require 'name' param"
 		
 		name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
@@ -1228,8 +1176,7 @@ class SublimeSocketAPI:
 		self.fireReactor(
 			SublimeSocketAPISettings.REACTORTYPE_VIEW,
 			SublimeSocketAPISettings.SS_EVENT_RENAMED, 
-			viewParams,
-			results
+			viewParams
 		)
 
 		# if "contents" exist, set contents to buffer.
@@ -1237,18 +1184,17 @@ class SublimeSocketAPI:
 			contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
 			self.editorAPI.runCommandOnView('insert_text', {'string': contents})
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.CREATEBUFFER_INJECTIONS,
-			[name, status],
-			results
+			[name, status]
 		)
 
 		
 		
 	
 	## open file
-	def openFile(self, params, results):
+	def openFile(self, params):
 		assert SublimeSocketAPISettings.OPENFILE_PATH in params, "openFile require 'path' key."
 		original_path = params[SublimeSocketAPISettings.OPENFILE_PATH]
 		path = original_path
@@ -1287,20 +1233,19 @@ class SublimeSocketAPI:
 			self.fireReactor(
 				SublimeSocketAPISettings.REACTORTYPE_VIEW,
 				SublimeSocketAPISettings.SS_EVENT_LOADING, 
-				viewParams,
-				results)
+				viewParams
+			)
 
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.OPENFILE_INJECTIONS,
-				[path, name],
-				results
+				[path, name]
 			)
 
 		
 	
 	## close file. if specified -> close the file. if not specified -> close current file.
-	def closeFile(self, params, results):
+	def closeFile(self, params):
 		assert SublimeSocketAPISettings.CLOSEFILE_NAME in params, "closeFile require 'name' param."
 		
 		name = params[SublimeSocketAPISettings.CLOSEFILE_NAME]
@@ -1310,15 +1255,13 @@ class SublimeSocketAPI:
 
 		self.editorAPI.closeView(view)
 		
-
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.CLOSEFILE_INJECTIONS,
-			[path, name],
-			results
+			[path, name]
 		)
 
-	def closeAllBuffer(self, params, results):
+	def closeAllBuffer(self, params):
 		closeds = []
 
 		def close(window):
@@ -1331,17 +1274,16 @@ class SublimeSocketAPI:
 
 		[close(window) for window in self.editorAPI.windows()]
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.CLOSEALLBUFFER_INJECTIONS,
-			[closeds],
-			results
+			[closeds]
 		)
 
 		
 
 	# run selected regions.
-	def selectedRegions(self, params, results):
+	def selectedRegions(self, params):
 		assert SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS in params, "selectedRegions require 'selecteds' param."
 		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SELECTEDREGIONS_VIEW, SublimeSocketAPISettings.SELECTEDREGIONS_NAME)
@@ -1349,6 +1291,13 @@ class SublimeSocketAPI:
 			return
 
 		isExactly = True
+		if SublimeSocketAPISettings.SELECTEDREGIONS_ISEXACTLY in params:
+			isExactly = params[SublimeSocketAPISettings.SELECTEDREGIONS_ISEXACTLY]
+
+		isSameLine = False
+		if SublimeSocketAPISettings.SELECTEDREGIONS_ISSAMELINE in params:
+			isSameLine = params[SublimeSocketAPISettings.SELECTEDREGIONS_ISSAMELINE]
+
 		name = os.path.basename(path)
 
 		selecteds = params[SublimeSocketAPISettings.SELECTEDREGIONS_SELECTEDS]
@@ -1367,7 +1316,7 @@ class SublimeSocketAPI:
 				regionTo = regionData[SublimeSocketAPISettings.REGION_TO]
 				region = self.editorAPI.generateRegion(regionFrom, regionTo)
 
-				if self.editorAPI.isRegionContained(region, selecteds, isExactly):
+				if self.editorAPI.isRegionContained(region, selecteds, isExactly, isSameLine):
 					return True
 				return False
 
@@ -1388,17 +1337,17 @@ class SublimeSocketAPI:
 				# add the line contents of this region. selection x region
 				crossed = self.editorAPI.crossedContents(view, fromParam, toParam)
 
-				self.runAllSelector(
+				self.runAllSelectors(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONS, 
-					[path, name, crossed, line, fromParam, toParam, messages], 
-					results)
+					[path, name, crossed, line, fromParam, toParam, messages]
+				)
 
 			# update current contained region for preventing double-run.
 			self.server.updateSelectingRegionIdsAndResetOthers(path, latestContainedRegionIdentities)
 			currentSelectedRegionIdsSet = self.server.selectingRegionIds(path)
 
-	def defineFilter(self, params, results):
+	def defineFilter(self, params):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
 		# load defined filters
@@ -1422,15 +1371,14 @@ class SublimeSocketAPI:
 		filterNameAndPatternsArray[filterName] = filters
 		self.server.updateFiltersDict(filterNameAndPatternsArray)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.DEFINEFILTER_INJECTIONS,
-			[filterName, patterns],
-			results
+			[filterName, patterns]
 		)
 		
 
-	def filtering(self, params, results):
+	def filtering(self, params):
 		assert SublimeSocketAPISettings.FILTERING_NAME in params, "filtering require 'name' param."
 		assert SublimeSocketAPISettings.FILTERING_SOURCE in params, "filtering require 'source' param."
 
@@ -1457,8 +1405,12 @@ class SublimeSocketAPI:
 		for pattern in filterPatternsArray:
 
 			key = list(pattern)[0]
-			executablesDict = pattern[key]
 			
+			executablesDict = pattern[key]
+
+			# print("executablesDict", executablesDict)
+
+
 			if debug:
 				self.editorAPI.printMessage("filterName:"+str(filterName))
 				self.editorAPI.printMessage("pattern:" + str(pattern))
@@ -1479,32 +1431,36 @@ class SublimeSocketAPI:
 			else:
 				searchResult = re.finditer(re.compile(r'%s' % key, re.M), filterSource)
 
+
 			
 			for searched in searchResult:
 				if searched:
+					searchedExecutablesDict = {}
+					for key, value in executablesDict.items():
+						searchedExecutablesDict[key] = value
 					
 					if SushiJSON.SUSHIJSON_KEYWORD_INJECTS in executablesDict:
-						injectionDict = executablesDict[SushiJSON.SUSHIJSON_KEYWORD_INJECTS].copy()
+						injectionDict = searchedExecutablesDict[SushiJSON.SUSHIJSON_KEYWORD_INJECTS]
 					else:
 						injectionDict = {}
-
+						
 					
 					if debug:
-						executablesArray = executablesDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
+						executablesArray = searchedExecutablesDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
 					
 						self.editorAPI.printMessage("matched defineFilter selectors:" + str(executablesArray))
 						self.editorAPI.printMessage("filterSource\n---------------------\n" + filterSource + "\n---------------------")
 						self.editorAPI.printMessage("matched group():" + str(searched.group()))
 						self.editorAPI.printMessage("matched groups():" + str(searched.groups()))
 					
-						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in executablesDict:
-							self.editorAPI.printMessage("matched defineFilter comment:" + executablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
+						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in searchedExecutablesDict:
+							self.editorAPI.printMessage("matched defineFilter comment:" + searchedExecutablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
 
 					for index in range(len(searched.groups())):
 						searchedValue = searched.groups()[index]
 						
 						searchedKey = "groups[" + str(index) + "]"
-						executablesDict[searchedKey] = searchedValue
+						searchedExecutablesDict[searchedKey] = searchedValue
 
 						# inject if not revealed yet.
 						if searchedKey in injectionDict:
@@ -1512,7 +1468,7 @@ class SublimeSocketAPI:
 						else:
 							injectionDict[searchedKey] = searchedValue
 
-					executablesDict["group"] = searched.group()
+					searchedExecutablesDict["group"] = searched.group()
 					if "group" in injectionDict:
 						pass
 					else:
@@ -1520,11 +1476,10 @@ class SublimeSocketAPI:
 
 					injectionDict[SublimeSocketAPISettings.FILTERING_SOURCE] = filterSource
 
-					self.runAllSelector(
-						executablesDict,
+					self.runAllSelectors(
+						searchedExecutablesDict,
 						injectionDict.keys(),
-						injectionDict.values(),
-						results
+						injectionDict.values()
 					)
 
 				else:
@@ -1532,7 +1487,7 @@ class SublimeSocketAPI:
 						self.editorAPI.printMessage("filtering not match")
 
 	## set reactor for reactive-event
-	def setEventReactor(self, params, results):
+	def setEventReactor(self, params):
 		assert SublimeSocketAPISettings.SETREACTOR_REACT in params, "setEventReactor require 'react' param."
 		
 		reactEventName = params[SublimeSocketAPISettings.SETREACTOR_REACT]
@@ -1544,28 +1499,27 @@ class SublimeSocketAPI:
 
 		assert check, "setEventReactor can only set the 'react' param which starts with 'ss_f_' or 'event_' prefix."
 		
-		self.setReactor(params, results)
+		self.setReactor(params)
 
 	## set reactor for view
-	def setViewReactor(self, params, results):
-		self.setReactor(params, results)
+	def setViewReactor(self, params):
+		self.setReactor(params)
 		
 		
 	## erase all reactors
-	def resetReactors(self, params, results):
+	def resetReactors(self, params):
 		deletedReactors = self.removeAllReactors()
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.RESETREACTORS_INJECTIONS,
-			[deletedReactors],
-			results
+			[deletedReactors]
 		)
 
 		
 
 
-	def viewEmit(self, params, results):
+	def viewEmit(self, params):
 		assert SublimeSocketAPISettings.VIEWEMIT_IDENTITY in params, "viewEmit require 'identity' param."
 		
 		identity = params[SublimeSocketAPISettings.VIEWEMIT_IDENTITY]
@@ -1575,6 +1529,7 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.VIEWEMIT_DELAY in params:
 			delay = params[SublimeSocketAPISettings.VIEWEMIT_DELAY]
 
+		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
 		if not view:
 			return
@@ -1587,7 +1542,6 @@ class SublimeSocketAPI:
 			name = os.path.basename(path)
 		
 		if view:
-	
 			if not self.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
 				pass
 
@@ -1599,14 +1553,13 @@ class SublimeSocketAPI:
 				# get modifying line num
 				rowColStr = self.editorAPI.selectionAsStr(view)
 				
-				self.runAllSelector(
+				self.runAllSelectors(
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
-					[body, path, name, modifiedPath, rowColStr, identity], 
-					results
+					[body, path, name, modifiedPath, rowColStr, identity]
 				)
 
-	def modifyView(self, params, results):
+	def modifyView(self, params):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
 		if not view:
 			return
@@ -1638,15 +1591,14 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
 			self.editorAPI.runCommandOnView(view, 'reduce_text')
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.MODIFYVIEW_INJECTIONS,
-			[path, name, line, to],
-			results
+			[path, name, line, to]
 		)
 
 	## generate selection to view
-	def setSelection(self, params, results):
+	def setSelection(self, params):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
 		if not view:
 			return
@@ -1692,19 +1644,18 @@ class SublimeSocketAPI:
 		emitIdentity = str(uuid.uuid4())
 		viewParams[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams, results)
+		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams)
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.SETSELECTION_INJECTIONS,
-			[path, name, selecteds],
-			results
+			[path, name, selecteds]
 		)
 
 		
 
 
-	def clearSelection(self, params, results):
+	def clearSelection(self, params):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CLEARSELECTION_VIEW, SublimeSocketAPISettings.CLEARSELECTION_NAME)
 		if not view:
 			return
@@ -1713,17 +1664,16 @@ class SublimeSocketAPI:
 
 		cleards = self.editorAPI.clearSelectionOfView(view)
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.CLEARSELECTION_INJECTIONS,
-			[path ,name, cleards],
-			results
+			[path ,name, cleards]
 		)
 
 
 
 	## show message
-	def showStatusMessage(self, params, results):
+	def showStatusMessage(self, params):
 		if SublimeSocketAPISettings.LOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
 			self.showStatusMessage(params, results)
@@ -1735,11 +1685,11 @@ class SublimeSocketAPI:
 
 		if SublimeSocketAPISettings.SHOWSTATUSMESSAGE_DEBUG in params:
 			if params[SublimeSocketAPISettings.SHOWSTATUSMESSAGE_DEBUG]:
-				self.showAtLog({"message":message}, results)
+				self.showAtLog({"message":message})
 
 
 	## append region
-	def appendRegion(self, params, results):
+	def appendRegion(self, params):
 		if SublimeSocketAPISettings.LOG_FORMAT in params:
 			params = self.formattingMessageParameters(params, SublimeSocketAPISettings.LOG_FORMAT, SublimeSocketAPISettings.LOG_MESSAGE)
 			self.appendRegion(params, results)
@@ -1776,11 +1726,10 @@ class SublimeSocketAPI:
 			
 			self.server.storeRegion(path, identity, line, regionFrom, regionTo, message)
 
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.APPENDREGION_INJECTIONS,
-				[path, identity, line, regionFrom, regionTo, message, condition],
-				results
+				[path, identity, line, regionFrom, regionTo, message, condition]
 			)
 
 
@@ -1798,14 +1747,14 @@ class SublimeSocketAPI:
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition
 
-			self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, currentParams, results)
+			self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_FOUNDATION_NOVIEWFOUND, currentParams)
 			
 			currentParams["result"] = "failed to append region."
 			
 
 
 	## emit notification mechanism
-	def notify(self, params, results):
+	def notify(self, params):
 		assert SublimeSocketAPISettings.NOTIFY_TITLE in params, "notify require 'title' param."
 		assert SublimeSocketAPISettings.NOTIFY_MESSAGE in params, "notify require 'message' param."
 
@@ -1830,23 +1779,22 @@ class SublimeSocketAPI:
 			
 			self.runShell(shellParams)
 
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.NOTIFY_INJECTIONS,
-				[title, message],
-				results
+				[title, message]
 			)
 			
 
 
 
 	## get current project's file paths then set results
-	def getAllFilePath(self, params, results):
+	def getAllFilePath(self, params):
 		assert SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR in params, "getAllFilePath require 'anchor' param."
 
 		anchor = params[SublimeSocketAPISettings.GETALLFILEPATH_ANCHOR]
 
-		self.setSublimeSocketWindowBasePath({}, results)
+		self.setSublimeSocketWindowBasePath({})
 
 		filePath = self.sublimeSocketWindowBasePath
 
@@ -1910,17 +1858,16 @@ class SublimeSocketAPI:
 				paths.append(partialPath)
 				fullpaths.append(fullPath)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.GETALLFILEPATH_INJECTIONS,
-			[baseDir, paths, fullpaths],
-			results
+			[baseDir, paths, fullpaths]
 		)
 
 		
 
 
-	def readFile(self, params, results):
+	def readFile(self, params):
 		assert SublimeSocketAPISettings.READFILE_PATH in params, "readFile require 'path' param."
 		
 		original_path = params[SublimeSocketAPISettings.READFILE_PATH]
@@ -1934,14 +1881,14 @@ class SublimeSocketAPI:
 		currentFile.close()
 
 		if data:
-			self.runAllSelector(
+			self.runAllSelectors(
 				params, 
 				SublimeSocketAPISettings.READFILE_INJECTIONS, 
-				[original_path, path, data], 
-				results)
+				[original_path, path, data]
+			)
 
 
-	def eventEmit(self, params, results):
+	def eventEmit(self, params):
 		assert SublimeSocketAPISettings.EVENTEMIT_TARGET in params, "eventEmit require 'target' param."
 		assert SublimeSocketAPISettings.EVENTEMIT_EVENT in params, "eventEmit require 'eventemit' param."
 
@@ -1949,33 +1896,31 @@ class SublimeSocketAPI:
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
-		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params, results)
+		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.EVENTEMIT_INJECTIONS,
-			[target, eventName],
-			results
+			[target, eventName]
 		)
 
 
-	def cancelCompletion(self, params, results):
+	def cancelCompletion(self, params):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.CANCELCOMPLETION_VIEW, SublimeSocketAPISettings.CANCELCOMPLETION_NAME)
 		
 		if view:
 			# hide completion
 			self.editorAPI.runCommandOnView(view, "hide_auto_complete")
 
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.CANCELCOMPLETION_INJECTIONS,
-				[],
-				results
+				[]
 			)
 			
 
 	
-	def runCompletion(self, params, results):
+	def runCompletion(self, params):
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
 		
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
@@ -2013,15 +1958,14 @@ class SublimeSocketAPI:
 		# display completions
 		self.editorAPI.runCommandOnView(view, "auto_complete")
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.RUNCOMPLETION_INJECTIONS,
-			[path, name],
-			results
+			[path, name]
 		)
 			
 
-	def forcelySave(self, params, results):
+	def forcelySave(self, params):
 		(view, path) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)
 		if not view:
 			return
@@ -2030,31 +1974,29 @@ class SublimeSocketAPI:
 
 		self.editorAPI.runCommandOnView(view, 'forcely_save')
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.FORCELYSAVE_INJECTIONS,
-			[path, name],
-			results
+			[path, name]
 		)
 
 		
-	def setSublimeSocketWindowBasePath(self, params, results):
+	def setSublimeSocketWindowBasePath(self, params):
 		basepath = self.editorAPI.getFileName()
 		basename = os.path.basename(basepath)
 
 		if basepath:
 			self.sublimeSocketWindowBasePath = basepath
 			
-			self.runAllSelector(
+			self.runAllSelectors(
 				params,
 				SublimeSocketAPISettings.SETSUBLIMESOCKETWINDOWBASEPATH_INJECTIONS,
-				[basepath, basename],
-				results
+				[basepath, basename]
 			)
 		
 		
 	## verify SublimeSocket API-version and SublimeSocket version
-	def versionVerify(self, params, clientId, results):
+	def versionVerify(self, params, clientId):
 		assert clientId, "versionVerify require 'client' object."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_SOCKETVERSION in params, "versionVerify require 'socketVersion' param."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_APIVERSION in params, "versionVerify require 'apiVersion' param."
@@ -2124,11 +2066,10 @@ class SublimeSocketAPI:
 			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.VERSIONVERIFY_INJECTIONS, 
-			[code, message], 
-			results
+			[code, message]
 		)
 
 		
@@ -2176,7 +2117,7 @@ class SublimeSocketAPI:
 		self.editorAPI.printMessage("verify: " + message)
 		return message
 
-	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition, results):
+	def checkIfViewExist_appendRegion_Else_notFound(self, view, viewInstance, line, message, condition):
 		# this check should be run in main thread
 		return self.server.internal_appendRegion(viewInstance, line, message, condition)
 
@@ -2184,7 +2125,7 @@ class SublimeSocketAPI:
 
 
 	## erase all regions of view/condition
-	def eraseAllRegions(self, params, results):
+	def eraseAllRegions(self, params):
 		regionsDict = self.server.regionsDict()
 		
 		deletes = {}
@@ -2228,11 +2169,10 @@ class SublimeSocketAPI:
 
 			self.server.updateRegionsDict(regionsDict)
 		
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.ERASEALLREGIONS_INJECTIONS,
-			[deletes],
-			results
+			[deletes]
 		)
 
 		
@@ -2345,7 +2285,7 @@ class SublimeSocketAPI:
 
 
 	## collect current views
-	def collectViews(self, params, results):
+	def collectViews(self, params):
 		collecteds = []
 		for views in [window.views() for window in self.editorAPI.windows()]:
 			for view in views:
@@ -2368,17 +2308,15 @@ class SublimeSocketAPI:
 				self.fireReactor(
 					SublimeSocketAPISettings.REACTORTYPE_VIEW,
 					SublimeSocketAPISettings.SS_EVENT_COLLECT, 
-					viewParams,
-					results
+					viewParams
 				)
 
 				collecteds.append(viewParams[SublimeSocketAPISettings.VIEW_PATH])
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.COLLECTVIEWS_INJECTIONS,
-			[collecteds],
-			results
+			[collecteds]
 		)
 
 		
@@ -2433,7 +2371,7 @@ class SublimeSocketAPI:
 
 
 	# reactor series
-	def setReactor(self, params, results):
+	def setReactor(self, params):
 		assert SublimeSocketAPISettings.SETREACTOR_TARGET in params, "set_X_Reactor require 'target' param."
 		assert SublimeSocketAPISettings.SETREACTOR_REACT in params, "set_X_Reactor require 'react' param."
 		assert SublimeSocketAPISettings.SETREACTOR_REACTORS in params, "set_X_Reactor require 'reactors' param."
@@ -2478,11 +2416,10 @@ class SublimeSocketAPI:
 		self.server.updateReactorsDict(reactorsDict)
 		self.server.updateReactorsLogDict(reactorsLogDict)
 
-		self.runAllSelector(
+		self.runAllSelectors(
 			params,
 			SublimeSocketAPISettings.SETREACTOR_INJECTIONS,
-			[target, reactEventName, delay],
-			results
+			[target, reactEventName, delay]
 		)
 
 
@@ -2504,14 +2441,14 @@ class SublimeSocketAPI:
 		return deletedReactorsList
 
 
-	def fireReactor(self, reactorType, eventName, eventParam, results):
+	def fireReactor(self, reactorType, eventName, eventParam):
 
 		reactorsDict = self.server.reactorsDict()
 		reactorsLogDict = self.server.reactorsLogDict()
 
 		if eventName in SublimeSocketAPISettings.REACTIVE_FOUNDATION_EVENT:
 			if reactorsDict and eventName in reactorsDict:
-				self.runFoundationEvent(eventName, eventParam, reactorsDict[eventName], results)
+				self.runFoundationEvent(eventName, eventParam, reactorsDict[eventName])
 				
 		else:
 			if eventName in SublimeSocketAPISettings.VIEW_EVENTS_RENEW:
@@ -2531,7 +2468,7 @@ class SublimeSocketAPI:
 
 					else:
 						reactorParams = reactorDict[reactorKey]
-						self.runReactor(reactorType, reactorParams, eventParam, results)
+						self.runReactor(reactorType, reactorParams, eventParam)
 						
 
 

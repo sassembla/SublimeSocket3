@@ -175,9 +175,7 @@ class SublimeSocketThread(threading.Thread):
       emitIdentity = str(uuid.uuid4())
       eventParam[SublimeSocketAPISettings.REACTOR_VIEWKEY_EMITIDENTITY] = emitIdentity
 
-      results = self.server.api.initResult("view:"+emitIdentity)
-
-      self.server.api.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam, results)
+      self.server.api.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, eventName, eventParam)
 
 
   def getReactorDataFromServer(self, eventName, view):
