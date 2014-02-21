@@ -2684,8 +2684,7 @@ test>filterのパターンを試す/defineFilter: {
         }
     },
     "description": "not match 2."
-}
-->filtering: {
+}->filtering: {
     "name": "testDotAll",
     "source": "System.NullReferenceException: reason3\nsomething\nsomething\n  at dummy3 in place3:300 \n  at dummy4 in place4:400 \ndummy5"
 }->assertResult: {

@@ -10,6 +10,7 @@ import re
 import uuid
 import sys
 import io
+import copy
 
 from functools import reduce
 from .PythonSwitch import PythonSwitch
@@ -1408,7 +1409,7 @@ class SublimeSocketAPI:
 			
 			executablesDict = pattern[key]
 
-			# print("executablesDict", executablesDict)
+			print("executablesDict", executablesDict)
 
 
 			if debug:
@@ -1435,32 +1436,29 @@ class SublimeSocketAPI:
 			
 			for searched in searchResult:
 				if searched:
-					searchedExecutablesDict = {}
-					for key, value in executablesDict.items():
-						searchedExecutablesDict[key] = value
-					
-					if SushiJSON.SUSHIJSON_KEYWORD_INJECTS in executablesDict:
-						injectionDict = searchedExecutablesDict[SushiJSON.SUSHIJSON_KEYWORD_INJECTS]
+					paramDict = copy.deepcopy(executablesDict)
+					if SushiJSON.SUSHIJSON_KEYWORD_INJECTS in paramDict:
+						injectionDict = paramDict[SushiJSON.SUSHIJSON_KEYWORD_INJECTS].copy()
 					else:
 						injectionDict = {}
 						
 					
 					if debug:
-						executablesArray = searchedExecutablesDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
+						executablesArray = paramDict[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
 					
 						self.editorAPI.printMessage("matched defineFilter selectors:" + str(executablesArray))
 						self.editorAPI.printMessage("filterSource\n---------------------\n" + filterSource + "\n---------------------")
 						self.editorAPI.printMessage("matched group():" + str(searched.group()))
 						self.editorAPI.printMessage("matched groups():" + str(searched.groups()))
 					
-						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in searchedExecutablesDict:
-							self.editorAPI.printMessage("matched defineFilter comment:" + searchedExecutablesDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
+						if SublimeSocketAPISettings.DEFINEFILTER_COMMENT in paramDict:
+							self.editorAPI.printMessage("matched defineFilter comment:" + paramDict[SublimeSocketAPISettings.DEFINEFILTER_COMMENT])
 
 					for index in range(len(searched.groups())):
 						searchedValue = searched.groups()[index]
 						
 						searchedKey = "groups[" + str(index) + "]"
-						searchedExecutablesDict[searchedKey] = searchedValue
+						paramDict[searchedKey] = searchedValue
 
 						# inject if not revealed yet.
 						if searchedKey in injectionDict:
@@ -1468,7 +1466,7 @@ class SublimeSocketAPI:
 						else:
 							injectionDict[searchedKey] = searchedValue
 
-					searchedExecutablesDict["group"] = searched.group()
+					paramDict["group"] = searched.group()
 					if "group" in injectionDict:
 						pass
 					else:
@@ -1476,8 +1474,9 @@ class SublimeSocketAPI:
 
 					injectionDict[SublimeSocketAPISettings.FILTERING_SOURCE] = filterSource
 
+					
 					self.runAllSelectors(
-						searchedExecutablesDict,
+						paramDict,
 						injectionDict.keys(),
 						injectionDict.values()
 					)
