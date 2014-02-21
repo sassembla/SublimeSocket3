@@ -311,27 +311,12 @@ class SublimeSocketAPI:
 			keys.append(key)
 			values.append(val)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params, 
 			keys, 
-			values
+			values,
+			self.runAPI
 		)
-
-	def runAllSelectors(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues):
-		if params:
-			assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
-			zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
-
-			if SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params:
-				selectors = params[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS]
-
-				# inject
-				composedInjectParams = SushiJSONParser.injectParams(params, zippedInjectiveParams)
-				
-				for selector in selectors:
-					for eachCommand, eachParams in selector.items():
-						command, params = SushiJSONParser.composeParams(eachCommand, eachParams, composedInjectParams)
-						self.runAPI(command, params, None)
 
 		
 	def runFoundationEvent(self, eventName, eventParam, reactors):
@@ -351,10 +336,12 @@ class SublimeSocketAPI:
 				keys.append(key)
 				values.append(val)
 
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params, 
 				keys, 
-				values)
+				values,
+				self.runAPI
+			)
 
 
 	def afterAsync(self, params):
@@ -375,10 +362,11 @@ class SublimeSocketAPI:
 
 			if identity in self.asyncDict:
 				if runtimeIdentity == self.asyncDict[identity]["runtimeIdentity"]:
-					self.runAllSelectors(
+					SushiJSONParser.runSelectors(
 						currentParams, 
 						currentParams.keys(),
-						currentParams.values()
+						currentParams.values(),
+						self.runAPI
 					)
 
 				else:
@@ -414,10 +402,11 @@ class SublimeSocketAPI:
 
 		count = self.counts[label]
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params, 
 			SublimeSocketAPISettings.COUNTUP_INJECTIONS,
-			[label, count]
+			[label, count],
+			self.runAPI
 		)
 
 		
@@ -434,10 +423,11 @@ class SublimeSocketAPI:
 			resetted = list(self.counts)
 			self.counts = {}
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.RESETCOUNTS_INJECTIONS,
-			[resetted]
+			[resetted],
+			self.runAPI
 		)
 
 		
@@ -477,10 +467,11 @@ class SublimeSocketAPI:
 
 		logs = ["done"]
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
-			[logs]
+			[logs],
+			self.runAPI
 		)
 
 
@@ -575,10 +566,11 @@ class SublimeSocketAPI:
 		else:
 			sendedTargetIds = self.server.broadcastMessage([], message)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.BROADCASTMESSAGE_INJECTIONS,
-			[sendedTargetIds, message]
+			[sendedTargetIds, message],
+			self.runAPI
 		)
 		
 	
@@ -599,10 +591,11 @@ class SublimeSocketAPI:
 		succeeded, reason = self.server.sendMessage(target, message)
 
 		if succeeded:
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.MONOCASTMESSAGE_INJECTIONS,
-				[target, message]
+				[target, message],
+				self.runAPI
 			)
 
 		else:
@@ -634,10 +627,11 @@ class SublimeSocketAPI:
 
 		self.editorAPI.showMessageDialog(message)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.SHOWDIALOG_INJECTIONS,
-			[message]
+			[message],
+			self.runAPI
 		)
 
 
@@ -690,19 +684,23 @@ class SublimeSocketAPI:
 					selectorInsideParams = params
 					selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = itemDict[key]
 					
-					self.runAllSelectors(
+					SushiJSONParser.runSelectors(
 						selectorInsideParams, 
 						SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-						[path, name, tooltipTitles, selectedTitle])
+						[path, name, tooltipTitles, selectedTitle],
+						self.runAPI
+					)
 			else:
 				# rename from "cancelled" to "selector".
 				selectorInsideParams = params
 				selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = cancelled
 				
-				self.runAllSelectors(
+				SushiJSONParser.runSelectors(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-					[path, name, tooltipTitles, selectedTitle])
+					[path, name, tooltipTitles, selectedTitle],
+					self.runAPI
+				)
 
 
 			if finallyBlock:
@@ -710,16 +708,20 @@ class SublimeSocketAPI:
 				selectorInsideParams = params
 				selectorInsideParams[SushiJSON.SUSHIJSON_KEYWORD_SELECTORS] = finallyBlock
 
-				self.runAllSelectors(
+				SushiJSONParser.runSelectors(
 					selectorInsideParams, 
 					SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-					[path, name, tooltipTitles, selectedTitle])
+					[path, name, tooltipTitles, selectedTitle],
+					self.runAPI
+				)
 		
 		# run before lock
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params, 
 			SublimeSocketAPISettings.SHOWTOOLTIP_INJECTIONS, 
-			[path, name, tooltipTitles, selectedTitle])
+			[path, name, tooltipTitles, selectedTitle],
+			self.runAPI
+		)
 
 		self.editorAPI.showPopupMenu(view, tooltipTitles, toolTipClosed)
 
@@ -745,10 +747,11 @@ class SublimeSocketAPI:
 
 		self.editorAPI.scrollTo(view, line, count)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.SCROLLTO_INJECTIONS,
-			[]
+			[],
+			self.runAPI
 		)
 
 		
@@ -871,10 +874,12 @@ class SublimeSocketAPI:
 			keys.append(key)
 			values.append(val)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params, 
 			keys, 
-			values)
+			values,
+			self.runAPI
+		)
 
 
 
@@ -1127,10 +1132,11 @@ class SublimeSocketAPI:
 
 		self.server.transfer.updateClientId(currentIdentityCandicate, newIdentity)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CHANGEIDENTITY_INJECTIONS,
-			[currentIdentityCandicate, newIdentity]
+			[currentIdentityCandicate, newIdentity],
+			self.runAPI
 		)
 
 		
@@ -1185,10 +1191,11 @@ class SublimeSocketAPI:
 			contents = params[SublimeSocketAPISettings.CREATEBUFFER_CONTENTS]
 			self.editorAPI.runCommandOnView('insert_text', {'string': contents})
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CREATEBUFFER_INJECTIONS,
-			[name, status]
+			[name, status],
+			self.runAPI
 		)
 
 		
@@ -1237,10 +1244,11 @@ class SublimeSocketAPI:
 				viewParams
 			)
 
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.OPENFILE_INJECTIONS,
-				[path, name]
+				[path, name],
+				self.runAPI
 			)
 
 		
@@ -1256,10 +1264,11 @@ class SublimeSocketAPI:
 
 		self.editorAPI.closeView(view)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CLOSEFILE_INJECTIONS,
-			[path, name]
+			[path, name],
+			self.runAPI
 		)
 
 	def closeAllBuffer(self, params):
@@ -1275,10 +1284,11 @@ class SublimeSocketAPI:
 
 		[close(window) for window in self.editorAPI.windows()]
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CLOSEALLBUFFER_INJECTIONS,
-			[closeds]
+			[closeds],
+			self.runAPI
 		)
 
 		
@@ -1338,10 +1348,11 @@ class SublimeSocketAPI:
 				# add the line contents of this region. selection x region
 				crossed = self.editorAPI.crossedContents(view, fromParam, toParam)
 
-				self.runAllSelectors(
+				SushiJSONParser.runSelectors(
 					params, 
 					SublimeSocketAPISettings.SELECTEDREGIONS_INJECTIONS, 
-					[path, name, crossed, line, fromParam, toParam, messages]
+					[path, name, crossed, line, fromParam, toParam, messages],
+					self.runAPI
 				)
 
 			# update current contained region for preventing double-run.
@@ -1372,10 +1383,11 @@ class SublimeSocketAPI:
 		filterNameAndPatternsArray[filterName] = filters
 		self.server.updateFiltersDict(filterNameAndPatternsArray)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.DEFINEFILTER_INJECTIONS,
-			[filterName, patterns]
+			[filterName, patterns],
+			self.runAPI
 		)
 		
 
@@ -1475,10 +1487,11 @@ class SublimeSocketAPI:
 					injectionDict[SublimeSocketAPISettings.FILTERING_SOURCE] = filterSource
 
 					
-					self.runAllSelectors(
+					SushiJSONParser.runSelectors(
 						paramDict,
 						injectionDict.keys(),
-						injectionDict.values()
+						injectionDict.values(),
+						self.runAPI
 					)
 
 				else:
@@ -1509,10 +1522,11 @@ class SublimeSocketAPI:
 	def resetReactors(self, params):
 		deletedReactors = self.removeAllReactors()
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.RESETREACTORS_INJECTIONS,
-			[deletedReactors]
+			[deletedReactors],
+			self.runAPI
 		)
 
 		
@@ -1552,10 +1566,11 @@ class SublimeSocketAPI:
 				# get modifying line num
 				rowColStr = self.editorAPI.selectionAsStr(view)
 				
-				self.runAllSelectors(
+				SushiJSONParser.runSelectors(
 					params, 
 					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
-					[body, path, name, modifiedPath, rowColStr, identity]
+					[body, path, name, modifiedPath, rowColStr, identity],
+					self.runAPI
 				)
 
 	def modifyView(self, params):
@@ -1590,10 +1605,11 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.MODIFYVIEW_REDUCE in params:
 			self.editorAPI.runCommandOnView(view, 'reduce_text')
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.MODIFYVIEW_INJECTIONS,
-			[path, name, line, to]
+			[path, name, line, to],
+			self.runAPI
 		)
 
 	## generate selection to view
@@ -1645,10 +1661,11 @@ class SublimeSocketAPI:
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_VIEW, SublimeSocketAPISettings.SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION, viewParams)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.SETSELECTION_INJECTIONS,
-			[path, name, selecteds]
+			[path, name, selecteds],
+			self.runAPI
 		)
 
 		
@@ -1663,10 +1680,11 @@ class SublimeSocketAPI:
 
 		cleards = self.editorAPI.clearSelectionOfView(view)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CLEARSELECTION_INJECTIONS,
-			[path ,name, cleards]
+			[path ,name, cleards],
+			self.runAPI
 		)
 
 
@@ -1725,10 +1743,11 @@ class SublimeSocketAPI:
 			
 			self.server.storeRegion(path, identity, line, regionFrom, regionTo, message)
 
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.APPENDREGION_INJECTIONS,
-				[path, identity, line, regionFrom, regionTo, message, condition]
+				[path, identity, line, regionFrom, regionTo, message, condition],
+				self.runAPI
 			)
 
 
@@ -1778,10 +1797,11 @@ class SublimeSocketAPI:
 			
 			self.runShell(shellParams)
 
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.NOTIFY_INJECTIONS,
-				[title, message]
+				[title, message],
+				self.runAPI
 			)
 			
 
@@ -1857,10 +1877,11 @@ class SublimeSocketAPI:
 				paths.append(partialPath)
 				fullpaths.append(fullPath)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.GETALLFILEPATH_INJECTIONS,
-			[baseDir, paths, fullpaths]
+			[baseDir, paths, fullpaths],
+			self.runAPI
 		)
 
 		
@@ -1880,10 +1901,11 @@ class SublimeSocketAPI:
 		currentFile.close()
 
 		if data:
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params, 
 				SublimeSocketAPISettings.READFILE_INJECTIONS, 
-				[original_path, path, data]
+				[original_path, path, data],
+				self.runAPI
 			)
 
 
@@ -1897,10 +1919,11 @@ class SublimeSocketAPI:
 
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.EVENTEMIT_INJECTIONS,
-			[target, eventName]
+			[target, eventName],
+			self.runAPI
 		)
 
 
@@ -1911,10 +1934,11 @@ class SublimeSocketAPI:
 			# hide completion
 			self.editorAPI.runCommandOnView(view, "hide_auto_complete")
 
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.CANCELCOMPLETION_INJECTIONS,
-				[]
+				[],
+				self.runAPI
 			)
 			
 
@@ -1957,10 +1981,11 @@ class SublimeSocketAPI:
 		# display completions
 		self.editorAPI.runCommandOnView(view, "auto_complete")
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.RUNCOMPLETION_INJECTIONS,
-			[path, name]
+			[path, name],
+			self.runAPI
 		)
 			
 
@@ -1973,10 +1998,11 @@ class SublimeSocketAPI:
 
 		self.editorAPI.runCommandOnView(view, 'forcely_save')
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.FORCELYSAVE_INJECTIONS,
-			[path, name]
+			[path, name],
+			self.runAPI
 		)
 
 		
@@ -1987,10 +2013,11 @@ class SublimeSocketAPI:
 		if basepath:
 			self.sublimeSocketWindowBasePath = basepath
 			
-			self.runAllSelectors(
+			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.SETSUBLIMESOCKETWINDOWBASEPATH_INJECTIONS,
-				[basepath, basename]
+				[basepath, basename],
+				self.runAPI
 			)
 		
 		
@@ -2065,10 +2092,11 @@ class SublimeSocketAPI:
 			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
 
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.VERSIONVERIFY_INJECTIONS, 
-			[code, message]
+			[code, message],
+			self.runAPI
 		)
 
 		
@@ -2168,10 +2196,11 @@ class SublimeSocketAPI:
 
 			self.server.updateRegionsDict(regionsDict)
 		
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.ERASEALLREGIONS_INJECTIONS,
-			[deletes]
+			[deletes],
+			self.runAPI
 		)
 
 		
@@ -2312,10 +2341,11 @@ class SublimeSocketAPI:
 
 				collecteds.append(viewParams[SublimeSocketAPISettings.VIEW_PATH])
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.COLLECTVIEWS_INJECTIONS,
-			[collecteds]
+			[collecteds],
+			self.runAPI
 		)
 
 		
@@ -2415,10 +2445,11 @@ class SublimeSocketAPI:
 		self.server.updateReactorsDict(reactorsDict)
 		self.server.updateReactorsLogDict(reactorsLogDict)
 
-		self.runAllSelectors(
+		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.SETREACTOR_INJECTIONS,
-			[target, reactEventName, delay]
+			[target, reactEventName, delay],
+			self.runAPI
 		)
 
 

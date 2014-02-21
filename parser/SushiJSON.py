@@ -89,6 +89,7 @@ class SushiJSONParser():
 
 
 	@classmethod
+	
 	def composeParams(self, command, params, injects):
 		
 		# erase comment
@@ -171,22 +172,23 @@ class SushiJSONParser():
 		return resultInjectDict
 
 
-	# @classmethod
-	# def runAllSelectors(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues):
-	# 	if params:
-	# 		assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
-	# 		zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
+	@classmethod
+	def runSelectors(self, params, apiDefinedInjectiveKeys, apiDefinedInjectiveValues, runnable):
+		if params:
+			assert len(apiDefinedInjectiveKeys) == len(apiDefinedInjectiveValues), "cannot generate inective-keys and values:"+str(apiDefinedInjectiveKeys)+" vs injects:"+str(apiDefinedInjectiveValues)
+			zippedInjectiveParams = dict(zip(apiDefinedInjectiveKeys, apiDefinedInjectiveValues))
 
-	# 		if SUSHIJSON_KEYWORD_SELECTORS in params:
-	# 			selectors = params[SUSHIJSON_KEYWORD_SELECTORS]
+			if SUSHIJSON_KEYWORD_SELECTORS in params:
+				selectors = params[SUSHIJSON_KEYWORD_SELECTORS]
 
-	# 			# inject
-	# 			composedInjectParams = injectParams(params, zippedInjectiveParams)
+				# inject
+				composedInjectParams = self.injectParams(params, zippedInjectiveParams)
 				
-	# 			for selector in selectors:
-	# 				for eachCommand, eachParams in selector.items():
-						
-	# 					self.runAPI(eachCommand, eachParams.copy(), None, composedInjectParams)
+				for selector in selectors:
+					for eachCommand, eachParams in selector.items():
+						command, params = self.composeParams(eachCommand, eachParams, composedInjectParams)
+						runnable(command, params)
+
 
 
 
