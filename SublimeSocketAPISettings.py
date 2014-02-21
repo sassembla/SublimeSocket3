@@ -32,18 +32,11 @@ VIEW_ISEXIST				= "isExist"
 	
 	
 DICT_COMPLETIONS			= "DICT_COMPLETIONS"
-	
-	
 DICT_FILTERS				= "DICT_FILTERS"
-		
-		
 DICT_REACTORS				= "DICT_REACTORS"
-		
-		
 DICT_REACTORSLOG			= "DICT_REACTORS_LOG"
 REACTORSLOG_LATEST			= "latest"
-		
-		
+
 DICT_REGIONS				= "DICT_REGIONS"
 REGION_IDENTITY				= "identity"
 REGION_ISSELECTING			= "isSelecting"
@@ -52,8 +45,8 @@ REGION_TO					= "to"
 REGION_LINE					= "line"
 REGION_MESSAGES				= "messages"
 REGIONDATA_MESSAGE			= "message"
-	
-	
+
+
 # region identifier prefix
 REGION_UUID_PREFIX			= "ss_"
 
