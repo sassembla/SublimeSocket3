@@ -1018,7 +1018,7 @@ test>getAllFilePathとselectors/openFile: {
     "isnotempty": "showAtLog",
     "description": "not match."
 }->closeFile: {
-    "name": "sample.txt"
+    "name": "sample.txt"    
 }
 
 
@@ -3093,7 +3093,7 @@ test>設定の実行が実行されきったかどうか/runSushiJSON: {
     "id": "setting done",
     "contains": {
         "showAtLog": {
-            "output": "runSetting logs:['done']"
+            "output": "runSetting logs:['done.']"
         }
     },
     "description": "not match"

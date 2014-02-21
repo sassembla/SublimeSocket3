@@ -76,12 +76,8 @@ class SublimeSocketServer:
 	# main API data incoming method.
 	def transferInputted(self, data, clientId):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
-
-		# gen result id of toplevel
-		resultIdentity = "callAPI:"+str(uuid.uuid4())
-	
-		results = self.api.initResult(resultIdentity)
 		self.api.parse(apiData, clientId)
+		
 
 	def showTransferInfo(self):
 		if self.transfer:
