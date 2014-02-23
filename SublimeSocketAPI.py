@@ -1772,7 +1772,7 @@ class SublimeSocketAPI:
 				return
 
 			currentParams = {}
-			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_PATH] = name
+			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_NAME] = name
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_LINE] = line
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_MESSAGE] = message
 			currentParams[SublimeSocketAPISettings.NOVIEWFOUND_CONDITION] = condition

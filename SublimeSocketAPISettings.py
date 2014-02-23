@@ -73,7 +73,7 @@ SS_EVENT_RENAMED			= "ss_renamed"
 
 SS_FOUNDATION_NOVIEWFOUND	= "ss_f_noViewFound"
 NOVIEWFOUND_TARGET			= "target"
-NOVIEWFOUND_PATH			= "path"
+NOVIEWFOUND_NAME			= "name"
 NOVIEWFOUND_LINE			= "line"
 NOVIEWFOUND_MESSAGE			= "message"
 NOVIEWFOUND_CONDITION		= "condition"

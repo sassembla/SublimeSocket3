@@ -2240,9 +2240,9 @@ test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
     "react": "ss_f_noViewFound",
     "reactors": [
         {
-            "showAtLog<-path": {
+            "showAtLog<-name": {
                 "message": "no view found",
-                "format": "view [path] not found."
+                "format": "view [name] not found."
             }
         }
     ]
