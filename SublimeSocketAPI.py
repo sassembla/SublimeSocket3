@@ -2407,7 +2407,7 @@ class SublimeSocketAPI:
 
 		if path in regionsDict:
 			del regionsDict[path]
-			self.server.updateReactorsDict(regionsDict)
+			self.server.updateRegionsDict(regionsDict)
 
 
 
