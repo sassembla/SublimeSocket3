@@ -20,6 +20,48 @@ beforeafter>thebeforeafterselectors/selector: {
 }
 
 
+test>regionを現在のviewに表示する/setViewReactor: {
+    "target": "something",
+    "react": "ss_f_noViewFound",
+    "reactors": [
+        {
+            "showAtLog": {
+                "message": "noViewFound fired."
+            }
+        }
+    ]
+}->viewEmit: {
+    "identity": "show region on this view",
+    "name": "ss_viewkey_current",
+    "selectors": [
+        {
+            "appendRegion<-name": {
+                "line": 1,
+                "message": "test",
+                "condition": "keyword",
+                "selectors": [
+                    {
+                        "showAtLog": {
+                            "message": "displayed."
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "show region on this view.",
+    "contains": {
+        "showAtLog": {
+            "output": "displayed."
+        }
+    },
+    "description": "not match."
+}->eraseAllRegions: {
+
+}
+
+
 test>readFileからselectors/readFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt",
     "injects": {
