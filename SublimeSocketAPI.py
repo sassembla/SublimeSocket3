@@ -62,7 +62,8 @@ class SublimeSocketAPI:
 		runnable = SushiJSONParser.parseStraight(data)
 
 		if runnable:
-			for command, params in runnable:
+			for commandSource, paramsSource in runnable:
+				command, params = SushiJSONParser.composeParams(commandSource, paramsSource, None)
 				self.runAPI(command, params, clientId)
 		
 
