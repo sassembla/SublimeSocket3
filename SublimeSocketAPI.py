@@ -2191,10 +2191,10 @@ class SublimeSocketAPI:
 				deletedRegionIdentities = []
 				for regionIdentity in targetRegionsDict:
 					view = self.internal_detectViewInstance(path)
+					if view:
+						self.editorAPI.removeRegionFromView(view, regionIdentity)
 
-					self.editorAPI.removeRegionFromView(view, regionIdentity)
-
-					deletedRegionIdentities.append(regionIdentity)
+						deletedRegionIdentities.append(regionIdentity)
 				
 
 				if deletedRegionIdentities:
