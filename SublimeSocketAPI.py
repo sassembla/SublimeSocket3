@@ -1434,8 +1434,6 @@ class SublimeSocketAPI:
 			
 			executablesDict = pattern[key]
 
-			print("executablesDict", executablesDict)
-
 
 			if debug:
 				self.editorAPI.printMessage("filterName:"+str(filterName))
@@ -2021,9 +2019,8 @@ class SublimeSocketAPI:
 		
 	def setSublimeSocketWindowBasePath(self, params):
 		basepath = self.editorAPI.getFileName()
-		basename = os.path.basename(basepath)
-
 		if basepath:
+			basename = os.path.basename(basepath)
 			self.sublimeSocketWindowBasePath = basepath
 			
 			SushiJSONParser.runSelectors(
