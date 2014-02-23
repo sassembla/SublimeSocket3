@@ -3081,7 +3081,27 @@ test>複数件の同名のevent-targetreactorをセットして、上書きさ�
 
 
 test>設定の実行が実行されきったかどうか/runSushiJSON: {
-    "path": "SUBLIMESOCKET_PATH:doc/FilterSettingSamples/UnityFilter.txt",
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
+    "selectors": [
+        {
+            "showAtLog<-logs": {
+                "format": "runSetting logs:[logs]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "setting done",
+    "contains": {
+        "showAtLog": {
+            "output": "runSetting logs:['done.']"
+        }
+    },
+    "description": "not match"
+}
+
+
+test>設定の実行が実行されきったかどうか/runSushiJSON: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
     "selectors": [
         {
             "showAtLog<-logs": {

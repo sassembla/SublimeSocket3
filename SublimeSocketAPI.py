@@ -21,8 +21,10 @@ from .editorAPIs.SublimeText.EditorAPI import EditorAPI
 
 from . import SublimeSocketAPISettings
 
-from .parser.SushiJSON import SushiJSONParser
+
 from .parser import SushiJSON
+from .parser.SushiJSON import SushiJSONParser
+from .parser.SushiJSON import SushiJSONTestParser
 
 ## API Parse the action
 class SublimeSocketAPI:
@@ -74,13 +76,21 @@ class SublimeSocketAPI:
 				break
 
 			if case(SushiJSON.SETTESTBEFOREAFTER_BEFORESELECTORS):
-				for selector in params:
-					[self.runAPI(eachCommand, eachParams) for eachCommand, eachParams in selector.items()]
+				SushiJSONParser.runSelectors(
+					params,
+					[],
+					[],
+					self.runAPI
+				)
 				break
 				
 			if case(SushiJSON.SETTESTBEFOREAFTER_AFTERSELECTORS):
-				for selector in params:
-					[self.runAPI(eachCommand, eachParams) for eachCommand, eachParams in selector.items()]
+				SushiJSONParser.runSelectors(
+					params,
+					[],
+					[],
+					self.runAPI
+				)
 				break
 
 			if case(SublimeSocketAPISettings.API_CHANGEIDENTITY):
@@ -450,31 +460,28 @@ class SublimeSocketAPI:
 		elif SublimeSocketAPISettings.RUNSUSHIJSON_DATA in params:
 			data = params[SublimeSocketAPISettings.RUNSUSHIJSON_DATA]
 
-		runnable = SushiJSONParser.parseStraight(data)
-		
-		contextIdentity = str(self.runSushiJSON.__name__) + ":" + str(uuid.uuid4())
 
+		contextIdentity = str(self.runSushiJSON.__name__) + ":" + str(uuid.uuid4())
 		# add context
 		self.addResultContext(contextIdentity)
 
-		if runnable:
-			for currentCommand, currentParams in runnable:
-				self.runAPI(currentCommand, currentParams)
+		def run(currentCommand, currentParams):
+			self.runAPI(currentCommand, currentParams)
+
+		[run(currentCommand, currentParams) for currentCommand, currentParams in SushiJSONParser.parseSushiJSON(data)]
 
 
-		logsSource = self.globalResults[contextIdentity]
+		logsSource = self.resultBody(contextIdentity)
 
 		# drip "showAtLog" result only.
 		logs = [logKeyAndBody[self.showAtLog.__name__]["output"] for logKeyAndBody in logsSource if self.showAtLog.__name__ in logKeyAndBody]
 		
-		print("logs", logs, "params", params)
 		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
 			[logs],
 			self.runAPI
 		)
-		print("fmmmm")
 
 
 	## run shellScript
@@ -904,7 +911,7 @@ class SublimeSocketAPI:
 
 		
 		# load test delimited scripts.
-		testCases = SushiJSONParser.parseTestSuite(data)
+		testCases = SushiJSONTestParser.parseTestSuite(data)
 		
 		def countTestResult(assertResultBody):
 			currentPassedCount = 0
