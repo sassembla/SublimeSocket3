@@ -1614,8 +1614,6 @@ class SublimeSocketAPI:
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
 		if not view:
 			return
-
-		assert view, "setSelection require 'view' or 'name' param."
 		
 		assert SublimeSocketAPISettings.SETSELECTION_SELECTIONS in params, "setSelection require 'selections' param."
 		
