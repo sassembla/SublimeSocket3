@@ -1552,25 +1552,24 @@ class SublimeSocketAPI:
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.VIEWEMIT_VIEW, SublimeSocketAPISettings.VIEWEMIT_NAME)
 		if not view:
 			return
+		
+		if not self.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
+			pass
 
-		if view:
-			if not self.isExecutableWithDelay(SublimeSocketAPISettings.SS_FOUNDATION_VIEWEMIT, identity, delay):
-				pass
+		else:
+			body = self.editorAPI.bodyOfView(view)
 
-			else:
-				body = self.editorAPI.bodyOfView(view)
+			modifiedPath = path.replace(":","&").replace("\\", "/")
 
-				modifiedPath = path.replace(":","&").replace("\\", "/")
-
-				# get modifying line num
-				rowColStr = self.editorAPI.selectionAsStr(view)
-				
-				SushiJSONParser.runSelectors(
-					params, 
-					SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
-					[body, path, name, modifiedPath, rowColStr, identity],
-					self.runAPI
-				)
+			# get modifying line num
+			rowColStr = self.editorAPI.selectionAsStr(view)
+			
+			SushiJSONParser.runSelectors(
+				params, 
+				SublimeSocketAPISettings.VIEWEMIT_INJECTIONS, 
+				[body, path, name, modifiedPath, rowColStr, identity],
+				self.runAPI
+			)
 
 	def modifyView(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.MODIFYVIEW_VIEW, SublimeSocketAPISettings.MODIFYVIEW_NAME)
