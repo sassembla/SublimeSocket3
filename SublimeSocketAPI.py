@@ -788,7 +788,7 @@ class SublimeSocketAPI:
 			code = compile(transformerCode, "", "exec")
 
 		else:
-			assert False, "no resource found for transform. transform require '' or '' params."
+			assert False, "no resource found for transform. transform require 'transformerpath' or 'source' params."
 
 		assert code, "no transformer generated. failed to generate from:"+transformerName
 
