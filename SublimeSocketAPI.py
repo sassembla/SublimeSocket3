@@ -1161,17 +1161,11 @@ class SublimeSocketAPI:
 		
 		name = params[SublimeSocketAPISettings.CREATEBUFFER_NAME]
 
-		if self.editorAPI.isBuffer(name):
-			pass
-		else:
-			result = "failed to create buffer "+ name +" because of the file is already exists."
-			
+		if not self.editorAPI.isBuffer(name):
 			return
-
 
 		# renew event will run, but the view will not store KVS because of no-name view.
 		view = self.editorAPI.openFile(name)
-		# buffer generated then set name and store to KVS.
 		
 		# buffer generated then set name and store to KVS.
 		self.editorAPI.setNameToView(view, name)
