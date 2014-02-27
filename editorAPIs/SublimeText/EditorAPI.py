@@ -77,9 +77,6 @@ class EditorAPI:
 	def windows(self):
 		return sublime.windows()
 
-	def viewsOfWindow(self, window):
-		return window.views()
-
 	def generateRegion(self, theFrom, theTo):
 		return sublime.Region(theFrom, theTo)
 
@@ -113,7 +110,7 @@ class EditorAPI:
 	def nameOfView(self, view):
 		return view.file_name()
 
-	def runCommandOnView(self, view, command, params=None):
+	def runCommandOn(self, view, command, params=None):
 		if params:
 			view.run_command(command, params)
 		else:
@@ -121,6 +118,12 @@ class EditorAPI:
 
 	def closeView(self, view):
 		view.close()
+		
+	def closeAllViewsInCurrentWindow(self):
+		self.runCommandOn(sublime.active_window(), "close_all")
+
+	def allViewsInCurrentWindow(self):
+		return sublime.active_window().views()
 
 	def viewSize(self, view):
 		return view.size()

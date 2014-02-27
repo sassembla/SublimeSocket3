@@ -20,7 +20,22 @@ beforeafter>thebeforeafterselectors/selector: {
 }
 
 
-test>regionを現在のviewに表示する/setViewReactor: {
+test>helloWorld/showAtLog: {
+    "message": "hello world."
+}->assertResult: {
+    "id": "helloWorld",
+    "contains": {
+        "showAtLog": {
+            "output": "hello world."
+        }
+    },
+    "description": "not match."
+}
+
+
+test>regionを現在のviewに表示する/openFile: {
+    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
+}->setViewReactor: {
     "target": "something",
     "react": "ss_f_noViewFound",
     "reactors": [
@@ -3688,7 +3703,7 @@ test>特定の名称のファイルのバッファを作成/createBuffer: {
     "selectors": [
         {
             "showAtLog<-name": {
-                "format": "[name] was created."
+                "format": "[name] created."
             }
         }
     ]
@@ -3696,7 +3711,7 @@ test>特定の名称のファイルのバッファを作成/createBuffer: {
     "id": "creates valid name and contents",
     "contains": {
         "showAtLog": {
-            "output": "test was created."
+            "output": "test created."
         }
     },
     "description": "not contains."
@@ -3977,4 +3992,24 @@ test>afterAsyncの他selectorsからの動作/createBuffer: {
         }
     },
     "description": "not match."
+}
+
+
+test>closeAllFiles: {
+    "selectors": [
+        {
+            "showAtLog<-closeds": {
+                "format": "[closeds]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "close all files for test in ST2",
+    "isnotempty": "showAtLog",
+    "description": "is empty."
+}
+
+
+test>openFile: {
+	"path": "SUBLIMESOCKET_PATH:tests/tests.sst"
 }

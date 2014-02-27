@@ -315,10 +315,5 @@ class ReduceTextCommand(sublime_plugin.TextCommand):
 class ClearSelectionCommand(sublime_plugin.TextCommand):
   def run(self, edit):
     self.view.sel().clear()
-
-
-class ForcelySave(sublime_plugin.TextCommand):
-  def run(self, edit):
-    self.view.run_command("save")
-
+    
     
