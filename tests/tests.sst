@@ -3687,8 +3687,8 @@ test>特定の名称のファイルのバッファを作成/createBuffer: {
     "name": "test",
     "selectors": [
         {
-            "showAtLog<-name, status": {
-                "format": "[name], [status]"
+            "showAtLog<-name": {
+                "format": "[name] was created."
             }
         }
     ]
@@ -3696,7 +3696,7 @@ test>特定の名称のファイルのバッファを作成/createBuffer: {
     "id": "creates valid name and contents",
     "contains": {
         "showAtLog": {
-            "output": "test, buffer test created."
+            "output": "test was created."
         }
     },
     "description": "not contains."
