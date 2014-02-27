@@ -1169,9 +1169,6 @@ class SublimeSocketAPI:
 		view = self.editorAPI.openFile(name)
 
 		# buffer generated then set name and store to KVS.
-		message = "buffer "+ name +" created."
-		status = message
-
 		self.editorAPI.setNameToView(view, name)
 		
 		# restore to KVS with name
@@ -1204,7 +1201,7 @@ class SublimeSocketAPI:
 		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.CREATEBUFFER_INJECTIONS,
-			[name, status],
+			[name],
 			self.runAPI
 		)
 
