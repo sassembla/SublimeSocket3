@@ -254,7 +254,6 @@ class CaptureEditing(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         completions = self.getDataFromThread(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
-        print("hit!!!", completions)
         if completions:
             return completions
 
