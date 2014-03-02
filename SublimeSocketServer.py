@@ -168,17 +168,29 @@ class SublimeSocketServer:
 
 
 	# views and KVS
-	def viewsDict(self):
-		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS)
+	def viewsDict(self, update=None):
+		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS, update)
 
 		if viewsDict:
 			return viewsDict
 		
 		return {}
 
-	def updateViewsDict(self, viewsDict):
+	def insertViewsDict(self, viewsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewsDict)
 
+
+	def addViewsDict(self, key, value):
+		print("addViewsDict, updateに置き換えたい")
+		viewsDict = self.viewsDict(True)
+
+		if viewsDict:
+			viewsDict[key] = value
+
+		else:
+			viewsDict = {}
+			viewsDict[key] = value
+			self.insertViewsDict(viewsDict)
 
 
 	# regions and KVS
@@ -218,6 +230,7 @@ class SublimeSocketServer:
 	def updateRegionsDict(self, regionsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REGIONS, regionsDict)
 
+
 	def selectingRegionIds(self, path):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
 		
@@ -227,6 +240,12 @@ class SublimeSocketServer:
 			return selectingRegionIds
 
 		return []
+
+	def deleteRegionsDict(self, key):
+		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
+
+		if regionsDict:
+			regionsDict.delete(key)
 
 	def updateSelectingRegionIdsAndResetOthers(self, path, selectingRegionIds):
 		regionsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REGIONS)
@@ -243,6 +262,8 @@ class SublimeSocketServer:
 			for unselectdRegionid in unselectedRegionIds:
 				regions[unselectdRegionid][SublimeSocketAPISettings.REGION_ISSELECTING] = 0
 
+
+
 	# reactor and KVS
 	def reactorsDict(self):
 		reactorsDict = self.kvs.get(SublimeSocketAPISettings.DICT_REACTORS)
@@ -254,6 +275,21 @@ class SublimeSocketServer:
 	def updateReactorsDict(self, reactorsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REACTORS, reactorsDict)
 
+	def addReactorsDict(self, reactEventName, reactTarget, value):
+		print("addReactorsDict, updateに置き換えたい")
+		reactorsDict = self.reactorsDict()
+
+		if reactorsDict:
+			if not reactEventName in reactorsDict:
+				reactorsDict.setToKVS(reactEventName, {})
+
+			reactorsDict[reactEventName][reactTarget] = value
+
+		else:
+			reactorsDict = {}
+			reactorsDict[reactEventName] = {}
+			reactorsDict[reactEventName][reactTarget] = value
+			self.updateReactorsDict(reactorsDict)
 
 
 
@@ -270,6 +306,21 @@ class SublimeSocketServer:
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_REACTORSLOG, reactorsLogDict)
 
 
+	def addReactorsLogDict(self, reactEventName, reactTarget, value):
+		print("addReactorsLogDict, updateに置き換えたい")
+		reactorsLogDict = self.reactorsLogDict()
+
+		if reactorsLogDict:
+			if not reactEventName in reactorsLogDict:
+				reactorsLogDict.setToKVS(reactEventName, {})
+
+			reactorsLogDict[reactEventName][reactTarget] = value
+
+		else:
+			reactorsLogDict = {}
+			reactorsLogDict[reactEventName] = {}
+			reactorsLogDict[reactEventName][reactTarget] = value
+			self.updateReactorsLogDict(reactorsLogDict)
 
 
 	# completions and KVS
@@ -288,6 +339,16 @@ class SublimeSocketServer:
 	def updateCompletionsDict(self, completionsDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_COMPLETIONS, completionsDict)
 
+	def addCompletion(self, key, value):
+		print("addCompletion, updateに置き換えたい")
+		completionsDict = self.completionsDict()
+
+		if completionsDict:
+			completionsDict[key] = value
+		
+		else:
+			completionsDict = {}
+			self.updateCompletionsDict(completionsDict)	
 
 
 	# filters and KVS
@@ -301,4 +362,20 @@ class SublimeSocketServer:
 
 	def updateFiltersDict(self, filtersDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_FILTERS, filtersDict)
+
+	def addFiltersDict(self, key, value):
+		print("addFiltersDict, updateに置き換えたい")
+		filtersDict = self.filtersDict()
+
+		if filtersDict:
+			filtersDict.setToKVS(key, value)
+
+		else:
+			filtersDict = {}
+			filtersDict[key] = value
+			self.updateFiltersDict(filtersDict)
+
+
+
+
 	

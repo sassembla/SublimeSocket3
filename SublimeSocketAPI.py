@@ -771,7 +771,6 @@ class SublimeSocketAPI:
 
 	def transform(self, params):
 		assert SushiJSON.SUSHIJSON_KEYWORD_SELECTORS in params, "transform require 'selectors' param."
-
 		code = None
 
 		if SublimeSocketAPISettings.TRANSFORM_PATH in params:
@@ -1307,11 +1306,13 @@ class SublimeSocketAPI:
 
 		def closeBuffer(view):
 			path = self.internal_detectViewPath(view)
+			print("closeBuffer path", path)
 			if self.editorAPI.isBuffer(path):
 				closeds.append(path)
 				self.editorAPI.closeView(view)
 
 		views = self.editorAPI.allViewsInCurrentWindow()
+		
 		[closeBuffer(view) for view in views]
 
 		SushiJSONParser.runSelectors(
@@ -1389,9 +1390,6 @@ class SublimeSocketAPI:
 	def defineFilter(self, params):
 		assert SublimeSocketAPISettings.DEFINEFILTER_NAME in params, "defineFilter require 'name' key."
 
-		# load defined filters
-		filterNameAndPatternsArray = self.server.filtersDict()
-
 		filterName = params[SublimeSocketAPISettings.DEFINEFILTER_NAME]
 
 		filters = params[SublimeSocketAPISettings.DEFINEFILTER_FILTERS]
@@ -1406,9 +1404,7 @@ class SublimeSocketAPI:
 			patterns.append(pattern)
 
 		[mustBeSingleDict(currentFilterDict) for currentFilterDict in filters]
-
-		filterNameAndPatternsArray[filterName] = filters
-		self.server.updateFiltersDict(filterNameAndPatternsArray)
+		self.server.addFiltersDict(filterName, filters)
 
 		SushiJSONParser.runSelectors(
 			params,
@@ -2185,7 +2181,7 @@ class SublimeSocketAPI:
 			[eraseRegions(path) for path in deleteTargetPaths]
 			
 			for delPath in deletes:
-				del regionsDict[delPath]
+				self.server.deleteRegionsDict(delPath)
 
 			self.server.updateRegionsDict(regionsDict)
 		
@@ -2242,6 +2238,9 @@ class SublimeSocketAPI:
 				viewInstance = viewsDict[path][SublimeSocketAPISettings.VIEW_SELF]
 				if view == viewInstance:
 					return path
+			print("辞書はあるが入ってない", view.file_name())
+		else:
+			print("そも辞書が無い可能性")
 
 	def internal_getViewAndPathFromViewOrName(self, params, viewParamKey, nameParamKey):
 		view = None
@@ -2370,8 +2369,7 @@ class SublimeSocketAPI:
 		viewInfo[SublimeSocketAPISettings.VIEW_SELF] = viewInstance
 
 		# add
-		viewDict[filePath] = viewInfo
-		self.server.updateViewsDict(viewDict)
+		self.server.addViewsDict(filePath, viewInfo)
 
 	def runDeletion(self, eventParam):
 		view = eventParam[SublimeSocketAPISettings.VIEW_SELF]
@@ -2421,21 +2419,9 @@ class SublimeSocketAPI:
 		if SublimeSocketAPISettings.SETREACTOR_ACCEPTS in params:
 			reactDict[SublimeSocketAPISettings.SETREACTOR_ACCEPTS] = params[SublimeSocketAPISettings.SETREACTOR_ACCEPTS]
 
-		# already set or not-> spawn dictionary for name.
-		if not reactEventName in reactorsDict:			
-			reactorsDict[reactEventName] = {}
-			reactorsLogDict[reactEventName] = {}
-
-
-		# store reactor			
-		reactorsDict[reactEventName][target] = reactDict
-
-		# reset reactLog too
-		reactorsLogDict[reactEventName][target] = {}
-
-
-		self.server.updateReactorsDict(reactorsDict)
-		self.server.updateReactorsLogDict(reactorsLogDict)
+		# already set or not-> spawn reactor by each name.
+		self.server.addReactorsDict(reactEventName, target, reactDict)
+		self.server.addReactorsLogDict(reactEventName, target, {})
 
 		SushiJSONParser.runSelectors(
 			params,
@@ -2509,11 +2495,7 @@ class SublimeSocketAPI:
 		return None
 
 	def updateCompletion(self, name, composedCompletions):
-		completionsDict = self.server.completionsDict()
-
-		completionsDict[name] = composedCompletions
-		self.server.updateCompletionsDict(completionsDict)
-		
+		self.server.addCompletion(name, composedCompletions)
 
 	# other
 
@@ -2540,17 +2522,7 @@ class SublimeSocketAPI:
 		# update latest time
 
 		# create executed log dict if not exist.
-		if name in reactorsLogDict:
-			if target in reactorsLogDict[name]:
-				pass
-			else:
-				reactorsLogDict[name][target] = {}
-		else:
-			reactorsLogDict[name] = {}
-			reactorsLogDict[name][target] = {}
-
-		reactorsLogDict[name][target][SublimeSocketAPISettings.REACTORSLOG_LATEST]	= currentTime
-		self.server.updateReactorsLogDict(reactorsLogDict)
+		self.server.addReactorsLogDict(name, target, {SublimeSocketAPISettings.REACTORSLOG_LATEST: currentTime})
 		
 		return True
 

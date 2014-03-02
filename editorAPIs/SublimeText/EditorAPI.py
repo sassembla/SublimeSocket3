@@ -52,7 +52,8 @@ class EditorAPI:
 		if path:
 			if os.path.exists(path):
 				return False
-			
+		
+		#if no-path
 		return True
 
 	def isNamed(self, view):
