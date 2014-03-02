@@ -12,9 +12,6 @@ beforeafter>thebeforeafterselectors/selector: {
             }
         },
         {
-            "closeAllFiles": {}
-        },
-        {
             "showAtLog": {
                 "message": "test over"
             }

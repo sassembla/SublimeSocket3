@@ -1,3 +1,5 @@
+import copy
+
 ## key-value pool
 class KVS:
 	def __init__(self):
@@ -21,7 +23,7 @@ class KVS:
 	## get value for key
 	def get(self, key):
 		if key in self.keyValueDict:
-			return self.keyValueDict[key]
+			return copy.deepcopy(self.keyValueDict[key])
 
 
 	def getAll(self):
