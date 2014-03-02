@@ -2369,7 +2369,7 @@ class SublimeSocketAPI:
 		viewInfo[SublimeSocketAPISettings.VIEW_SELF] = viewInstance
 
 		# add
-		self.server.addViewsDict(filePath, viewInfo)
+		self.server.updateViewsDict(filePath, viewInfo)
 
 	def runDeletion(self, eventParam):
 		view = eventParam[SublimeSocketAPISettings.VIEW_SELF]
@@ -2380,8 +2380,7 @@ class SublimeSocketAPI:
 
 		# delete
 		if path in viewsDict:
-			del viewsDict[path]
-			self.server.updateViewsDict(viewsDict)
+			self.server.deleteViewsDict(path)
 
 		if path in regionsDict:
 			del regionsDict[path]

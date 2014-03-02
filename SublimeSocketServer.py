@@ -168,8 +168,8 @@ class SublimeSocketServer:
 
 
 	# views and KVS
-	def viewsDict(self, update=None):
-		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS, update)
+	def viewsDict(self):
+		viewsDict = self.kvs.get(SublimeSocketAPISettings.DICT_VIEWS)
 
 		if viewsDict:
 			return viewsDict
@@ -180,17 +180,19 @@ class SublimeSocketServer:
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_VIEWS, viewsDict)
 
 
-	def addViewsDict(self, key, value):
-		print("addViewsDict, updateに置き換えたい")
-		viewsDict = self.viewsDict(True)
+	def updateViewsDict(self, key, value):
+		viewsDict = self.viewsDict()
 
 		if viewsDict:
-			viewsDict[key] = value
+			self.kvs.update(SublimeSocketAPISettings.DICT_VIEWS, key, value)
 
 		else:
 			viewsDict = {}
 			viewsDict[key] = value
 			self.insertViewsDict(viewsDict)
+
+	def deleteViewsDict(self, key):
+		viewsDict = self.viewsDict()
 
 
 	# regions and KVS

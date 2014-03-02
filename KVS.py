@@ -19,15 +19,15 @@ class KVS:
 			pass
 
 		self.keyValueDict[key] = value
-		
+
+	def update(self, index, key, value):
+		if index in self.keyValueDict:
+			self.keyValueDict[index][key] = value
+				
 
 	## get value for key
-	def get(self, key, update=None):
+	def get(self, key):
 		if key in self.keyValueDict:
-			
-			if update:
-				return self.keyValueDict[key]
-
 			return readonlyDict(self.keyValueDict[key])
 
 
@@ -63,7 +63,13 @@ class readonlyDict(dict):
 	def __setitem__(self, key, value):
 		assert False, "cannot overwrite the KVS-param directly."
 
+	def __getitem__(self, key):
+		val = super(readonlyDict, self).__getitem__(key)
+		if type(val) == dict:
+			return readonlyDict(val)
 
+		return val
+		
 	def __delitem__(self, key):
 		assert False, "cannot delete the KVS-param directly."		
 
