@@ -2810,6 +2810,11 @@ test>ファイル内容を特定クライアントに配信する。/openFile: {
     },
     "selectors": [
         {
+            "showAtLog<-body": {
+                "format": "the [body]"
+            }
+        },
+        {
             "monocastMessage<-message": {
                 "target": "sublimesockettest",
                 "injects": {
@@ -2826,13 +2831,21 @@ test>ファイル内容を特定クライアントに配信する。/openFile: {
         }
     ]
 }->assertResult: {
-    "id": "ST3: monocast message for specific client, not stable in ST2 @ test.",
+    "id": "monocast message for specific client",
+    "contains": {
+        "showAtLog": {
+            "output": "the a\nb\n\/\/comment\nc\nd\n\n\ne\nf\n\ng"
+        }
+    },
+    "description": "faild to monocast 1."
+}->assertResult: {
+    "id": "monocast message for specific client",
     "contains": {
         "showAtLog": {
             "output": "sublimesockettest, a\nb\n\/\/comment\nc\nd\n\n\ne\nf\n\ng"
         }
     },
-    "description": "faild to monocast."
+    "description": "faild to monocast 2."
 }->closeFile: {
     "name": "sample4.txt"
 }
