@@ -2026,10 +2026,14 @@ class SublimeSocketAPI:
 		# current API version
 		currentVersion			= SublimeSocketAPISettings.SSAPI_VERSION
 
+		isDryRun = False
+		if SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN in params:
+			isDryRun = params[SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN]
+
 
 		# check socket version
 		if targetSocketVersion is not currentSocketVersion:
-			self.sendVerifiedResultMessage(0, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, client)
+			self.sendVerifiedResultMessage(0, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
 			return
 
 		# SublimeSocket version matched.
@@ -2050,10 +2054,7 @@ class SublimeSocketAPI:
 
 		code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_DIFFERENT_SUBLIMESOCKET
 
-		isDryRun = False
-		if SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN in params:
-			isDryRun = params[SublimeSocketAPISettings.VERSIONVERIFY_DRYRUN]
-
+		
 		# major check
 		if targetMajor < currentMajor:
 			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE
@@ -2096,7 +2097,7 @@ class SublimeSocketAPI:
 				self.server.sendMessage(clientId, message)
 
 				if not isDryRun:
-					self.server.closeClient(clientId)
+					self.server.purgeConnection(clientId)
 			
 				break
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED):
@@ -2113,7 +2114,7 @@ class SublimeSocketAPI:
 				self.server.sendMessage(clientId, message)
 				
 				if not isDryRun:
-					self.server.closeClient(clientId)
+					self.server.purgeConnection(clientId)
 
 				break
 
@@ -2122,7 +2123,7 @@ class SublimeSocketAPI:
 				self.server.sendMessage(clientId, message)
 				
 				if not isDryRun:
-					self.server.closeClient(clientId)
+					self.server.purgeConnection(clientId)
 					
 				break
 
