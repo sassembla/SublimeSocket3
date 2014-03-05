@@ -2290,7 +2290,6 @@ class SublimeSocketAPI:
 			for viewKey in viewKeys:
 				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_NAME]
 				if viewBasename in viewSearchSource:
-					print("viewBasename", viewBasename)
 					return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
 		
 		# totally, return None and do nothing
