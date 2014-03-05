@@ -255,6 +255,8 @@ class CaptureEditing(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
         completions = self.getDataFromThread(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
         if completions:
+            # add prefix for prevent force-input.
+            completions.append((prefix, prefix))
             return completions
 
     ## call when the event happen
@@ -266,20 +268,20 @@ class CaptureEditing(sublime_plugin.EventListener):
 
 
     def updateViewInfo(self, view):
-        if self.currentViewInfo and self.currentViewInfo["view"] == view:
-                beforeSize = self.currentViewInfo["size"]
-                
-                self.currentViewInfo["view"] = view
-                self.currentViewInfo["size"] = view.size()
+        if self.currentViewInfo and self.currentViewInfo["view"] == view.file_name():
+            beforeSize = self.currentViewInfo["size"]
+            
+            self.currentViewInfo["view"] = view.file_name()
+            self.currentViewInfo["size"] = view.size()
 
-                if beforeSize > self.currentViewInfo["size"]:
-                        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
-                
-                if beforeSize < self.currentViewInfo["size"]:
-                        self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
+            if beforeSize > self.currentViewInfo["size"]:
+                self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_DECREASED, view)
+            
+            if beforeSize < self.currentViewInfo["size"]:
+                self.update(SublimeSocketAPISettings.REACTABLE_VIEW_SS_V_INCREASED, view)
                     
         else:
-            self.currentViewInfo["view"] = view
+            self.currentViewInfo["view"] = view.file_name()
             self.currentViewInfo["size"] = view.size()
 
 

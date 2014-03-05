@@ -126,6 +126,10 @@ class WSServer:
 		self.closeClient(clientId)
 		
 
+	def purgeConnection(self, clientId):
+		self.closeClient(clientId)
+		
+
 	# remove from Client dict
 	def closeClient(self, clientId):
 		client = self.clientIds[clientId]
