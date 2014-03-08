@@ -9,8 +9,11 @@ from . import SublimeSocketAPISettings
 
 from .KVS import KVS
 
-# choose transfer method.
+# choose transfer method from below.
+from .protocols.RunSushiJSON.RunSushiJSONServer import RunSushiJSONServer
 from .protocols.WebSocket.WSServer import WSServer
+
+
 from .PythonSwitch import PythonSwitch
 
 
@@ -74,7 +77,7 @@ class SublimeSocketServer:
 
 
 	# main API data incoming method.
-	def transferInputted(self, data, clientId):
+	def transferInputted(self, data, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
 		self.api.parse(apiData, clientId)
 		
@@ -100,10 +103,16 @@ class SublimeSocketServer:
 			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
 				
 				for case in PythonSwitch(transferMethod):
+					if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+						self.transfer = RunSushiJSONServer(self)
+						self.transfer.setup(params)
+						break
+						
 					if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
 						self.transfer = WSServer(self)
 						self.transfer.setup(params)
 						break
+
 
 
 		self.currentTransferMethod = transferMethod

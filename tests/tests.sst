@@ -3125,7 +3125,7 @@ test>複数件の同名のevent-targetreactorをセットして、上書きさ�
 }
 
 
-test>設定の実行が実行されきったかどうか/runSushiJSON: {
+test>設定の実行が実行されきったかどうか 1 path版/runSushiJSON: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
     "selectors": [
         {
@@ -3145,8 +3145,8 @@ test>設定の実行が実行されきったかどうか/runSushiJSON: {
 }
 
 
-test>設定の実行が実行されきったかどうか/runSushiJSON: {
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
+test>設定の実行が実行されきったかどうか 2 data版/runSushiJSON: {
+    "data": "showAtLog:{\"message\":\"done with data.\"}",
     "selectors": [
         {
             "showAtLog<-logs": {
@@ -3158,7 +3158,7 @@ test>設定の実行が実行されきったかどうか/runSushiJSON: {
     "id": "ST3: setting done2",
     "contains": {
         "showAtLog": {
-            "output": "runSetting logs:['done.']"
+            "output": "runSetting logs:['done with data.']"
         }
     },
     "description": "not match"

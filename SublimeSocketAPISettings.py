@@ -14,9 +14,9 @@ HTML_REPLACEABLE_KEYS		= [SS_HOST_REPLACE, SS_PORT_REPLACE, SS_VERSION_REPLACE]
 # get folder name of this plugin.
 MY_PLUGIN_PATHNAME			= os.path.split(os.path.dirname(os.path.realpath(__file__)))[1]
 	
-	
+RUNSUSHIJSON_SERVER			= "RunSushiJSONServer"
 WEBSOCKET_SERVER			= "WebSocketServer"
-TRANSFER_METHODS			= [WEBSOCKET_SERVER]
+TRANSFER_METHODS			= [RUNSUSHIJSON_SERVER, WEBSOCKET_SERVER]
 	
 # KVS	
 	
@@ -59,6 +59,7 @@ SSAPI_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]
 
 SSAPI_VERSION				= "1.4.0"
 SSSOCKET_VERSION			= 3	# for Sublime Text 3
+
 
 
 # SublimeSocket internal event definition
@@ -145,6 +146,7 @@ RESETCOUNTS_INJECTIONS		= [RESETCOUNTS_RESETTED]
 
 API_RUNSUSHIJSON			= "runSushiJSON"
 RUNSUSHIJSON_PATH			= "path"
+RUNSUSHIJSON_DATA			= "data"
 RUNSUSHIJSON_NAME			= "name"
 RUNSUSHIJSON_LOGS			= "logs"
 RUNSUSHIJSON_INJECTIONS		= [RUNSUSHIJSON_LOGS]

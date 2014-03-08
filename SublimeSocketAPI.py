@@ -443,7 +443,7 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
 				self.editorAPI.packagePath()+ "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
-			self.editorAPI.printMessage("runSetting:" + replacedFilePath)
+			self.editorAPI.printMessage("runSushiJSON:" + replacedFilePath)
 			
 			with open(replacedFilePath, encoding='utf8') as f:
 				setting = f.read()
