@@ -2,6 +2,7 @@
 import sublime, sublime_plugin
 import threading
 import uuid
+import os
 
 from .SublimeSocketServer import SublimeSocketServer
 from . import SublimeSocketAPISettings
@@ -14,6 +15,44 @@ from .OpenHTML import Openhtml
 # SublimeSocket server's thread
 thread = None
 
+# one history of runSushiJSON
+runPath = ""
+
+class Socket_run_sushijson(sublime_plugin.TextCommand):
+    def run(self, edit):
+        global runPath
+
+        caption = "input the path of SushiJSON file:"
+
+        defaultPath = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultRunSushiJSONPath")
+
+        if runPath:
+            initial_text = runPath
+
+        else:
+            initial_text = defaultPath
+
+        def on_done(path):
+            global runPath
+
+            runPath = path
+            Socket_on.startServer(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, [path])
+        
+        def on_change(pathCandidate):
+            if os.path.exists(pathCandidate):
+                message = "runSushiJSON:" + pathCandidate + " is exists."
+                
+            else:
+                message = "runSushiJSON:" + pathCandidate + " is not exists."
+
+            sublime.status_message(message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
+
+        def on_cancel():
+            pass
+            
+        sublime.active_window().show_input_panel(caption, initial_text, on_done, on_change, on_cancel)
+
 
 # states are below.
 # not active -> active <-> serving <-> transfering
@@ -25,7 +64,6 @@ thread = None
 #                           transfer:restart
 #                           transfer:change
 #                           transfer:close
-
 class Socket_on(sublime_plugin.TextCommand):
     def run(self, edit):
         defaultTransferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
@@ -41,7 +79,7 @@ class Socket_on(sublime_plugin.TextCommand):
         else:
             notActivatedMessage = "SublimeSocket not yet activated."
             sublime.status_message(notActivatedMessage)
-            print("ss:", notActivatedMessage)
+            print(SublimeSocketAPISettings.LOG_prefix, notActivatedMessage)
 
 
     @classmethod
@@ -73,7 +111,7 @@ class Socket_off(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
             
 
 class Transfer_info(sublime_plugin.TextCommand):
@@ -83,12 +121,12 @@ class Transfer_info(sublime_plugin.TextCommand):
         if thread and thread.is_alive():
             message = thread.server.showTransferInfo()
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 
@@ -113,6 +151,10 @@ class SublimeSocketThread(threading.Thread):
             params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
                  
             for case in PythonSwitch(transferMethod):
+                if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+                    params = {"path":args[0]}
+                    break
+
                 if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
                     
                     if "runTests" in args:
@@ -206,7 +248,7 @@ class Kvs_show(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 class Kvs_flush(sublime_plugin.TextCommand):
@@ -218,7 +260,7 @@ class Kvs_flush(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 # view listeners
