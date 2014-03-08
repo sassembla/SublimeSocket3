@@ -32,7 +32,7 @@ class SublimeSocketAPI:
 		self.server = server
 
 		self.editorAPI = EditorAPI()
-		self.globalResults = []
+		self.globalResults = {}
 
 		self.asyncDict = {}
 		self.counts = {}
