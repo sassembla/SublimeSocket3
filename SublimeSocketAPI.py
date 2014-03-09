@@ -110,6 +110,10 @@ class SublimeSocketAPI:
 				self.wait(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_STARTTAILING):
+				self.startTailing(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_COUNTUP):
 				self.countUp(params)
 				break			
@@ -385,6 +389,13 @@ class SublimeSocketAPI:
 		waitMSNum = int(waitMS)
 
 		time.sleep(waitMSNum*0.001)
+
+
+	def startTailing(self, params):
+		assert SublimeSocketAPISettings.STARTTAILING_PATH in params, "startTailing require 'path' param"
+		target = params[SublimeSocketAPISettings.STARTTAILING_PATH]
+		print("サーバ側に掛け合って、tailラインを構築する。transferへの干渉。")
+		# self.server.
 
 
 	## count up specified labelled param.
@@ -1271,6 +1282,11 @@ class SublimeSocketAPI:
 			)
 
 	def closeAllFiles(self, params):
+		dryrun = False
+
+		if SublimeSocketAPISettings.CLOSEFILE_DRYRUN in params:
+			dryrun = params[SublimeSocketAPISettings.CLOSEFILE_DRYRUN]
+
 		expectPaths = []
 
 		targetViews = self.editorAPI.allViewsInCurrentWindow()
@@ -1283,13 +1299,16 @@ class SublimeSocketAPI:
 
 			currentTargetPaths = list(targetPathsSet - expectPaths)
 			currentTargetViews = map(internal_detectViewInstance, currentTargetPaths)
-			[self.editorAPI.closeView(view) for view in currentTargetViews]
+			
+			if not dryrun:
+				[self.editorAPI.closeView(view) for view in currentTargetViews]
 
 			closeds = currentTargetPaths
 
 		# close all in this window
 		else:
-			self.editorAPI.closeAllViewsInCurrentWindow()
+			if not dryrun:
+				self.editorAPI.closeAllViewsInCurrentWindow()
 			closeds = targetPaths
 
 		SushiJSONParser.runSelectors(

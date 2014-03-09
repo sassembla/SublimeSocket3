@@ -61,9 +61,14 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 #                     serving:off
 #                     serving:restart
 # 
+#                           transfer:add
+# 
 #                           transfer:restart
 #                           transfer:change
 #                           transfer:close
+# 
+#                           transfers:closeall
+
 class Socket_on(sublime_plugin.TextCommand):
     def run(self, edit):
         defaultTransferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
