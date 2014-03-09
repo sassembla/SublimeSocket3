@@ -1,6 +1,8 @@
 import os
 import subprocess
 import queue
+import time
+import uuid
 
 import threading
 
@@ -36,26 +38,17 @@ class TailMachine:
 		self.args = params
 
 		self.path = params["path"]
+
+		print("ここでreactorsをSushiへと分解する", params["reactors"])
 		self.reactors = params["reactors"]
 
 
 	def spinup(self):
 		if os.path.exists(self.path):
 			command = ['tail', '-f', self.path]
-			process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			
-			stdout_queue = queue.Queue()
-			stdout_reader = AsynchronousFileReader(process.stdout, stdout_queue)
-			stdout_reader.start()
+			self.generateTailThread(command)
 
-			stderr_queue = queue.Queue()
-			stderr_reader = AsynchronousFileReader(process.stderr, stderr_queue)
-			stderr_reader.start()
-
-			# ここをどうノンブロッキングで書くか。あとどうやってkillするか。
-			# 寿命としては、新たなサーバ機能の一つなので、inしてくるラインか。ということは、server側に実装をもつべき。
-
-			print("tailMachineの起動、ファイルパスチェックとかを行って開始。必要であればジェネレートする＞いいや。")
 			self.sublimeSocketServer.transferSpinupped('TailMachine spinupped:' + self.path)
 
 		else:
@@ -82,42 +75,59 @@ class TailMachine:
 	def closeClient(self, clientId):
 		print("closeClient do nothing.", clientId)
 
+
+
 	# call SublimeSocket server. transfering datas.
-	def call(self, data, clientId):
-		print("call with data", data, "to", clientId)
+	def call(self, data):
+
+		print("ここで、reactorの値にsourceを適応したSushiJSONを返す。reactorを分解しておく必要がある。", data)
+
+		# self.sublimeSocketServer.transferInputted(data)
 
 
 	def sendMessage(self, targetId, message):
-		if message:
-			pass
-		else:
-			return (False, "no data to:"+targetId)
-		
-		print("call with data", data, "to", clientId)
-
+		pass
 
 	def broadcastMessage(self, targetIds, message):
-		print("broadcastMessage do nothing.")
+		pass
+
+	def generateTailThread(self, command):
+		process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+		# observe target.
+		logQueue = queue.Queue()
+
+		AsynchronousFileReader(process.stdout, logQueue).start()
+		
+		self.handler = Handler()
+		threading.Thread(target = self.handler.handle, args = (self.call, logQueue)).start()
 
 
+class Handler:
+	def handle(self, call, queue):
+		while 1:
+			if queue.empty():
+				pass
+			else:
+				m = queue.get()
+				print("m", m)
+				call(m)
+			
+			time.sleep(0.1)
 
 
 class AsynchronousFileReader(threading.Thread):
-    def __init__(self, fd, queue):
-        assert callable(fd.readline)
-        threading.Thread.__init__(self)
-        self._fd = fd
-        self._queue = queue
- 
-    def run(self):
-        '''The body of the tread: read lines and put them on the queue.'''
-        for line in iter(self._fd.readline, ''):
-            self._queue.put(line)
- 
-    def eof(self):
-        '''Check whether there is no more content to expect.'''
-        return not self.is_alive() and self._queue.empty()
+	def __init__(self, fd, queue):
+		assert callable(fd.readline)
 
+		self._fd = fd
+		self._queue = queue
+
+		threading.Thread.__init__(self)
+
+	def run(self):	
+		for line in iter(self._fd.readline, ''):
+			self._queue.put(line)
 
 
 

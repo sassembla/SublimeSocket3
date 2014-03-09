@@ -15,11 +15,6 @@ beforeafter>thebeforeafterselectors/selector: {
             "showAtLog": {
                 "message": "test over"
             }
-        },
-        {   
-            "openFile": {
-                "path": "SUBLIMESOCKET_PATH:tests/tests.sst"
-            }
         }
     ]
 }
@@ -3999,27 +3994,26 @@ beforeafter>thebeforeafterselectors/selector: {
 // }
 
 
-test>tailServerを立ち上げる。/startTailing: {
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
-    "reactors": [
-    ],
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "tail started."
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "tail the file",
-    "contains": {
-        "showAtLog": {
-            "output": "tail started."
-        }
-    },
-    "description": "not written",
-    "debug": true
-}
+// test>tailServerを立ち上げる。/startTailing: {
+//     "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
+//     "reactors": [
+//     ],
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "tail started."
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "start tailing the file",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "tail started."
+//         }
+//     },
+//     "description": "not tailing"
+// }
 
 
 test>tailServerを立ち上げ、ファイルへの変更を監視する。/runShell: {
@@ -4035,6 +4029,13 @@ test>tailServerを立ち上げ、ファイルへの変更を監視する。/runS
                 "format": "wrote, [source]"
             }
         }
+    ],
+    "selectors": [
+        {
+            "showAtLog": {
+                "message": "start tailing"
+            }
+        }
     ]
 }->write message to file/runShell: {
     "main": "/bin/echo",
@@ -4043,6 +4044,8 @@ test>tailServerを立ち上げ、ファイルへの変更を監視する。/runS
         ">",
         "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt"
     ]
+}->wait: {
+    "ms": 1000
 }->assertResult: {
     "id": "tail the file",
     "contains": {
