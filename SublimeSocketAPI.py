@@ -391,11 +391,34 @@ class SublimeSocketAPI:
 		time.sleep(waitMSNum*0.001)
 
 
+	# this API genereates tail machine into SublimeSocketServer. that input the result of tail the target file as "reactor" do.
 	def startTailing(self, params):
-		assert SublimeSocketAPISettings.STARTTAILING_PATH in params, "startTailing require 'path' param"
-		target = params[SublimeSocketAPISettings.STARTTAILING_PATH]
-		print("サーバ側に掛け合って、tailラインを構築する。transferへの干渉。")
-		# self.server.
+		assert SublimeSocketAPISettings.STARTTAILING_PATH in params, "startTailing require 'path' param."
+		assert SublimeSocketAPISettings.STARTTAILING_REACTORS in params, "startTailing require 'reactors' param."
+
+		tailTarget = params[SublimeSocketAPISettings.STARTTAILING_PATH]
+		tailTarget = self.getKeywordBasedPath(tailTarget, 
+					SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
+					self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
+
+
+		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
+		
+		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
+			{
+				"path": tailTarget,
+				"reactors": reactors
+			}
+		)
+
+		self.server.transfers[tailTransferIdentity].spinup()
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.STARTTAILING_INJECTIONS,
+			[tailTarget],
+			self.runAPI
+		)
 
 
 	## count up specified labelled param.
@@ -1153,7 +1176,7 @@ class SublimeSocketAPI:
 
 		newIdentity = params[SublimeSocketAPISettings.CHANGEIDENTITY_TO]
 
-		self.server.transfer.updateClientId(currentIdentityCandicate, newIdentity)
+		self.server.transfers[self.server.mainTransferId].updateClientId(currentIdentityCandicate, newIdentity)
 
 		SushiJSONParser.runSelectors(
 			params,

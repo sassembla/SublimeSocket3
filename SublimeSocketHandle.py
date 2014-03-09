@@ -39,11 +39,15 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
             Socket_on.startServer(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, [path])
         
         def on_change(pathCandidate):
-            if os.path.exists(pathCandidate):
-                message = "runSushiJSON:" + pathCandidate + " is exists."
-                
+            if os.path.isdir(pathCandidate):
+                message = "runSushiJSON:" + pathCandidate + " is folder."
+
             else:
-                message = "runSushiJSON:" + pathCandidate + " is not exists."
+                if os.path.exists(pathCandidate):
+                    message = "runSushiJSON:" + pathCandidate + " is exists."
+                    
+                else:
+                    message = "runSushiJSON:" + pathCandidate + " is not exists."
 
             sublime.status_message(message)
             print(SublimeSocketAPISettings.LOG_prefix, message)
@@ -61,11 +65,11 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 #                     serving:off
 #                     serving:restart
 # 
-#                           transfer:add
+#                           transfer:setup
+#                           transfer:spinup
 # 
 #                           transfer:restart
-#                           transfer:change
-#                           transfer:close
+#                           transfer:teardown
 # 
 #                           transfers:closeall
 
@@ -142,13 +146,14 @@ class SublimeSocketThread(threading.Thread):
     def __init__(self, transferMethod, args):
         threading.Thread.__init__(self)
         self.server = SublimeSocketServer()
-
+        self.currentTransferIdentity = "not yet generated."
+        
         self.setupThread(transferMethod, args)
 
 
   # called by thread.start
     def run(self):
-        self.server.spinupTransfer()
+        self.server.spinupTransfer(self.currentTransferIdentity)
 
 
     def setupThread(self, transferMethod, args):
@@ -176,7 +181,7 @@ class SublimeSocketThread(threading.Thread):
                     break
 
             
-            self.server.setupTransfer(transferMethod, params)
+            self.currentTransferIdentity = self.server.setupTransfer(transferMethod, params)
 
 
 

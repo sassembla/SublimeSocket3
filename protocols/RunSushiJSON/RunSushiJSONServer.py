@@ -4,11 +4,12 @@ from ... import SublimeSocketAPISettings
 
 
 class RunSushiJSONServer:
-	def __init__(self, server):
+	def __init__(self, server, serverIdentity):
 		self.methodName = SublimeSocketAPISettings.RUNSUSHIJSON_SERVER
-		self.clientIds = {}
+		
 		
 		self.args = None
+		self.transferIdentity = serverIdentity
 
 		self.path = "not set yet."
 
@@ -17,8 +18,6 @@ class RunSushiJSONServer:
 	def info(self):
 		message = "SublimeSocket RunSushiJSONServer running by path:" + self.path
 		
-		for clientId in self.clientIds:
-			message = message + "\n	client:" + clientId
 		return message
 		
 

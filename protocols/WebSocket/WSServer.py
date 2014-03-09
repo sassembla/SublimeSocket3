@@ -14,12 +14,12 @@ from ... import SublimeSocketAPISettings
 
 
 class WSServer:
-	def __init__(self, server):
+	def __init__(self, server, serverIdentity):
 		self.methodName = SublimeSocketAPISettings.WEBSOCKET_SERVER
 		self.clientIds = {}
 		
 		self.args = None
-
+		self.wsServerIdentity = serverIdentity
 		
 		self.socket = ''
 		self.host = ''
@@ -89,10 +89,10 @@ class WSServer:
 				self.sublimeSocketServer.transferNoticed(errorMsg)
 			
 		message = "SublimeSocket WebSocketServing closed @ " + str(self.host) + ":" + str(self.port)
-		self.sublimeSocketServer.transferTeardowned(message)		
+		self.sublimeSocketServer.transferTeardowned(self.wsServerIdentity, message)		
 
 	## teardown the server
-	def teardown(self):
+	def teardown(self):	
 		# close all WebSocket clients
 		clientsList = self.clientIds.copy()
 		
