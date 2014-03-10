@@ -393,15 +393,17 @@ class SublimeSocketAPI:
 
 	# this API genereates tail machine into SublimeSocketServer. that input the result of tail the target file as "reactor" do.
 	def startTailing(self, params):
+		assert SublimeSocketAPISettings.STARTTAILING_IDENTITY in params, "startTailing require 'identity' param."
 		assert SublimeSocketAPISettings.STARTTAILING_PATH in params, "startTailing require 'path' param."
 		assert SublimeSocketAPISettings.STARTTAILING_REACTORS in params, "startTailing require 'reactors' param."
 
+		identity = params[SublimeSocketAPISettings.STARTTAILING_IDENTITY]
 		tailTarget = params[SublimeSocketAPISettings.STARTTAILING_PATH]
 		tailTarget = self.getKeywordBasedPath(tailTarget, 
 					SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
 					self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
-
+		identityを持っておいてkillできるようにしたい。
 		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
 		
 		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 

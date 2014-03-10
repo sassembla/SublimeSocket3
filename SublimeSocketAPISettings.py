@@ -133,6 +133,7 @@ WAIT_MS						= "ms"
 
 
 API_STARTTAILING			= "startTailing"
+STARTTAILING_IDENTITY		= "identity"
 STARTTAILING_PATH			= "path"
 STARTTAILING_REACTORS		= "reactors"
 STARTTAILING_SOURCE			= "source"
