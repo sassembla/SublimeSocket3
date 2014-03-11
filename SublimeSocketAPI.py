@@ -126,6 +126,10 @@ class SublimeSocketAPI:
 				self.runSushiJSON(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_RUNSELECTORSWITHINJECTS):
+				self.runSelectorsWithInjects(pa)
+				break
+
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
 				self.server.tearDown()
 				break
@@ -403,7 +407,7 @@ class SublimeSocketAPI:
 					SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
 					self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
-		identityを持っておいてkillできるようにしたい。
+		
 		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
 		
 		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
@@ -518,6 +522,20 @@ class SublimeSocketAPI:
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
 			[logs],
+			self.runAPI
+		)
+
+
+	def runSelectorsWithInjects(self, params):
+		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS in params, "runSelectorsWithInjects require 'selectors' params."
+		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_INJECTS in params, "runSelectorsWithInjects require 'injects' params."
+
+		injects = params[SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_INJECTS]
+
+		SushiJSONParser.runSelectors(
+			params,
+			injects.keys(),
+			injects.values(),
 			self.runAPI
 		)
 
