@@ -81,10 +81,15 @@ class SublimeSocketServer:
 		self.onConnectedTriggers = []
 
 
-	# main API data incoming method.
+	# by raw string. main API data incoming method.
 	def transferInputted(self, data, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
 		self.api.parse(apiData, clientId)
+		
+
+	# by command and params. direct igniton of API.
+	def transferRunAPI(self, command, params, clientId=None):
+		self.api.runAPI(command, params, clientId)
 		
 
 	def showTransferInfo(self):

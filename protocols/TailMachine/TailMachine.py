@@ -3,6 +3,7 @@ import subprocess
 import queue
 import time
 import uuid
+import json
 
 import threading
 
@@ -19,6 +20,9 @@ class TailMachine:
 
 		self.path = "not set yet."
 
+		self.params = {}
+
+
 		self.sublimeSocketServer = server
 
 	def info(self):
@@ -31,16 +35,25 @@ class TailMachine:
 
 
 	def setup(self, params):
-		assert "path" in params, "TailMachine require 'path' param."
-		assert "reactors" in params, "TailMachine require 'reactors' param."
+		assert "tailTarget" in params, "TailMachine require 'tailTarget' param."
+		assert "reactors" in params or "reactorsSource" in params, "TailMachine require 'reactors' or 'reactorsSource' param."
 		
+		if "reactorsSource" in params:
+			assert False, "reactorsSource not yet supported."
+			data
+			reactorsData = json.loads(data)
+
+		else:
+			reactors = params["reactors"]
+			reactorsData = json.loads(reactors)
+
 		# set for restart.
 		self.args = params
+		self.path = params["tailTarget"]
+		
 
-		self.path = params["path"]
-
-		print("ここでreactorsをSushiへと分解する", params["reactors"])
-		self.reactors = params["reactors"]
+		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS in reactorsData, "TailMachine require 'selector' in reactor definition."
+		self.selectors = reactorsData[SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS]
 
 
 	def spinup(self):
@@ -52,7 +65,7 @@ class TailMachine:
 			self.sublimeSocketServer.transferSpinupped('TailMachine spinupped:' + self.path)
 
 		else:
-			print("failed!!:" + self.path)
+			assert False, "TailMachine spinup failed:path not found:" + self.path
 
 	## teardown the server
 	def teardown(self):
@@ -61,10 +74,10 @@ class TailMachine:
 
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
-		print("updateClientId do nothing.")
+		pass
 
 	def thisClientIsDead(self, clientId):
-		print("thisClientIsDead do nothing.")
+		pass
 		
 
 	def purgeConnection(self, clientId):
@@ -73,16 +86,17 @@ class TailMachine:
 
 	# remove from Client dict
 	def closeClient(self, clientId):
-		print("closeClient do nothing.", clientId)
+		pass
 
 
 
 	# call SublimeSocket server. transfering datas.
-	def call(self, data):
+	def call(self, source):
+		lineSource = source.decode("utf-8")
 
-		print("ここで、reactorの値にsourceを適応したSushiJSONを返す。reactorを分解しておく必要がある。", data)
-
-		# self.sublimeSocketServer.transferInputted(data)
+		# combine
+		data = {"selectors":self.selectors, "injects":{"source":lineSource}}
+		self.sublimeSocketServer.transferRunAPI(SublimeSocketAPISettings.API_RUNSELECTORSWITHINJECTS, data)
 
 
 	def sendMessage(self, targetId, message):
@@ -110,7 +124,6 @@ class Handler:
 				pass
 			else:
 				m = queue.get()
-				print("m", m)
 				call(m)
 			
 			time.sleep(0.1)

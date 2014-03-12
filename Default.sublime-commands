@@ -5,6 +5,16 @@
     },
 
     {
+        "caption": "SublimeSocket: start TailMacnine",
+        "command": "socket_start_tailmachine"
+    },
+
+    {
+        "caption": "SublimeSocket: start TailMacnine (repeat)",
+        "command": "socket_start_tailmachine_repeat"
+    },
+
+    {
         "caption": "SublimeSocket: on",
         "command": "socket_on"
     },

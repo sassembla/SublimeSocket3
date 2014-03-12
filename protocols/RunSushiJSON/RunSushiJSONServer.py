@@ -30,7 +30,7 @@ class RunSushiJSONServer:
 		
 		# set for restart.
 		self.args = params
-
+		
 		self.path = params["path"]
 
 

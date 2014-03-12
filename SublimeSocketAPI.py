@@ -127,7 +127,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_RUNSELECTORSWITHINJECTS):
-				self.runSelectorsWithInjects(pa)
+				self.runSelectorsWithInjects(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
@@ -409,11 +409,12 @@ class SublimeSocketAPI:
 
 		
 		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
+		reactorsDict = {"selectors": reactors}
 		
 		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
 			{
-				"path": tailTarget,
-				"reactors": reactors
+				"tailTarget": tailTarget,
+				"reactors": json.dumps(reactorsDict)
 			}
 		)
 
