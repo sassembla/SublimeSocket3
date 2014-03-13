@@ -490,7 +490,6 @@ class CaptureEditing(sublime_plugin.EventListener):
     def update(self, eventName, view=None):
         global thread
 
-        print("thread", thread)
         
         if thread and thread.is_alive():
             thread.viewEmitViaSublime(eventName, view)

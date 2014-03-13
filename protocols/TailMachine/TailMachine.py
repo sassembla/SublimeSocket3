@@ -4,6 +4,7 @@ import queue
 import time
 import uuid
 import json
+import atexit
 
 import threading
 
@@ -13,6 +14,8 @@ from ... import SublimeSocketAPISettings
 TAIL_PATH = "tailPath"
 TAIL_REACTORS = "reactors"
 TAIL_REACTORS_SOURCE = "reactorsSource"
+TAIL_CONTINUATION	= "continuation"
+
 
 class TailMachine:
 	def __init__(self, server, serverIdentity):
@@ -51,8 +54,8 @@ class TailMachine:
 			reactors = params[TAIL_REACTORS]
 			reactorsData = json.loads(reactors)
 
-		if "continuation" in params:
-			self.continuation = params["continuation"]
+		if TAIL_CONTINUATION in params:
+			self.continuation = params[TAIL_CONTINUATION]
 
 		# set for restart.
 		self.args = params
@@ -73,6 +76,10 @@ class TailMachine:
 
 		else:
 			assert False, "TailMachine spinup failed:path not found:" + self.path
+
+		if self.continuation:
+			time.sleep(0.1)
+
 
 	## teardown the server
 	def teardown(self):
@@ -115,6 +122,8 @@ class TailMachine:
 	def generateTailThread(self, command):
 		process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+		atexit.register(process.terminate)
+		
 		# observe target.
 		logQueue = queue.Queue()
 

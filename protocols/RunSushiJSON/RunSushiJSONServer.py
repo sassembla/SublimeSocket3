@@ -3,6 +3,9 @@ from ...PythonSwitch import PythonSwitch
 from ... import SublimeSocketAPISettings
 
 
+import time
+
+
 class RunSushiJSONServer:
 	def __init__(self, server, serverIdentity):
 		self.methodName = SublimeSocketAPISettings.RUNSUSHIJSON_SERVER
@@ -47,7 +50,7 @@ class RunSushiJSONServer:
 		self.sublimeSocketServer.transferInputted(data)
 
 		while self.continuation:
-			pass
+			time.sleep(0.1)
 
 	## teardown the server
 	def teardown(self):
