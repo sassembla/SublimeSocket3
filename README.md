@@ -1,64 +1,54 @@
 # SublimeSocket
-##### version 1.4.0
+======
+![SS](/main.png)
 
-**API Server** for the SublimeText.   
-Control SublimeTextAPI via WebSocket protocol.  
-![alt roundabout](https://dl.dropbox.com/u/36583594/2013%3A04%3A05%201-17-34/%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%BC%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%83%E3%83%88%202013-04-05%2013.27.48.png)  
-・Keep SublimeText "LIGHT".  
-・Show Errors and Suggestions on SublimeText.  
-・Enable Tooltip as Mac-Notification.  
+**The set of API Server, KVS and Executor** for the SublimeText and more.   
+Connect something to editor.  
+Control EditorAPI by inputted **JSON string**.  
+
+You can construct **the chain of filters and events** that you want to do. 
+
+ver 1.4.1
 
 
+##demos
+* [Ruby show runtime error on code sample](https://vimeo.com/88961966)
 
-#Supported languages
-* Unity + C# (Unity Asset, coming soon!)
-* TypeScript (ChromeExtension)
-* mruby (ChromeExtension) 
-
-#Demo movie
 * [Work with Unity	:	Build and show parameters and errors](https://vimeo.com/62957311)  
 * [Work with TypeScript	:	Build and show errors with Chrome Ext](https://vimeo.com/63188211)  
 
 
 
-#USAGE: CommandPalette >  
-* ##### SublimeSocket: on
-**-> start WebSocket server at http://localhost:8823**
+##usage: CommandPalette >  
+start WebSocket server
 
-* ##### SublimeSocket: on > open preference
-**-> server ON, then show SublimeSocket's preference page.**  
-(**will connect to SublimeServer automatically.**)
+	SublimeSocket: on
+	
+	start serving ws at http://localhost:8823 by default.
 
-* ##### SublimeSocket: open preference
-**-> show SublimeSocket's preference.**  
+show status
+	
+	SublimeSocket: status
+	
+	show SublimeSocket's status and list current connections name.
 
-* ##### SublimeSocket: status
-**-> show SublimeSocket's status and current connections.**  
+test
 
-* ##### SublimeSocket: off
-Please restart SublimeText manually.
-  
+	SublimeSocket: on > test
+	
+	show SublimeSocket's status and current connections.
+	
+teardown
 
-#sample filters
-SublimeSocket can show "error" regions through the filtered-data from WebSocket.
-
-* The sample filter for Unity3D:  
-[https://github.com/sassembla/SublimeSocket/...UnityFilter.txt](https://github.com/sassembla/SublimeSocket/blob/unity/FilterSettingSamples/UnityFilter.txt)  
-
-* The tail-WebSocket node.js component:  
-[/tool/nodeTailSocket/node_tailsocket_unity.js](https://github.com/sassembla/SublimeSocket/blob/master/tool/nodeTailSocket/node_tailsocket.js)    
-
-
+	SublimeSocket: off
+	
+	teardown.
 
 
 #Purpose/Motivation
-* Enable control SublimeText from other process, browser, websocket clients.
-* Pick out all heavy-process from SublimeText to the outside.
+* Control SublimeText API from the other process, data, input.
+* Pick out all heavy-process from SublimeText to the outside & keep async.
 
 
-#ToDo
-* Completion support
-
-#Done
-* (Done)ST3 adopt -> go to [SublimeSocket3](https://github.com/sassembla/SublimeSocket3)
-* (Done)Windows support -> go to [SublimeSocket3](https://github.com/sassembla/SublimeSocket3)
+#Next
+* Atom adopt.

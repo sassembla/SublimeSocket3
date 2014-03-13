@@ -1,0 +1,67 @@
+// use RuhSushiJSON for running.
+// this file is writtern by SushiJSON-lang (https://github.com/sassembla/SushiJSON) 
+
+showAtLog: {
+	"message": "start defining for ruby."
+}->defineFilter: {
+	"name": "rubyFilter",
+	"filters": [
+		{
+			// error
+			// e.g.)hello.rb:3: undefined local variable or method `somethingwrong' for main:Object (NameError)
+			"(.*?):([0-9].*): (.*)\n": {
+				"injects": {
+					"groups[0]": "name",
+					"groups[1]": "line",
+					"source": "message"
+				},
+				"selectors": [
+					{
+						"showAtLog<-message": {
+
+						}
+					},
+					{
+						"appendRegion<-name, line, message": {
+							"condition": "keyword"
+						}
+					}
+				]
+			}
+		}
+	]
+}->setViewReactor: {
+    "react": "on_post_save",
+    "reactors": [
+    	{
+    		"showAtLog": {
+    			"message": "saved."
+    		}
+    	},
+    	{
+    		"eraseAllRegions": {
+    			
+    		}
+    	},
+    	{
+    		"runShell": {
+    			"main": "/bin/sh",
+    			"": "/Users/highvision/Desktop/rubySample/run.sh"
+    		}
+    	}
+    ]
+}->startTailing: {
+	"identity": "sample ruby tail",
+	"path": "/Users/highvision/Desktop/rubySample/log.txt",
+	"reactors": [
+		{
+			"filtering<-source": {
+				"name": "rubyFilter"
+			}
+		}
+	]
+}->showAtLog: {
+	"message": "ruby setting done."
+}
+
+

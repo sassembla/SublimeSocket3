@@ -2,6 +2,7 @@
 import sublime, sublime_plugin
 import threading
 import uuid
+import os
 
 from .SublimeSocketServer import SublimeSocketServer
 from . import SublimeSocketAPISettings
@@ -10,9 +11,192 @@ from .PythonSwitch import PythonSwitch
 
 
 from .OpenHTML import Openhtml
+# one history of tailMachine
 
 # SublimeSocket server's thread
 thread = None
+
+
+tailPath = ""
+tailReactor = ""
+
+# one history of runSushiJSON
+runPath = ""
+
+
+
+class Socket_start_tailmachine(sublime_plugin.TextCommand):
+    def run(self, edit):
+        global tailPath
+
+        caption = "input tail-target path:"
+
+        defaultPath = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultRunSushiJSONPath")
+
+        if tailPath:
+            initial_text = tailPath
+
+        else:
+            initial_text = defaultPath
+
+
+        def getMessageAndStatus(pathCandidate):
+            status = -1
+
+            if os.path.isdir(pathCandidate):
+                message = "tailMachine:" + pathCandidate + " is folder."
+
+            else:
+                if os.path.exists(pathCandidate):
+                    message = "tailMachine:" + pathCandidate + " is exists."
+                    status = 1                    
+                else:
+                    message = "tailMachine:" + pathCandidate + " is not exists."
+
+            return (message, status)
+
+
+        def on_done(path):
+            global tailPath
+
+
+            _, status = getMessageAndStatus(path)
+
+            if status == 1:
+                caption = "input tail-reactor path or SushiJSON-String:"
+
+                def on_done_setReactor(reactorCandicate):
+                    global tailPath
+                    global tailReactor
+
+                    tailPath = path
+                    tailReactor = reactorCandicate
+
+                    # do not check if file or string here.
+                    _, result = getMessageAndStatus(reactorCandicate)
+
+                    self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":tailPath, "reactors":reactorCandicate, "continuation": True}})
+            
+
+                def on_change_setReactor(reactorCandicate):
+                    # do nothing.
+                    pass
+
+                def on_cancel_setReactor():
+                    # do nothing.
+                    pass
+
+                sublime.active_window().show_input_panel(caption, "", 
+                    on_done_setReactor,
+                    on_change_setReactor, 
+                    on_cancel_setReactor)
+
+            else:
+                result = "tailMachine:cannot run:"+path
+                sublime.status_message(result)
+                print(SublimeSocketAPISettings.LOG_prefix, result)
+
+        
+        def on_change(pathCandidate):
+            message, _ = getMessageAndStatus(pathCandidate)
+
+            sublime.status_message(message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
+
+        def on_cancel():
+            pass
+            
+        sublime.active_window().show_input_panel(caption, initial_text, on_done, on_change, on_cancel)
+
+
+
+class Socket_start_tailmachine_repeat(sublime_plugin.TextCommand):
+    def run(self, edit):
+        global tailPath
+        global tailReactor
+
+        currentTailPath = tailPath
+        currentTailReactor = tailReactor
+
+        if tailPath and tailReactor:
+            def getMessageAndStatus(pathCandidate):
+                status = -1
+
+                if os.path.isdir(pathCandidate):
+                    pass
+                else:
+                    if os.path.exists(pathCandidate):
+                        status = 1                    
+                    else:
+                        pass
+
+                return status
+
+            # do not check if file or string here.
+            result = getMessageAndStatus(currentTailReactor)
+            self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":currentTailPath, "reactors":currentTailReactor}})
+            
+
+
+
+class Socket_run_sushijson(sublime_plugin.TextCommand):
+    def run(self, edit):
+        global runPath
+
+        caption = "input the path of SushiJSON file:"
+
+        defaultPath = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultRunSushiJSONPath")
+
+        if runPath:
+            initial_text = runPath
+
+        else:
+            initial_text = defaultPath
+
+
+        def getMessageAndStatus(pathCandidate):
+            status = -1
+
+            if os.path.isdir(pathCandidate):
+                message = "runSushiJSON:" + pathCandidate + " is folder."
+
+            else:
+                if os.path.exists(pathCandidate):
+                    message = "runSushiJSON:" + pathCandidate + " is exists."
+                    status = 1                    
+                else:
+                    message = "runSushiJSON:" + pathCandidate + " is not exists."
+
+            return (message, status)
+
+
+        def on_done(path):
+            global runPath
+            _, status = getMessageAndStatus(path)
+
+            if status == 1:
+                runPath = path
+                self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, "path": path, "continuation": True}})
+
+            else:
+                result = "runSushiJSON:cannot run:" + path
+                sublime.status_message(result)
+                print(SublimeSocketAPISettings.LOG_prefix, result)
+
+        
+        def on_change(pathCandidate):
+            message, _ = getMessageAndStatus(pathCandidate)
+
+            sublime.status_message(message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
+
+        def on_cancel():
+            pass
+            
+        sublime.active_window().show_input_panel(caption, initial_text, on_done, on_change, on_cancel)
+
+
+
 
 
 # states are below.
@@ -22,14 +206,24 @@ thread = None
 #                     serving:off
 #                     serving:restart
 # 
+#                           transfer:setup
+#                           transfer:spinup
+# 
 #                           transfer:restart
-#                           transfer:change
-#                           transfer:close
+#                           transfer:teardown
+# 
+#                           transfers:closeall
 
 class Socket_on(sublime_plugin.TextCommand):
-    def run(self, edit):
-        defaultTransferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
-        self.startServer(defaultTransferMethod, [])
+    def run(self, edit, params=None):
+        if params:
+            assert "type" in params, "SocketOn require 'type' params."
+            transferMethod = params["type"]
+        else:
+            transferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
+            params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
+
+        self.startServer(transferMethod, params)
 
 
     @classmethod
@@ -41,12 +235,13 @@ class Socket_on(sublime_plugin.TextCommand):
         else:
             notActivatedMessage = "SublimeSocket not yet activated."
             sublime.status_message(notActivatedMessage)
-            print("ss:", notActivatedMessage)
+            print(SublimeSocketAPISettings.LOG_prefix, notActivatedMessage)
 
 
     @classmethod
     def startServer(self, transferMethod, args):
         global thread
+        
         if thread and thread.is_alive():
             thread.setupThread(transferMethod, args)
 
@@ -57,7 +252,14 @@ class Socket_on(sublime_plugin.TextCommand):
 
 class Socket_on_then_test(sublime_plugin.TextCommand):
     def run(self, edit):
-        Socket_on.startServer("WebSocketServer", ["runTests"])
+        transferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
+        baseArgs = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
+            
+        params = baseArgs
+        params["type"] = transferMethod
+        params["runTests"] = True
+
+        self.view.run_command("socket_on", {"params":params})
 
 class Socket_restart(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -73,7 +275,7 @@ class Socket_off(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
             
 
 class Transfer_info(sublime_plugin.TextCommand):
@@ -83,12 +285,12 @@ class Transfer_info(sublime_plugin.TextCommand):
         if thread and thread.is_alive():
             message = thread.server.showTransferInfo()
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 
@@ -99,23 +301,32 @@ class SublimeSocketThread(threading.Thread):
     def __init__(self, transferMethod, args):
         threading.Thread.__init__(self)
         self.server = SublimeSocketServer()
-
+        self.currentTransferIdentity = "not yet generated."
+        
         self.setupThread(transferMethod, args)
 
 
   # called by thread.start
     def run(self):
-        self.server.spinupTransfer()
+        self.server.spinupTransfer(self.currentTransferIdentity)
 
 
-    def setupThread(self, transferMethod, args):
+    def setupThread(self, transferMethod, argsDict):
         if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:   
-            params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
-                 
             for case in PythonSwitch(transferMethod):
-                if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+                if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+                    assert "path" in argsDict, "RunSushiJSONServer require 'path' param."
+                    params = argsDict
                     
-                    if "runTests" in args:
+                    break
+
+                if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+                    assert "host" in argsDict, "WebSocketServer require 'host' param."
+                    assert "port" in argsDict, "WebSocketServer require 'port' param."
+
+                    params = argsDict
+
+                    if "runTests" in argsDict:
                         Openhtml.openSublimeSocketTest(params)
                         
                         testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
@@ -127,9 +338,25 @@ class SublimeSocketThread(threading.Thread):
                         self.server.appendOnConnectedTriggers(runTests)
                     
                     break
+                if case(SublimeSocketAPISettings.TAIL_MACHINE):
+                    assert "result" in argsDict, "TailMachine require 'result' param."
+                    result = argsDict["result"]
+                    
+                    # not file, reactor body.
+                    if result == -1:
+                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
+                        assert "reactors" in argsDict, "TailMachine require 'reactors' param."
 
-            
-            self.server.setupTransfer(transferMethod, params)
+                    # file path. reactor string.
+                    else:
+                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
+                        assert "reactorsSource" in argsDict, "TailMachine require 'reactorsSource' param."
+
+                    params = argsDict
+
+                    break
+
+            self.currentTransferIdentity = self.server.setupTransfer(transferMethod, params)
 
 
 
@@ -206,7 +433,7 @@ class Kvs_show(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 class Kvs_flush(sublime_plugin.TextCommand):
@@ -218,7 +445,7 @@ class Kvs_flush(sublime_plugin.TextCommand):
         else:
             message = "SublimeSocket not yet activated."
             sublime.status_message(message)
-            print("ss:", message)
+            print(SublimeSocketAPISettings.LOG_prefix, message)
 
 
 # view listeners
@@ -263,8 +490,10 @@ class CaptureEditing(sublime_plugin.EventListener):
     def update(self, eventName, view=None):
         global thread
 
+        
         if thread and thread.is_alive():
             thread.viewEmitViaSublime(eventName, view)
+
 
 
     def updateViewInfo(self, view):
@@ -296,6 +525,7 @@ class CaptureEditing(sublime_plugin.EventListener):
 # view contents control
 class InsertTextCommand(sublime_plugin.TextCommand):
     def run(self, edit, string='', fromParam=0):
+        
         fromParam = int(fromParam)
         if fromParam == -1:
             self.view.insert(edit, self.view.size(), string)

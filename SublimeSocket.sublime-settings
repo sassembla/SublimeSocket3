@@ -1,6 +1,8 @@
 {
 	"schema_version": "1.0",
 
+	"defaultRunSushiJSONPath": "/",
+
 	"defaultTransferMethod": "WebSocketServer",
 
 	"WebSocketServer": {

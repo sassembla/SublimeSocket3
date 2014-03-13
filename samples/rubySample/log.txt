@@ -1,0 +1,1 @@
+/Users/highvision/Desktop/rubySample/hello.rb:3: undefined method `pauts' for main:Object (NoMethodError)

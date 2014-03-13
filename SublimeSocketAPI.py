@@ -32,7 +32,7 @@ class SublimeSocketAPI:
 		self.server = server
 
 		self.editorAPI = EditorAPI()
-		self.globalResults = []
+		self.globalResults = {}
 
 		self.asyncDict = {}
 		self.counts = {}
@@ -110,6 +110,10 @@ class SublimeSocketAPI:
 				self.wait(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_STARTTAILING):
+				self.startTailing(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_COUNTUP):
 				self.countUp(params)
 				break			
@@ -120,6 +124,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RUNSUSHIJSON):
 				self.runSushiJSON(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_RUNSELECTORSWITHINJECTS):
+				self.runSelectorsWithInjects(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_TEARDOWN):
@@ -387,6 +395,39 @@ class SublimeSocketAPI:
 		time.sleep(waitMSNum*0.001)
 
 
+	# this API genereates tail machine into SublimeSocketServer. that input the result of tail the target file as "reactor" do.
+	def startTailing(self, params):
+		assert SublimeSocketAPISettings.STARTTAILING_IDENTITY in params, "startTailing require 'identity' param."
+		assert SublimeSocketAPISettings.STARTTAILING_PATH in params, "startTailing require 'path' param."
+		assert SublimeSocketAPISettings.STARTTAILING_REACTORS in params, "startTailing require 'reactors' param."
+
+		identity = params[SublimeSocketAPISettings.STARTTAILING_IDENTITY]
+		tailTarget = params[SublimeSocketAPISettings.STARTTAILING_PATH]
+		tailTarget = self.getKeywordBasedPath(tailTarget, 
+					SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
+					self.editorAPI.packagePath() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
+
+		
+		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
+		reactorsDict = {"selectors": reactors}
+		
+		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
+			{
+				"tailPath": tailTarget,
+				"reactors": json.dumps(reactorsDict)
+			}
+		)
+
+		self.server.transfers[tailTransferIdentity].spinup()
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.STARTTAILING_INJECTIONS,
+			[tailTarget],
+			self.runAPI
+		)
+
+
 	## count up specified labelled param.
 	def countUp(self, params):
 		assert SublimeSocketAPISettings.COUNTUP_LABEL in params, "countUp requre 'label' param."
@@ -443,7 +484,7 @@ class SublimeSocketAPI:
 				SublimeSocketAPISettings.RUNSUSHIJSON_PREFIX_SUBLIMESOCKET_PATH,
 				self.editorAPI.packagePath()+ "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/")
 
-			self.editorAPI.printMessage("runSetting:" + replacedFilePath)
+			self.editorAPI.printMessage("runSushiJSON:" + replacedFilePath)
 			
 			with open(replacedFilePath, encoding='utf8') as f:
 				setting = f.read()
@@ -482,6 +523,20 @@ class SublimeSocketAPI:
 			params,
 			SublimeSocketAPISettings.RUNSUSHIJSON_INJECTIONS,
 			[logs],
+			self.runAPI
+		)
+
+
+	def runSelectorsWithInjects(self, params):
+		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS in params, "runSelectorsWithInjects require 'selectors' params."
+		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_INJECTS in params, "runSelectorsWithInjects require 'injects' params."
+
+		injects = params[SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_INJECTS]
+
+		SushiJSONParser.runSelectors(
+			params,
+			injects.keys(),
+			injects.values(),
 			self.runAPI
 		)
 
@@ -1142,7 +1197,7 @@ class SublimeSocketAPI:
 
 		newIdentity = params[SublimeSocketAPISettings.CHANGEIDENTITY_TO]
 
-		self.server.transfer.updateClientId(currentIdentityCandicate, newIdentity)
+		self.server.transfers[self.server.mainTransferId].updateClientId(currentIdentityCandicate, newIdentity)
 
 		SushiJSONParser.runSelectors(
 			params,
@@ -1271,6 +1326,11 @@ class SublimeSocketAPI:
 			)
 
 	def closeAllFiles(self, params):
+		dryrun = False
+
+		if SublimeSocketAPISettings.CLOSEFILE_DRYRUN in params:
+			dryrun = params[SublimeSocketAPISettings.CLOSEFILE_DRYRUN]
+
 		expectPaths = []
 
 		targetViews = self.editorAPI.allViewsInCurrentWindow()
@@ -1283,13 +1343,16 @@ class SublimeSocketAPI:
 
 			currentTargetPaths = list(targetPathsSet - expectPaths)
 			currentTargetViews = map(internal_detectViewInstance, currentTargetPaths)
-			[self.editorAPI.closeView(view) for view in currentTargetViews]
+			
+			if not dryrun:
+				[self.editorAPI.closeView(view) for view in currentTargetViews]
 
 			closeds = currentTargetPaths
 
 		# close all in this window
 		else:
-			self.editorAPI.closeAllViewsInCurrentWindow()
+			if not dryrun:
+				self.editorAPI.closeAllViewsInCurrentWindow()
 			closeds = targetPaths
 
 		SushiJSONParser.runSelectors(

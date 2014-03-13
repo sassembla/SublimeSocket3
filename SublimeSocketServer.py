@@ -9,8 +9,12 @@ from . import SublimeSocketAPISettings
 
 from .KVS import KVS
 
-# choose transfer method.
+# choose transfer method from below.
+from .protocols.RunSushiJSON.RunSushiJSONServer import RunSushiJSONServer
 from .protocols.WebSocket.WSServer import WSServer
+from .protocols.TailMachine.TailMachine import TailMachine
+
+
 from .PythonSwitch import PythonSwitch
 
 
@@ -19,8 +23,12 @@ class SublimeSocketServer:
 		self.api = SublimeSocketAPI(self)
 		self.kvs = KVS()
 
-		self.transfer = None
-		self.reserveRestart = None
+
+		self.mainTransferId = None
+
+
+		self.transfers = {}
+		self.reserveRestart = {}
 
 		self.onConnectedTriggers = []
 
@@ -37,18 +45,18 @@ class SublimeSocketServer:
 	def refreshKVS(self):
 		self.clearAllKeysAndValues()
 
-	def transferTeardowned(self, message):
+	def transferTeardowned(self, message, transferIdentity):
 		self.api.editorAPI.printMessage(message + "\n")
 		self.api.editorAPI.statusMessage(message)
 
-		self.transfer = None
+		del self.transfers[transferIdentity]
 
 		# run when restert reserved.
-		if self.reserveRestart:
-			self.setupTransfer(*self.reserveRestart)
+		if self.reserveRestart[transferIdentity]:
+			newTransferIdentity = self.setupTransfer(*self.reserveRestart[transferIdentity])
 
-			self.spinupTransfer()
-			self.reserveRestart = None
+			self.spinupTransfer(newTransferIdentity)
+			del self.reserveRestart[transferIdentity]
 
 	
 	def transferNoticed(self, message):
@@ -73,15 +81,21 @@ class SublimeSocketServer:
 		self.onConnectedTriggers = []
 
 
-	# main API data incoming method.
-	def transferInputted(self, data, clientId):
+	# by raw string. main API data incoming method.
+	def transferInputted(self, data, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
 		self.api.parse(apiData, clientId)
 		
 
+	# by command and params. direct igniton of API.
+	def transferRunAPI(self, command, params, clientId=None):
+		self.api.runAPI(command, params, clientId)
+		
+
 	def showTransferInfo(self):
-		if self.transfer:
-			return self.transfer.info()
+		if self.transfers:
+			infos = [" ".join(transfer.info()) for transfer in self.transfers.values()]
+			return infos
 
 		else:
 			return "no transfer running."
@@ -91,40 +105,52 @@ class SublimeSocketServer:
 	# control transfer.
 
 	def setupTransfer(self, transferMethod, params):
-		if self.transfer:
-			message = "SublimeSocket already running." + self.transfer.info()
-			self.api.editorAPI.printMessage(message + "\n")
-			self.api.editorAPI.statusMessage(message)
-		
-		else:
-			if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
-				
-				for case in PythonSwitch(transferMethod):
-					if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
-						self.transfer = WSServer(self)
-						self.transfer.setup(params)
-						break
+		if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
+			
+			transferIdentity = str(uuid.uuid4())
+
+			for case in PythonSwitch(transferMethod):
+				if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+					self.transfers[transferIdentity] = RunSushiJSONServer(self, transferIdentity)
+					self.transfers[transferIdentity].setup(params)
+
+					break
+					
+				if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+					self.transfers[transferIdentity] = WSServer(self, transferIdentity)
+					self.transfers[transferIdentity].setup(params)
+
+					break
+
+				if case(SublimeSocketAPISettings.TAIL_MACHINE):
+					self.transfers[transferIdentity] = TailMachine(self, transferIdentity)
+					self.transfers[transferIdentity].setup(params)
+
+					break
+
+			if not self.mainTransferId:
+				self.mainTransferId = transferIdentity
+
+			return transferIdentity
 
 
-		self.currentTransferMethod = transferMethod
+	def spinupTransfer(self, transferIdentity):
+		if transferIdentity in self.transfers:
+			self.transfers[transferIdentity].spinup()
 
-	def spinupTransfer(self):
-		if self.transfer:
-			self.transfer.spinup()
-
-	def restartTransfer(self):
-		if self.transfer:
+	def restartTransfer(self, transferIdentity):
+		if transferIdentity in self.transfers:
 			# reserve restart
-			self.reserveRestart = self.transfer.currentArgs()
-			self.teardownTransfer()
+			self.reserveRestart[transferIdentity] = self.transfers[transferIdentity].currentArgs()
+			self.teardownTransfer(transferIdentity)
 		else:
-			self.transferSpinupFailed("no transfer running.")
+			self.transferSpinupFailed("no transfer running:"+ transferIdentity)
 
-	def teardownTransfer(self):
-		if self.transfer:
-			self.transfer.teardown()
+	def teardownTransfer(self, transferIdentity):
+		if transferIdentity in self.transfers:
+			self.transfers[transferIdentity].teardown(transferIdentity)
 		else:
-			self.transferTeardowned("no transfer running.")
+			self.transferTeardowned("no transfer running.", transferIdentity)
 
 	def appendOnConnectedTriggers(self, func):
 		for addedFunctionDict in self.onConnectedTriggers:
@@ -137,14 +163,14 @@ class SublimeSocketServer:
 	# message series
 	
 	def sendMessage(self, targetId, message):
-		return self.transfer.sendMessage(targetId, message)
+		return self.transfers[self.mainTransferId].sendMessage(targetId, message)
 
 	def broadcastMessage(self, targetIds, message):
-		return self.transfer.broadcastMessage(targetIds, message)
+		return self.transfers[self.mainTransferId].broadcastMessage(targetIds, message)
 
 	# purge
 	def purgeConnection(self, targetId):
-		self.transfer.purgeConnection(targetId)
+		self.transfers[self.mainTransferId].purgeConnection(targetId)
 
 
 	# other series

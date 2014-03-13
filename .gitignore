@@ -12,3 +12,5 @@ tool/chromeClients/TypeScriptClient/compileLog.log
 doc/reference/2013:04:05 1-17-34.rtfd/*
 
 tmp/tests.html
+
+tests/testResources/runShellTarget.txt

@@ -1,0 +1,9 @@
+{
+    "selectors": [
+        {
+            "showAtLog<-source": {
+                "format": "the [source]"
+            }
+        }
+    ]
+}
