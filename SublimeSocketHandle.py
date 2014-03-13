@@ -75,7 +75,7 @@ class Socket_start_tailmachine(sublime_plugin.TextCommand):
                     # do not check if file or string here.
                     _, result = getMessageAndStatus(reactorCandicate)
 
-                    self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":tailPath, "reactor":reactorCandicate}})
+                    self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":tailPath, "reactors":reactorCandicate, "continuation": True}})
             
 
                 def on_change_setReactor(reactorCandicate):
@@ -134,7 +134,7 @@ class Socket_start_tailmachine_repeat(sublime_plugin.TextCommand):
 
             # do not check if file or string here.
             result = getMessageAndStatus(currentTailReactor)
-            self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":currentTailPath, "reactor":currentTailReactor}})
+            self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.TAIL_MACHINE, "result": result, "tailPath":currentTailPath, "reactors":currentTailReactor}})
             
 
 
@@ -176,7 +176,7 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 
             if status == 1:
                 runPath = path
-                self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, "path": path}})
+                self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, "path": path, "continuation": True}})
 
             else:
                 result = "runSushiJSON:cannot run:" + path
@@ -222,7 +222,6 @@ class Socket_on(sublime_plugin.TextCommand):
         else:
             transferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
             params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
-            print("hmm?", params)
 
         self.startServer(transferMethod, params)
 
@@ -316,7 +315,6 @@ class SublimeSocketThread(threading.Thread):
         if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:   
             for case in PythonSwitch(transferMethod):
                 if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
-                    print("来てる")
                     assert "path" in argsDict, "RunSushiJSONServer require 'path' param."
                     params = argsDict
                     
@@ -346,12 +344,12 @@ class SublimeSocketThread(threading.Thread):
                     
                     # not file, reactor body.
                     if result == -1:
-                        assert "tailTarget" in argsDict, "TailMachine require 'tailTarget' param."
+                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
                         assert "reactors" in argsDict, "TailMachine require 'reactors' param."
 
                     # file path. reactor string.
                     else:
-                        assert "tailTarget" in argsDict, "TailMachine require 'tailTarget' param."
+                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
                         assert "reactorsSource" in argsDict, "TailMachine require 'reactorsSource' param."
 
                     params = argsDict

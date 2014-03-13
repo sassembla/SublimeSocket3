@@ -10,6 +10,9 @@ import threading
 from ...PythonSwitch import PythonSwitch
 from ... import SublimeSocketAPISettings
 
+TAIL_PATH = "tailPath"
+TAIL_REACTORS = "reactors"
+TAIL_REACTORS_SOURCE = "reactorsSource"
 
 class TailMachine:
 	def __init__(self, server, serverIdentity):
@@ -19,6 +22,7 @@ class TailMachine:
 		self.transferIdentity = serverIdentity
 
 		self.path = "not set yet."
+		self.continuation = False
 
 		self.params = {}
 
@@ -35,21 +39,24 @@ class TailMachine:
 
 
 	def setup(self, params):
-		assert "tailTarget" in params, "TailMachine require 'tailTarget' param."
-		assert "reactors" in params or "reactorsSource" in params, "TailMachine require 'reactors' or 'reactorsSource' param."
+		assert TAIL_PATH in params, "TailMachine require 'tailPath' param."
+		assert TAIL_REACTORS in params or TAIL_REACTORS_SOURCE in params, "TailMachine require 'reactors' or 'reactorsSource' param."
 		
-		if "reactorsSource" in params:
+		if TAIL_REACTORS_SOURCE in params:
 			assert False, "reactorsSource not yet supported."
 			data
 			reactorsData = json.loads(data)
 
 		else:
-			reactors = params["reactors"]
+			reactors = params[TAIL_REACTORS]
 			reactorsData = json.loads(reactors)
+
+		if "continuation" in params:
+			self.continuation = params["continuation"]
 
 		# set for restart.
 		self.args = params
-		self.path = params["tailTarget"]
+		self.path = params[TAIL_PATH]
 		
 
 		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS in reactorsData, "TailMachine require 'selector' in reactor definition."

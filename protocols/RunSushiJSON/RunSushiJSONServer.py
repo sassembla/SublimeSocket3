@@ -12,6 +12,7 @@ class RunSushiJSONServer:
 		self.transferIdentity = serverIdentity
 
 		self.path = "not set yet."
+		self.continuation = False
 
 		self.sublimeSocketServer = server
 
@@ -27,11 +28,15 @@ class RunSushiJSONServer:
 
 	def setup(self, params):
 		assert "path" in params, "RunSushiJSONServer require 'path' param."
+
+		self.path = params["path"]
+
+		if "continuation" in params:
+			self.continuation = params["continuation"]
 		
 		# set for restart.
 		self.args = params
 		
-		self.path = params["path"]
 
 
 	def spinup(self):
@@ -40,6 +45,9 @@ class RunSushiJSONServer:
 		data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"path\": \"" + self.path + "\"}"
 		
 		self.sublimeSocketServer.transferInputted(data)
+
+		while self.continuation:
+			pass
 
 	## teardown the server
 	def teardown(self):
