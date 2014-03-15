@@ -2276,7 +2276,6 @@ test>noViewFoundを起こし、log出力をassertする/setEventReactor: {
     "reactors": [
         {
             "showAtLog<-name": {
-                "message": "no view found",
                 "format": "view [name] not found."
             }
         }
@@ -2411,11 +2410,8 @@ test>現在開いているファイルに対するviewEmitのテスト。特定�
 }
 
 
-test>eventEmitでのaccepts機構のテスト、eventEmit側にinjectsが無いver/setEventReactor: {
-    "react": "event_accept_event",
-    "accepts":[
-        "messageFromEventEmit"
-    ],
+test>eventEmitでのInjects機構のテスト/setEventReactor: {
+    "react": "event_accept_params",
     "reactors": [
         {
             "showAtLog": {
@@ -2429,13 +2425,13 @@ test>eventEmitでのaccepts機構のテスト、eventEmit側にinjectsが無いv
         }
     ]
 }->eventEmit: {
-    "event": "event_accept_event",
-    "messageFromEventEmit": "the message from eventEmit"
+    "event": "event_accept_params",
+    "messageFromEventEmit": "the message via eventEmit"
 }->assertResult: {
-    "id": "eventEmit with accepts",
+    "id": "eventEmit with injects",
     "contains": {
         "showAtLog": {
-            "output": "from the message from eventEmit"
+            "output": "from the message via eventEmit"
         }
     },
     "description": "not match."
