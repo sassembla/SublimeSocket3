@@ -11,11 +11,11 @@ You can construct **the chain of filters and events** that you want to do.
 ver 1.4.1
 
 
-##demos
-* [Ruby show runtime error on code sample](https://vimeo.com/88961966)
-
-* [Work with Unity	:	Build and show parameters and errors](https://vimeo.com/62957311)  
-* [Work with TypeScript	:	Build and show errors with Chrome Ext](https://vimeo.com/63188211)  
+##demos & samples
+* [Ruby show runtime error on code sample](https://vimeo.com/88961966) 
+	[https://github.com/sassembla/SublimeSocket3/tree/master/samples/rubySample](https://github.com/sassembla/SublimeSocket3/tree/master/samples/rubySample)
+	
+* [Work with Unity	:	Build and show parameters and errors](https://vimeo.com/71323225)  
 
 
 
