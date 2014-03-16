@@ -33,6 +33,24 @@ test>helloWorld/showAtLog: {
 }
 
 
+test>setEventReactor: {
+    "react": "event_eventWithIdentity",
+    "reactors": [
+        {
+            "showAtLog<-identity": {
+                "format": "the [identity]"
+            }
+        }
+    ]
+}->eventEmit: {
+    "event": "event_eventWithIdentity"
+}->assertResult: {
+    "id": "eventEmit can emit event with identity",
+    "isnotempty": "showAtLog",
+    "description": "not match."
+}
+
+
 test>regionを現在のviewに表示する/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"
 }->setViewReactor: {

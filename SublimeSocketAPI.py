@@ -1970,6 +1970,11 @@ class SublimeSocketAPI:
 		eventName = params[SublimeSocketAPISettings.EVENTEMIT_EVENT]
 		assert eventName.startswith(SublimeSocketAPISettings.REACTIVE_PREFIX_USERDEFINED_EVENT), "eventEmit only emit 'user-defined' event such as starts with 'event_' keyword."
 
+		if SublimeSocketAPISettings.REACTOR_EVENTKEY_EMITIDENTITY in params:
+			pass
+		else:
+			params[SublimeSocketAPISettings.REACTOR_EVENTKEY_EMITIDENTITY] = str(uuid.uuid4())
+
 		self.fireReactor(SublimeSocketAPISettings.REACTORTYPE_EVENT, eventName, params)
 
 		SushiJSONParser.runSelectors(

@@ -117,6 +117,7 @@ versionVerify: {
 }
 @apiParam {String} socketVersion the version of expected SublimeSocket version.(2 or 3)
 @apiParam {String} apiVersion the version of expected SublimeSocket API version.(a.b.c)
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Int} code_2 (2) VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE
 @apiSuccess {Int} code_1 (1) VERIFICATION_CODE_VERIFIED		
@@ -176,7 +177,7 @@ afterAsync: {
 
 @apiParam {String} identity identifier of this async block.
 @apiParam {Int} ms run selectors after this milliseconds.
-@apiParam {JSON} selectors run after ms.
+@apiParam {Selectors} selectors selectors.
 
 @apiSuccess {Everything} keys_and_values this api injects all keys and values to selectors.
 """
@@ -220,7 +221,7 @@ startTailing: {
 @apiParam {String} identity identifier of this tail process.(only defined. no usage yet.)
 @apiParam {String} path the target file path. must be full-path.
 @apiParam {JSON} reactors run when tailed-data incoming. "source" param will be injected.
-@apiParam {JSON} selectors run after defined.
+@apiParam {Selectors} selectors selectors.
 
 @apiSuccess {String} path the tail-started file path.
 """
@@ -243,6 +244,7 @@ countUp: {
 
 @apiParam {String} label identifier of the count machine. countup if same label is defined.
 @apiParam {Int} default the first value of the count.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} label inputted label.
 @apiSuccess {Int} count the count after define/countup.
@@ -263,6 +265,7 @@ resetCounts: {
 }
 
 @apiParam {String(Optional)} label identifier of the count machine. countup if same label is defined. reset all if not specified.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Strings} resetted the list of labels which was resetted.
 """
@@ -289,6 +292,7 @@ runSushiJSON: {
 
 @apiParam {String(Optional)} path the path of SushiJSON descripted file.
 @apiParam {String(Optional)} data the strings of SushiJSON.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Strings} logs the list of the SushiJSON's result = "showAtLog" message which was running inside path / data.
 """
@@ -318,7 +322,7 @@ runSelectorsWithInjects: {
 }
 
 @apiParam {JSON} injects the pair of before-after key name transform.
-@apiParam {JSON} selectors which run with injects all keys & values.
+@apiParam {Selectors} selectors the selectors which run with injects all keys & values.
 
 @ap@apiSuccess {Everything} keys_and_values this api injects all keys and values to selectors.
 """
@@ -349,6 +353,7 @@ changeIdentity: {
 
 @apiParam {String} from specify the target of rename.
 @apiParam {String} to value for rename.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} from the identity before changed.
 @apiSuccess {String} to the identity after changed.
@@ -385,6 +390,7 @@ createBuffer: {
 
 @apiParam {String} name set the name of buffer.
 @apiParam {String(Optional)} contents the contents of buffer. create, named then insert contents to the buffer.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Strings} name the name of buffer.
 """
@@ -411,6 +417,7 @@ openFile: {
 }
 
 @apiParam {String} path open file if exist. or not, do nothing.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} name the name = last path part of the file.
 @apiSuccess {String} path the full path of the file.
@@ -431,6 +438,7 @@ closeFile: {
 }
 
 @apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} name the name = last path part of the closed file.
 @apiSuccess {String} path the full path of the closed file.
@@ -457,6 +465,7 @@ closeAllFiles: {
 }
 @apiParam {String(Optional)} excepts the list of file names which do not want to close.
 @apiParam {Bool(Optional)} dryrun the flag for debug.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Strings} closeds the list of closed file's full path.
 """
@@ -481,6 +490,8 @@ closeAllBuffer: {
         }
     ]
 }
+
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {Strings} closeds the list of closed buffer's names.
 """
@@ -521,21 +532,36 @@ setEventReactor: {
                 "format": "view [name] not found."
             }
         }
+    ],
+    "selectors": [
+        {
+            "showAtLog<-delay": {
+                "format": "[delay]"
+            }
+        }
     ]
 }
 
 @apiParam {String} react target event name.
 @apiParam {JSON} reactors run when target-event/foundation-event appeared.
 @apiParam {Int(Optional)} delay milliseconds. delay ignore running reactors, when the event appeared multitimes in this delay.
+@apiParam {Selectors(Optional)} selectors selectors.
 
-@apiSuccess {Everything} keys_and_values run when this event appeared. run with caller API's injects.
+@apiSuccess {JSON} reactors reactors block.
+@apiSuccess {Int} delay 0 or inputted value.
+
+@apiError {String} identity the generated uuid4 string for each event.
+@apiError {Everything} keys_and_values run when this event appeared. run with caller API's injects.
 """
 API_SETEVENTREACTOR			= "setEventReactor"
+REACTOR_EVENTKEY_EMITIDENTITY   = "identity"
 
 
 """
 @apiGroup setViewReactor
 @api {SushiJSON} setViewReactor:{JSON} set defined view-event reactor. run when the event appeared.
+@apiName b
+
 @apiExample [example]
 setViewReactor: {
     "react": "on_post_save",
@@ -568,18 +594,17 @@ ss_v_increased
 @apiParam {String} react target event name.
 @apiParam {JSON} reactors run when target-event/foundation-event appeared.
 @apiParam {Int(Optional)} delay milliseconds. delay ignore running reactors, when the event appeared multitimes in this delay.
+@apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {JSON} reactors reactors block.
 @apiSuccess {Int} delay 0 or inputted value.
 
-@apiExample [when reacted]
-@apiSuccess {ViewInstance} view the instance of view.(not good to use. use "name", "path" to specify view.)
-"view"
-"path"
-"name"
-"selecteds"
-"isExist"
-"identity"
+@apiError {String} path the full path of the view when the view-event appeared. if the view is buffer, path becomes last path of buffer = name.
+@apiError {String} name the last path of the view.
+@apiError {[[Int, Int]]} selecteds the list of list(from, to).
+@apiError {Bool} isExist the view is exist or not.
+@apiError {String} identity the generated uuid4 string for each event.
+@apiError {ViewInstance} view the instance of view.(not good to use. use "name", "path" to find view.)
 """
 API_SETVIEWREACTOR			= "setViewReactor"
 
@@ -593,7 +618,6 @@ SETREACTOR_INJECTIONS		= [SETREACTOR_REACT, SETREACTOR_DELAY]
 REACTOR_VIEWKEY_VIEWSELF	= "view"
 REACTOR_VIEWKEY_PATH		= "path"
 REACTOR_VIEWKEY_NAME		= "name"
-REACTOR_VIEWKEY_VNAME		= "vname"
 REACTOR_VIEWKEY_SELECTEDS	= "selecteds"
 REACTOR_VIEWKEY_ISEXIST		= "isExist"
 REACTOR_VIEWKEY_EMITIDENTITY= "identity"
@@ -603,11 +627,33 @@ REACTORTYPE_EVENT			= "event"
 REACTORTYPE_VIEW			= "view"
 
 
+"""
+@apiGroup resetReactors
+@api {SushiJSON} resetReactors:{JSON} reset all reactors.
+
+@apiExample [example]
+resetReactors: {
+                
+}
+
+@apiSuccess {Strings[]} deleteds deleted reactor's names.
+"""
 API_RESETREACTORS			= "resetReactors"
 RESETREACTORS_DELETEDS		= "deleteds"
 RESETREACTORS_INJECTIONS	= [RESETREACTORS_DELETEDS]
 
 
+"""
+@apiGroup resetReactors
+@api {SushiJSON} resetReactors:{JSON} reset all reactors.
+
+@apiExample [example]
+resetReactors: {
+                
+}
+
+@apiSuccess {Strings[]} deleteds deleted reactor's names.
+"""
 API_VIEWEMIT				= "viewEmit"
 VIEWEMIT_NAME				= "name"
 VIEWEMIT_VIEW				= "view"
