@@ -1,0 +1,7 @@
+org.codehaus.groovy.control.MultipleCompilationErrorsException: startup failed:
+/Users/highvision/Desktop/groovySample/hello.groovy: 6: unexpected token: Greest @ line 6, column 2.
+   	Greest(who) {
+    ^
+
+1 error
+

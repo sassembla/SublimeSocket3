@@ -1,0 +1,91 @@
+// use RuhSushiJSON for running.
+// this file is writtern by SushiJSON-lang (https://github.com/sassembla/SushiJSON) 
+
+showAtLog: {
+    "message": "groovy filter constructing.."
+}->defineFilter: {
+    "name": "groovyFilter",
+    "filters": [
+        {
+            // show typo error
+            // /Users/highvision/Desktop/groovySample/hello.groovy: 8: Method definition not expected here. Please define the method at an appropriate place or perhaps try using a block/Closure instead. at line: 8 column: 2. File: /Users/highvision/Desktop/groovySample/hello.groovy @ line 8, column 2.
+            "(.*?): ([0-9].*?): (.*)": {
+                "injects": {
+                    "groups[0]": "name",
+                    "groups[1]": "line",
+                    "groups[2]": "message"
+                },
+                "selectors": [
+                    {
+                        "showAtLog<-message": {
+
+                        }
+                    },
+                    {
+                        "appendRegion<-name, line, message": {
+                            "condition": "keyword"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            // count error-count. and show it to status & log
+            "([0-9].*) error": {
+                "injects": {
+                    "groups[0]": "count"
+                },
+                "selectors": [
+                    {
+                        "showAtLog<-count": {
+                            "format": "[count] error"
+                        }
+                    }
+                ]
+
+            }
+        }
+    ]
+}->setViewReactor: {
+    "react": "on_post_save",
+    "reactors": [
+        {
+            "showAtLog": {
+                "message": "saved."
+            }
+        },
+        {
+            "eraseAllRegions": {
+                
+            }
+        },
+        {
+            "afterAsync": {
+                "identity": "groovy run",
+                "ms": 10,
+                "selectors": [
+                    {
+                        "runShell": {
+                            "main": "/usr/local/bin/groovy",
+                            "": [
+                                "/Users/highvision/Desktop/groovySample/hello.groovy", "2>", "/Users/highvision/Desktop/groovySample/log.txt"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}->startTailing: {
+    "identity": "groovy",
+    "path": "/Users/highvision/Desktop/groovySample/log.txt",
+    "reactors": [
+        {
+            "filtering<-source": {
+                "name": "groovyFilter"
+            }
+        }
+    ]
+}->showAtLog: {
+    "message": "groovy filter constructed."
+}
