@@ -61,6 +61,7 @@ class TailMachine:
 		self.args = params
 		self.path = params[TAIL_PATH]
 		
+		assert os.path.isfile(self.path), "path:"+ self.path + " is not file or is not exist."
 
 		assert SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS in reactorsData, "TailMachine require 'selector' in reactor definition."
 		self.selectors = reactorsData[SublimeSocketAPISettings.RUNSELECTORSWITHINJECTS_SELECTORS]

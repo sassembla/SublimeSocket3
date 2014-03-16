@@ -78,7 +78,7 @@ showAtLog: {
     ]
 }->startTailing: {
     "identity": "groovy",
-    "path": "/Users/highvision/Desktop/groovySample/log.txt",
+    "path": "/Users/highvision/Desktop/groovySample/lg.txt",
     "reactors": [
         {
             "filtering<-source": {
