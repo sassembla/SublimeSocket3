@@ -45,8 +45,10 @@ showAtLog: {
     	},
     	{
     		"runShell": {
-    			"main": "/bin/sh",
-    			"": "/Users/highvision/Desktop/rubySample/run.sh"
+    			"main": "/usr/bin/ruby",
+    			"": [
+    				"/Users/highvision/Desktop/rubySample/hello.rb", "&>", "/Users/highvision/Desktop/rubySample/log.txt"
+    			]
     		}
     	}
     ]
