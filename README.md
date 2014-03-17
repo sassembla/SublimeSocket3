@@ -2,7 +2,7 @@
 ======
 ![SS](/main.png)
 
-**The set of API Server, KVS and Executor** for the SublimeText and more.   
+**The set of API Server, KVS and Executor** for the SublimeText3.   
 Connect something to editor.  
 Control EditorAPI by inputted **JSON string**.  
 
@@ -20,7 +20,7 @@ ver 1.4.1
 
 ##installation
 1. DL.
-2. move SublimeSocket3 folder to Sublime Text's packages folder.
+2. move SublimeSocket3 folder to Sublime Text 3's packages folder.
 3. that's all.
 4. 
 
