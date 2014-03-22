@@ -2950,28 +2950,7 @@ test>メッセージを全クライアントに配信する/broadcastMessage: {
     "id": "ST3: broadcast message for every client",
     "contains": {
         "showAtLog": {
-            "output": "['sublimesockettest'], broadcasting"
-        }
-    },
-    "description": "faild to broadcast."
-}
-
-
-test>メッセージを複数のクライアント(同名でもOK)に配信する/broadcastMessage: {
-    "targets": ["sublimesockettest", "sublimesockettest"],
-    "message": "broadcasting",
-    "selectors": [
-        {
-            "showAtLog<-targets, message": {
-                "format": "[targets], [message]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "ST3: broadcast message for every client 2",
-    "contains": {
-        "showAtLog": {
-            "output": "['sublimesockettest', 'sublimesockettest'], broadcasting"
+            "output": "[['sublimesockettest']], broadcasting"
         }
     },
     "description": "faild to broadcast."
@@ -3499,7 +3478,7 @@ test>バージョンの出力/versionVerify: {
     "id": "code and message will enable.",
     "contains": {
         "showAtLog": {
-            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.1, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.2, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3523,7 +3502,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
     "id": "situation-please update possible",
     "contains": {
         "showAtLog": {
-            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.1, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.2, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3532,7 +3511,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 
 test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
-    "apiVersion": "1.4.1",
+    "apiVersion": "1.4.2",
     "injects": {
         "message": "reason"
     },
@@ -3547,7 +3526,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     "id": "situation-latest version",
     "contains": {
         "showAtLog": {
-            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.4.1, SublimeSocket 3"
+            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.4.2, SublimeSocket 3"
         }
     },
     "description": "not match."
@@ -3572,7 +3551,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.1, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -3597,7 +3576,7 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     "id": "situation-should update client",
     "contains": {
         "showAtLog": {
-            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.4.1, this client requires api version = 0.0.0, required api version is too old. please update this client."
+            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this client requires api version = 0.0.0, required api version is too old. please update this client."
         }
     },
     "description": "not match."
@@ -3622,7 +3601,7 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.1, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -4008,66 +3987,66 @@ test>closeAllFiles: {
 }
 
 
-test>tailServerを立ち上げる。/startTailing: {
-    "identity": "startTailing",
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
-    "reactors": [
-    ],
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "tail started."
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "start tailing the file",
-    "contains": {
-        "showAtLog": {
-            "output": "tail started."
-        }
-    },
-    "description": "not tailing"
-}
+// test>tailServerを立ち上げる。/startTailing: {
+//     "identity": "startTailing",
+//     "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
+//     "reactors": [
+//     ],
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "tail started."
+//             }
+//         }
+//     ]
+// }->assertResult: {
+//     "id": "start tailing the file",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "tail started."
+//         }
+//     },
+//     "description": "not tailing"
+// }
 
 
-test>tailServerを立ち上げ、ファイルへの変更を監視する。/runShell: {
-    "main": "/usr/bin/touch",
-    "": [
-        "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt"
-    ]
-}->startTailing: {
-    "identity": "runShellTarget",
-    "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
-    "reactors": [
-        {
-            "showAtLog<-source": {
-                "format": "wrote, [source]"
-            }
-        }
-    ],
-    "selectors": [
-        {
-            "showAtLog": {
-                "message": "start tailing"
-            }
-        }
-    ]
-}->write message to file/runShell: {
-    "main": "/bin/echo",
-    "": [
-        "written_by_shell",
-        ">",
-        "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt"
-    ]
-}->wait: {
-    "ms": 100
-}->assertResult: {
-    "id": "tail the file",
-    "contains": {
-        "showAtLog": {
-            "output": "wrote, written_by_shell\n"
-        }
-    },
-    "description": "not written"
-}
+// test>tailServerを立ち上げ、ファイルへの変更を監視する。/runShell: {
+//     "main": "/usr/bin/touch",
+//     "": [
+//         "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt"
+//     ]
+// }->startTailing: {
+//     "identity": "runShellTarget",
+//     "path": "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt",
+//     "reactors": [
+//         {
+//             "showAtLog<-source": {
+//                 "format": "wrote, [source]"
+//             }
+//         }
+//     ],
+//     "selectors": [
+//         {
+//             "showAtLog": {
+//                 "message": "start tailing"
+//             }
+//         }
+//     ]
+// }->write message to file/runShell: {
+//     "main": "/bin/echo",
+//     "": [
+//         "written_by_shell",
+//         ">",
+//         "SUBLIMESOCKET_PATH:tests/testResources/runShellTarget.txt"
+//     ]
+// }->wait: {
+//     "ms": 100
+// }->assertResult: {
+//     "id": "tail the file",
+//     "contains": {
+//         "showAtLog": {
+//             "output": "wrote, written_by_shell\n"
+//         }
+//     },
+//     "description": "not written"
+// }
