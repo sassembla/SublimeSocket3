@@ -58,7 +58,7 @@ SSAPI_PREFIX_SUB			= "ss"
 SSAPI_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]->
 
 
-SSAPI_VERSION				= "1.4.1"
+SSAPI_VERSION				= "1.4.2"
 SSSOCKET_VERSION			= 3	# for Sublime Text 3
 
 
@@ -80,12 +80,33 @@ SS_FOUNDATION_VIEWEMIT		= "ss_f_viewemit"
 SS_VIEWKEY_CURRENTVIEW		= "ss_viewkey_current"
 
 
+# format replacer definition
+FORMAT_BEFORE               = "["
+FORMAT_AFTER                = "]"
+
+
+
 # internal APIs/
 
 INTERNAL_API_RUNTESTS		= "runTests"
 RUNTESTS_PATH				= "path"
 
 # /internal APIs
+
+"""
+@apiGroup addTransfer
+@api {SushiJSON} addTransfer:{JSON} add transfer with protocol. root > identity > protocol.
+@apiExample [example]
+
+@apiParam {String} connectionIdentity the connection's identity of the new transfer's first connection.
+@apiParam {String} protocol the protocol of the new transfer.
+@apiParam {JSON} params the parameters for setup of the new transfer.
+"""
+API_ADDTRANSFER             = "addTransfer"
+ADDTRANSFER_TRANSFERIDENTITY    = "transferIdentity"
+ADDTRANSFER_CONNECTIONIDENTITY  = "connectionIdentity"
+ADDTRANSFER_PROTOCOL        = "protocol"
+ADDTRANSFER_PARAMS          = "params"
 
 
 """
@@ -333,7 +354,7 @@ RUNSELECTORSWITHINJECTS_INJECTS		= "injects"
 
 """
 @apiGroup changeIdentity
-@api {SushiJSON} changeIdentity:{JSON} chamge identity of WebSocket client.(not useful for the other protocols.)
+@api {SushiJSON} changeIdentity:{JSON} chamge identity of specified transfer's connection.
 @apiExample [example]
 changeIdentity: {
     "from": "sublimesockettest",
@@ -351,14 +372,16 @@ changeIdentity: {
     ]
 }
 
-@apiParam {String} from specify the target of rename.
+@apiParam {String(Optional)} from specify the target connection's identity which will be renamed. if not, requested connection's identitiy will be used.
 @apiParam {String} to value for rename.
+@apiParam {String(Optional)} transfer's identity which has connection of the target. if not, requested transfer's identitiy will be used.
 @apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} from the identity before changed.
 @apiSuccess {String} to the identity after changed.
 """
 API_CHANGEIDENTITY			= "changeIdentity"
+CHANGEIDENTITY_TRANSFERIDENTITY   = "transferIdentity"
 CHANGEIDENTITY_FROM			= "from"
 CHANGEIDENTITY_TO			= "to"
 CHANGEIDENTITY_INJECTIONS	= [CHANGEIDENTITY_FROM, CHANGEIDENTITY_TO]
@@ -774,9 +797,10 @@ ERASEALLREGIONS_INJECTIONS	= [ERASEALLREGIONS_DELETES]
 
 API_RUNSHELL					= "runShell"
 RUNSHELL_MAIN					= "main"
+RUNSHELL_FORMAT					     = "format"
 RUNSHELL_DELAY					= "delay"
 RUNSHELL_DEBUG					= "debug"
-RUNSHELL_LIST_IGNORES 			= [RUNSHELL_MAIN, RUNSHELL_DELAY, RUNSHELL_DEBUG]
+RUNSHELL_LIST_IGNORES 			= [RUNSHELL_MAIN, RUNSHELL_FORMAT, RUNSHELL_DELAY, RUNSHELL_DEBUG]
 RUNSHELL_REPLACE_SPACE			= "_"
 RUNSHELL_REPLACE_RIGHTBRACE 	= ""
 RUNSHELL_REPLACE_LEFTBRACE		= ""
@@ -787,15 +811,17 @@ RUNSHELL_REPLACE_At_s_At_s_At	= " "
 API_BROADCASTMESSAGE		= "broadcastMessage"
 BROADCASTMESSAGE_TARGETS	= "targets"
 BROADCASTMESSAGE_FORMAT		= "format"
+MONOCASTMESSAGE_TRANSFERIDENTITIES = "transferIdentities"
 BROADCASTMESSAGE_MESSAGE	= "message"
-BROADCASTMESSAGE_INJECTIONS	= [BROADCASTMESSAGE_TARGETS, BROADCASTMESSAGE_MESSAGE]
+BROADCASTMESSAGE_INJECTIONS	= [MONOCASTMESSAGE_TRANSFERIDENTITIES, BROADCASTMESSAGE_TARGETS, BROADCASTMESSAGE_MESSAGE]
 
 
 API_MONOCASTMESSAGE			= "monocastMessage"
 MONOCASTMESSAGE_TARGET		= "target"
 MONOCASTMESSAGE_FORMAT		= "format"
+MONOCASTMESSAGE_TRANSFERIDENTITY = "transferIdentity"
 MONOCASTMESSAGE_MESSAGE		= "message"
-MONOCASTMESSAGE_INJECTIONS	= [MONOCASTMESSAGE_TARGET, MONOCASTMESSAGE_MESSAGE]
+MONOCASTMESSAGE_INJECTIONS	= [MONOCASTMESSAGE_TRANSFERIDENTITY, MONOCASTMESSAGE_TARGET, MONOCASTMESSAGE_MESSAGE]
 
 
 API_SHOWSTATUSMESSAGE		= "showStatusMessage"

@@ -18,11 +18,10 @@ TAIL_CONTINUATION	= "continuation"
 
 
 class TailMachine:
-	def __init__(self, server, serverIdentity):
+	def __init__(self, server):
 		self.methodName = SublimeSocketAPISettings.TAIL_MACHINE
 		
 		self.args = None
-		self.transferIdentity = serverIdentity
 
 		self.path = "not set yet."
 		self.continuation = False
@@ -117,7 +116,8 @@ class TailMachine:
 	def sendMessage(self, targetId, message):
 		pass
 
-	def broadcastMessage(self, targetIds, message):
+	def broadcastMessage(self, message):
+		print("broadcastMessage do nothing")
 		pass
 
 	def generateTailThread(self, command):

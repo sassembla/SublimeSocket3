@@ -7,12 +7,11 @@ import time
 
 
 class RunSushiJSONServer:
-	def __init__(self, server, serverIdentity):
+	def __init__(self, server, transferId):
 		self.methodName = SublimeSocketAPISettings.RUNSUSHIJSON_SERVER
-		
+		self.transferId = transferId
 		
 		self.args = None
-		self.transferIdentity = serverIdentity
 
 		self.path = "not set yet."
 		self.continuation = False
@@ -47,7 +46,7 @@ class RunSushiJSONServer:
 
 		data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"path\": \"" + self.path + "\"}"
 		
-		self.sublimeSocketServer.transferInputted(data)
+		self.sublimeSocketServer.transferInputted(data, self.transferId)
 
 		while self.continuation:
 			time.sleep(0.1)
@@ -56,7 +55,10 @@ class RunSushiJSONServer:
 	def teardown(self):
 		self.sublimeSocketServer.transferSpinupped('SublimeSocket RunSushiJSONServer teardowned')
 
-
+	## return connection IDs
+	def connectionIdentities(self):
+		pass
+		
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
 		print("updateClientId do nothing.")
@@ -87,5 +89,5 @@ class RunSushiJSONServer:
 		print("call with data", data, "to", clientId)
 
 
-	def broadcastMessage(self, targetIds, message):
+	def broadcastMessage(self, message):
 		print("broadcastMessage do nothing.")

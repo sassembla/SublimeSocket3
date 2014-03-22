@@ -200,7 +200,7 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 
 
 # states are below.
-# not active -> active <-> serving <-> transfering
+# not active -> active == serving <-> transfering
 
 #                     serving:on
 #                     serving:off
@@ -259,7 +259,19 @@ class Socket_on_then_test(sublime_plugin.TextCommand):
         params["type"] = transferMethod
         params["runTests"] = True
 
-        self.view.run_command("socket_on", {"params":params})
+        def start():
+            self.view.run_command("socket_on", {"params":params})
+
+        global thread
+        
+        if thread and thread.is_alive():            
+            # run after teardowned.
+            self.view.run_command("socket_off")
+
+            start()
+        else:
+            start()
+        
 
 class Socket_restart(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -301,64 +313,30 @@ class SublimeSocketThread(threading.Thread):
     def __init__(self, transferMethod, args):
         threading.Thread.__init__(self)
         self.server = SublimeSocketServer()
-        self.currentTransferIdentity = "not yet generated."
         
+        # setup and get identity for transfer.
         self.setupThread(transferMethod, args)
 
 
-  # called by thread.start
+
+    def setupThread(self, transferMethod, params):
+        # get transferIdentity for prepare action.
+        transferIdentity = self.server.setupTransfer(transferMethod, params)
+        if "runTests" in params:
+            Openhtml.openSublimeSocketTest(params)
+            
+            testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
+
+            
+            def runTests():
+                self.server.api.runTests({SublimeSocketAPISettings.RUNTESTS_PATH:testSuiteFilePath}, transferIdentity, "sublimesockettest")
+            
+            self.server.appendOnConnectedTriggers(transferIdentity, [runTests])
+        
+    # called by thread.start
     def run(self):
-        self.server.spinupTransfer(self.currentTransferIdentity)
-
-
-    def setupThread(self, transferMethod, argsDict):
-        if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:   
-            for case in PythonSwitch(transferMethod):
-                if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
-                    assert "path" in argsDict, "RunSushiJSONServer require 'path' param."
-                    params = argsDict
-                    
-                    break
-
-                if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
-                    assert "host" in argsDict, "WebSocketServer require 'host' param."
-                    assert "port" in argsDict, "WebSocketServer require 'port' param."
-
-                    params = argsDict
-
-                    if "runTests" in argsDict:
-                        Openhtml.openSublimeSocketTest(params)
-                        
-                        testSuiteFilePath = sublime.packages_path() + "/"+SublimeSocketAPISettings.MY_PLUGIN_PATHNAME+"/"+sublime.load_settings("SublimeSocket.sublime-settings").get('testSuiteFilePath')
-
-                        
-                        def runTests():
-                          self.server.api.runTests({SublimeSocketAPISettings.RUNTESTS_PATH:testSuiteFilePath}, "sublimesockettest")
-                        
-                        self.server.appendOnConnectedTriggers(runTests)
-                    
-                    break
-                if case(SublimeSocketAPISettings.TAIL_MACHINE):
-                    assert "result" in argsDict, "TailMachine require 'result' param."
-                    result = argsDict["result"]
-                    
-                    # not file, reactor body.
-                    if result == -1:
-                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
-                        assert "reactors" in argsDict, "TailMachine require 'reactors' param."
-
-                    # file path. reactor string.
-                    else:
-                        assert "tailPath" in argsDict, "TailMachine require 'tailPath' param."
-                        assert "reactorsSource" in argsDict, "TailMachine require 'reactorsSource' param."
-
-                    params = argsDict
-
-                    break
-
-            self.currentTransferIdentity = self.server.setupTransfer(transferMethod, params)
-
-
+        self.server.spinupLatestTransfer()
+        
 
     def restartServer(self):
         # restart means reset @ SublimeSocketServer.

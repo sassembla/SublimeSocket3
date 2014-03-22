@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import uuid
 import re
 import time
 
@@ -23,41 +22,47 @@ class SublimeSocketServer:
 		self.api = SublimeSocketAPI(self)
 		self.kvs = KVS()
 
-
-		self.mainTransferId = None
-
-
 		self.transfers = {}
 		self.reserveRestart = {}
 
-		self.onConnectedTriggers = []
+		self.onConnectedTriggers = {}
 
 	# control server self.
 
 	def resetServer(self):
+		currentTransferIdentities = list(self.transfers)
+		for transferIdentity in currentTransferIdentities:
+			self.teardownTransfer(transferIdentity)
+
 		self.refreshKVS()
-		self.teardownTransfer()
 
 	def teardownServer(self):
 		self.resetServer()
-		# teardowned will call.
+		# teardowned will be called.
 	
 	def refreshKVS(self):
 		self.clearAllKeysAndValues()
 
-	def transferTeardowned(self, message, transferIdentity):
+	def transferTeardowned(self, transferIdentity, message):
 		self.api.editorAPI.printMessage(message + "\n")
 		self.api.editorAPI.statusMessage(message)
 
 		del self.transfers[transferIdentity]
 
-		# run when restert reserved.
-		if self.reserveRestart[transferIdentity]:
+		# run if restert reserved.
+		if transferIdentity in self.reserveRestart:
 			newTransferIdentity = self.setupTransfer(*self.reserveRestart[transferIdentity])
 
 			self.spinupTransfer(newTransferIdentity)
 			del self.reserveRestart[transferIdentity]
 
+		if self.transfers:
+			pass
+		else:
+			self.api.editorAPI.statusMessage("no transfer remain. SublimeSocketServer is now restartable.")
+
+	def transferIdentities(self):
+		return self.transfers.keys()
 	
 	def transferNoticed(self, message):
 		self.api.editorAPI.printMessage(message)
@@ -73,23 +78,25 @@ class SublimeSocketServer:
 		# react to renew
 		self.onTransferRenew()
 
-	def transferConnected(self, clientId):
+	def transferConnected(self, transferIdentity, connectionId):
 		if self.onConnectedTriggers:
-			for funcDict in self.onConnectedTriggers:
-				for _, func in funcDict.items():
+			if transferIdentity in self.onConnectedTriggers:
+				triggers = self.onConnectedTriggers[transferIdentity]
+				for func in triggers:
 					func()
-		self.onConnectedTriggers = []
+					
+				del self.onConnectedTriggers[transferIdentity]
 
 
 	# by raw string. main API data incoming method.
-	def transferInputted(self, data, clientId=None):
+	def transferInputted(self, data, transferId, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
-		self.api.parse(apiData, clientId)
+		self.api.parse(apiData, transferId, clientId)
 		
 
 	# by command and params. direct igniton of API.
-	def transferRunAPI(self, command, params, clientId=None):
-		self.api.runAPI(command, params, clientId)
+	def transferRunAPI(self, command, params, transferId, clientId=None):
+		self.api.runAPI(command, params, transferId, clientId)
 		
 
 	def showTransferInfo(self):
@@ -100,43 +107,86 @@ class SublimeSocketServer:
 		else:
 			return "no transfer running."
 
+	def isValidTransferId(self, transferIdentity):
+		if transferIdentity in self.transfers:
+			return True
+
+		return False
+
+	def isValidConnectionId(self, transferIdentity, connectionIdentity):
+		if self.isValidTransferId(transferIdentity) and connectionIdentity in self.transfers[transferIdentity].connectionIdentities():
+			return True
+
+		return False
+
+	def updateTransferClientIdOf(self, targetTransferIdentity, targetConnectionIdentity, newConnectionIdentity):
+		self.transfers[targetTransferIdentity].updateClientId(targetConnectionIdentity, newConnectionIdentity)
+
 
 
 	# control transfer.
 
-	def setupTransfer(self, transferMethod, params):
-		if transferMethod in SublimeSocketAPISettings.TRANSFER_METHODS:
-			
-			transferIdentity = str(uuid.uuid4())
+	def setupTransfer(self, transferProtocol, params):
+		assert SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY in params, "setupTransfer require 'transferIdentity' param."
+		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
 
-			for case in PythonSwitch(transferMethod):
+		if self.transfers:
+			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has  taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
+		
+		if transferProtocol in SublimeSocketAPISettings.TRANSFER_METHODS:
+
+			assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "setupTransfer require 'connectionIdentity' param for add new transfer."
+			
+			for case in PythonSwitch(transferProtocol):
 				if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+					assert "path" in params, "RunSushiJSONServer require 'path' param."
+					
 					self.transfers[transferIdentity] = RunSushiJSONServer(self, transferIdentity)
 					self.transfers[transferIdentity].setup(params)
 
 					break
 					
 				if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+					assert "host" in params, "WebSocketServer require 'host' param."
+					assert "port" in params, "WebSocketServer require 'port' param."
+					
 					self.transfers[transferIdentity] = WSServer(self, transferIdentity)
 					self.transfers[transferIdentity].setup(params)
 
 					break
 
 				if case(SublimeSocketAPISettings.TAIL_MACHINE):
-					self.transfers[transferIdentity] = TailMachine(self, transferIdentity)
-					self.transfers[transferIdentity].setup(params)
+					assert "result" in params, "TailMachine require 'result' param."
+					result = params["result"]
+					
+					# not file, reactor body.
+					if result == -1:
+					    assert "tailPath" in params, "TailMachine require 'tailPath' param."
+					    assert "reactors" in params, "TailMachine require 'reactors' param."
 
+					# file path. reactor string.
+					else:
+					    assert "tailPath" in params, "TailMachine require 'tailPath' param."
+					    assert "reactorsSource" in params, "TailMachine require 'reactorsSource' param."
+
+					self.transfers[transferIdentity] = TailMachine(self)
+					self.transfers[transferIdentity].setup(params)
 					break
 
-			if not self.mainTransferId:
-				self.mainTransferId = transferIdentity
 
 			return transferIdentity
 
+	def addConnectionToTransfer():
+		print("not yet implemented.")
+		pass
 
-	def spinupTransfer(self, transferIdentity):
-		if transferIdentity in self.transfers:
-			self.transfers[transferIdentity].spinup()
+
+	# spinup "latest" transfer.
+	def spinupLatestTransfer(self):
+		assert self.transfers, "should setupTransfer before spinup."
+		transferIdentity = list(self.transfers)[-1]
+		self.transfers[transferIdentity].spinup()
+
 
 	def restartTransfer(self, transferIdentity):
 		if transferIdentity in self.transfers:
@@ -148,29 +198,42 @@ class SublimeSocketServer:
 
 	def teardownTransfer(self, transferIdentity):
 		if transferIdentity in self.transfers:
-			self.transfers[transferIdentity].teardown(transferIdentity)
+			self.transfers[transferIdentity].teardown()
 		else:
 			self.transferTeardowned("no transfer running.", transferIdentity)
 
-	def appendOnConnectedTriggers(self, func):
+	def appendOnConnectedTriggers(self, transferIdentity, funcs):
 		for addedFunctionDict in self.onConnectedTriggers:
-			if func.__name__ in addedFunctionDict.keys():
-				print("duplicate trigger:"+str(func))
+			if transferIdentity in addedFunctionDict.keys():
+				print("duplicate trigger for:" + transferIdentity + " function:" +str(funcs))
 				return
 			
-		self.onConnectedTriggers.append({func.__name__:func})
+		self.onConnectedTriggers[transferIdentity] = funcs
 
 	# message series
 	
-	def sendMessage(self, targetId, message):
-		return self.transfers[self.mainTransferId].sendMessage(targetId, message)
+	def sendMessage(self, transferId, connectionId, message):
+		assert connectionId, "sendMessage require 'connectionId' param."
 
-	def broadcastMessage(self, targetIds, message):
-		return self.transfers[self.mainTransferId].broadcastMessage(targetIds, message)
+		if transferId in self.transfers:
+			return self.transfers[transferId].sendMessage(connectionId, message)
+		
+		# if transferId is None, try to send message via all transfer's connectionId.
+		elif not transferId:
+			results = [self.transfers[currentTransferId].sendMessage(connectionId, message) for currentTransferId in list(self.transfers)]
+
+			# ignore result. 
+			return (True, "done")
+
+		return (False, "no transfer & connection found in transfers:" + str(self.transfers) + " connection:" + connectionId)
+		
+
+	def broadcastMessage(self, message):
+		return [self.transfers[transferId].broadcastMessage(message) for transferId in self.transfers]
 
 	# purge
-	def purgeConnection(self, targetId):
-		self.transfers[self.mainTransferId].purgeConnection(targetId)
+	def purgeConnection(self, transferId, connectionId):
+		self.transfers[transferId].purgeConnection(connectionId)
 
 
 	# other series
