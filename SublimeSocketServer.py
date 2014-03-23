@@ -12,6 +12,7 @@ from .KVS import KVS
 from .protocols.RunSushiJSON.RunSushiJSONServer import RunSushiJSONServer
 from .protocols.WebSocket.WSServer import WSServer
 from .protocols.HTTP.HTTPServer import HTTPServer
+from .protocols.ByteData.ByteDataServer import ByteDataServer
 from .protocols.TailMachine.TailMachine import TailMachine
 
 
@@ -138,10 +139,10 @@ class SublimeSocketServer:
 			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has  taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
 		
 		transferProtocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
-		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_METHODS, "protocol:" + transferProtocol + " is not supported."
+		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_PROTOCOLS, "protocol:" + transferProtocol + " is not supported."
 			
 		for case in PythonSwitch(transferProtocol):
-			if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+			if case(SublimeSocketAPISettings.PROTOCOL_RUNSUSHIJSON_SERVER):
 				assert "path" in params, "RunSushiJSONServer require 'path' param."
 				
 				self.transfers[transferIdentity] = RunSushiJSONServer(self, transferIdentity)
@@ -149,7 +150,7 @@ class SublimeSocketServer:
 
 				break
 				
-			if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+			if case(SublimeSocketAPISettings.PROTOCOL_WEBSOCKET_SERVER):
 				assert "host" in params, "WebSocketServer require 'host' param."
 				assert "port" in params, "WebSocketServer require 'port' param."
 				
@@ -158,7 +159,7 @@ class SublimeSocketServer:
 
 				break
 
-			if case(SublimeSocketAPISettings.HTTP_SERVER):
+			if case(SublimeSocketAPISettings.PROTOCOL_HTTP_SERVER):
 				assert "host" in params, "WebSocketServer require 'host' param."
 				assert "port" in params, "WebSocketServer require 'port' param."
 				
@@ -167,8 +168,14 @@ class SublimeSocketServer:
 
 				break
 
+			if case(SublimeSocketAPISettings.PROTOCOL_BYTEDATA_SERVER):
+				assert "reactors" in params, "ByteDataServer require 'reactors' param."
+				self.transfers[transferIdentity] = ByteDataServer(self, transferIdentity)
+				self.transfers[transferIdentity].setup(params)
+				break
 
-			if case(SublimeSocketAPISettings.TAIL_MACHINE):
+
+			if case(SublimeSocketAPISettings.PROTOCOL_TAIL_MACHINE):
 				assert "result" in params, "TailMachine require 'result' param."
 				result = params["result"]
 				

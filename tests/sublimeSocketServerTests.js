@@ -16,19 +16,6 @@ beforeafter>SSではなく、プロトコル切り替え部分について、自
 }
 
 
-// 実行フェーズがどうしてもSS側に来ちゃうのをどうしようかなー感がある。
-// httpサーバを上げて下げる
-// test>addTransfer: {
-//     "identity": "testHttpServer",
-//     "protocol": "http",
-//     "params": {
-//         "serve": "127.0.0.1",
-//         "port": "8823"
-//     }
-// }
-
-
-
 test>add new WebSocketServer transfer/afterAsync: {
     "identity": "addTransfer",
     "ms": 1,
@@ -181,13 +168,30 @@ test>httpServerを上げて下げる/afterAsync: {
         }
     ]
 }->wait: {
-    "ms": 10
+    "ms": 100
 }->removeTransfer: {
     "transferIdentity": "testAdditionalHTTPServer"
 }->wait: {
     "ms": 10
 }
 
+
+test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、reverseを試す/addTransfer: {
+    "transferIdentity": "byteDataServer",
+    "connectionIdentity": "byteDataConnection",
+    "protocol": "ByteDataServer",
+    "params":{
+        "reactors": [
+            {
+                "request":"response"
+            }
+        ]
+    }
+}->適当なdataを送り込んで、responseを期待する。条件としては、WebSocketServerに向かってrawDataをソケットに直接ぶん投げる、とかだ。リバプロの仕組み自体は放置しよう。/showAtLog: {
+    "message": "testing"
+}->removeTransfer: {
+    "transferIdentity": "byteDataServer"
+}
 
 
 

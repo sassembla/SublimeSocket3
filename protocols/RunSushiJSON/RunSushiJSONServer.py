@@ -8,7 +8,7 @@ import time
 
 class RunSushiJSONServer:
 	def __init__(self, server, transferId):
-		self.methodName = SublimeSocketAPISettings.RUNSUSHIJSON_SERVER
+		self.methodName = SublimeSocketAPISettings.PROTOCOL_RUNSUSHIJSON_SERVER
 		self.transferId = transferId
 		
 		self.args = None

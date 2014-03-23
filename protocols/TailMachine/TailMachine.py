@@ -19,7 +19,7 @@ TAIL_CONTINUATION	= "continuation"
 
 class TailMachine:
 	def __init__(self, server):
-		self.methodName = SublimeSocketAPISettings.TAIL_MACHINE
+		self.methodName = SublimeSocketAPISettings.PROTOCOL_TAIL_MACHINE
 		
 		self.args = None
 

@@ -419,7 +419,7 @@ class SublimeSocketAPI:
 		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
 		reactorsDict = {"selectors": reactors}
 		
-		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
+		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.PROTOCOL_TAIL_MACHINE, 
 			{
 				"tailPath": tailTarget,
 				"reactors": json.dumps(reactorsDict)

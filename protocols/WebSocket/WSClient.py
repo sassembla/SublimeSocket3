@@ -6,6 +6,7 @@ from .WSDecoder import WSDecoder
 from .WSController import WSController
 
 VERSION = 13
+BUF_SIZE = 1024
 
 class WSClient:
 	CONNECTION_STATUS = {
@@ -71,11 +72,12 @@ class WSClient:
 			remaining = bufsize - len(preBytes)
 		return bytes
 
-	## Read data until line return (used by handshake)
+
+	## read line.
 	def readlineheader(self):
 		line = bytearray()
 
-		while self.hasStatus('CONNECTING') and len(line)<1024:
+		while self.hasStatus('CONNECTING') and len(line) < BUF_SIZE:
 			c = self.receive(1)
 			line = line + c
 
@@ -84,20 +86,21 @@ class WSClient:
 				
 		return line.decode('utf-8')
 
-	## Send handshake according to RFC
-	def handshake(self):
-		headers = {}
 
-		# Ignore first line with GET
-		line = self.readlineheader()
+	## Send handshake according to RFC
+	def handshake(self, line):
+		headers = {}
 
 		while self.hasStatus('CONNECTING'):
 			if len(headers)>64:
 				raise ValueError('Header too long.')
+
+			# read again.
 			line = self.readlineheader()
+			
 			if not self.hasStatus('CONNECTING'):
 				raise ValueError('Client left.')
-			if len(line) == 0 or len(line) == 1024:
+			if len(line) == 0 or len(line) == BUF_SIZE:
 				raise ValueError('Invalid line in header.')
 
 			if line == '\r\n':
@@ -152,31 +155,21 @@ class WSClient:
 		
 
 	## Handle incoming datas
-	#  @param conn Socket of WebSocket client (from WSServer).
-	#  @param addr Adress of WebSocket client (from WSServer).
-	def handle(self, conn, addr):
-		self.conn = conn
-		self.addr = addr
-		self.setStatus('CONNECTING')
-		try:
-			self.handshake()
-		except ValueError as error:
-			print("ss: handle error", error)
+	def connected(self):
+		# connected
+		# generate decoder for this client.
+		decoder = WSDecoder()
+		
+		self.setStatus('OPEN')
+		
+		while self.hasStatus('OPEN'):
+			(ctrl, data) = decoder.decode(self)
+			if ctrl and data:
+				self.cont.run(ctrl, data)
 
-		else:
-			# generate decoder for this client.
-			decoder = WSDecoder()
+			if not ctrl:
+				self.server.thisClientIsDead(self.clientId)
 			
-			self.setStatus('OPEN')
-			
-			while self.hasStatus('OPEN'):
-				(ctrl, data) = decoder.decode(self)
-				if ctrl and data:
-					self.cont.run(ctrl, data)
-
-				if not ctrl:
-					self.server.thisClientIsDead(self.clientId)
-				
 	## Send an unicast frame
 	#  @param bytes Bytes to send.
 	def send(self, bytes):

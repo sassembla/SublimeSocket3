@@ -1,25 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# import os
-# import socket
-# import string
-# import threading
-# import uuid
-
-# from .WSClient import WSClient
-# from .WSEncoder import WSEncoder
-# import http.server.HTTPServer
 import http.server
 import socketserver
-# from SimpleHTTPServer import SimpleHTTPRequestHandler
-
 
 from ...PythonSwitch import PythonSwitch
 from ... import SublimeSocketAPISettings
 
+
+# this is prototype of http server. not yet implmented 1.1 & 2 of HTTP.
 class HTTPServer:
 	def __init__(self, server, transferId):
-		self.methodName = SublimeSocketAPISettings.HTTP_SERVER
+		self.methodName = SublimeSocketAPISettings.PROTOCOL_HTTP_SERVER
 		self.transferId = transferId
 		
 		self.args = None
@@ -28,17 +19,12 @@ class HTTPServer:
 		self.port = ''
 		
 		self.sublimeSocketServer = server
-
-
+		self.httpd = None
 
 
 	def info(self):
-		pass
-		# message = "SublimeSocket WebSocketServing running @ " + str(self.host) + ':' + str(self.port)
-		
-		# for clientId in self.clientIds:
-		# 	message = message + "\n	client:" + clientId
-		# return message
+		message = "SublimeSocket HTTPServing running @ " + str(self.host) + ':' + str(self.port)
+		return message
 		
 
 	def currentArgs(self):
@@ -54,73 +40,53 @@ class HTTPServer:
 		self.host = params["host"]
 		self.port = params["port"]
 
+		self.listening = False
 
 	def spinup(self):
+		self.listening = True
 		Handler = http.server.SimpleHTTPRequestHandler
 
-		httpd = socketserver.TCPServer((self.host, self.port), Handler)
-
+		self.httpd = socketserver.TCPServer((self.host, self.port), Handler)
+		
 		self.sublimeSocketServer.transferSpinupped('SublimeSocket HTTPServing started @ ' + str(self.host) + ':' + str(self.port))
 		
-		httpd.serve_forever()
+		# while self.listening:
+		# 	self.httpd.handle_request()
+		self.httpd.serve_forever()
 
 		message = "SublimeSocket HTTPServing closed @ " + str(self.host) + ":" + str(self.port)
 		self.sublimeSocketServer.transferTeardowned(self.transferId, message)
 
 	## teardown the server
 	def teardown(self):
-		pass
-		# # close all WebSocket clients
-		# clientsList = self.clientIds.copy()
+		print("http teardown")
+		self.listening = False
+		if self.httpd:
+			self.httpd.shutdown()
+
+		print("http teardown2")
 		
-		# for clientId in clientsList:
-		# 	client = self.clientIds[clientId]
-		# 	client.close()
-
-		# self.clientIds = {}
-
-		# # stop receiving
-		# self.listening = False
-
-		# # force close. may cause "[Errno 53] Software caused connection abort".
-		# self.socket.close()
-
 
 	## return current connection Ids.
 	def connectionIdentities(self):
-		pass
-		# return self.clientIds
+		return []
 
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
 		pass
-		# client = self.clientIds[clientId]
-
-		# # del from list
-		# del self.clientIds[clientId]
-
-		# # update
-		# client.clientId = newIdentity
-		# self.clientIds[newIdentity] = client
-
 
 	def thisClientIsDead(self, clientId):
-		self.closeClient(clientId)
+		pass
 		
 
 	def purgeConnection(self, clientId):
-		self.closeClient(clientId)
+		pass
 		
 
 	# remove from Client dict
 	def closeClient(self, clientId):
 		pass
-		# client = self.clientIds[clientId]
-		# client.close()
-
-		# if clientId in self.clientIds:
-		# 	del self.clientIds[clientId]
-	
+		
 
 	# call SublimeSocket server. transfering datas.
 	def call(self, data, clientId):
@@ -128,35 +94,14 @@ class HTTPServer:
 
 
 	def sendMessage(self, targetId, message):
+		# HTTP2, serverPush
 		pass
-		# if message:
-		# 	pass
-		# else:
-		# 	return (False, "no data to:"+targetId)
-			
-		# if targetId in self.clientIds:
-		# 	client = self.clientIds[targetId]
-		# 	buf = self.encoder.text(str(message), mask=0)
-		# 	client.send(buf)
-		# 	return (True, "done")
-			
-		# return (False, "no target found in:" + str(self.clientIds))
-
+		
 
 	def broadcastMessage(self, message):
+		# HTTP2, serverPush
 		pass
-		# buf = self.encoder.text(str(message), mask=0)
-		
-		# clients = self.clientIds.values()
-		# targets = []
 
-		# # broadcast
-		# for client in clients:
-		# 	client.send(buf)
-
-		# 	targets.append(client.clientId)
-
-		# return targets
 
 
 
