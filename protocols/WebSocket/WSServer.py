@@ -101,7 +101,7 @@ class WSServer:
 			client = self.clientIds[clientId]
 			client.close()
 
-		self.clientIds = []
+		self.clientIds = {}
 
 		# stop receiving
 		self.listening = False

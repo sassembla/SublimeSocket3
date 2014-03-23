@@ -16,8 +16,9 @@ MY_PLUGIN_PATHNAME			= os.path.split(os.path.dirname(os.path.realpath(__file__))
 	
 RUNSUSHIJSON_SERVER			= "RunSushiJSONServer"
 WEBSOCKET_SERVER			= "WebSocketServer"
+HTTP_SERVER                 = "HTTPServer"
 TAIL_MACHINE				= "TailMachine"
-TRANSFER_METHODS			= [RUNSUSHIJSON_SERVER, WEBSOCKET_SERVER, TAIL_MACHINE]
+TRANSFER_METHODS			= [RUNSUSHIJSON_SERVER, WEBSOCKET_SERVER, HTTP_SERVER, TAIL_MACHINE]
 	
 # KVS	
 	
@@ -95,19 +96,31 @@ RUNTESTS_PATH				= "path"
 
 """
 @apiGroup addTransfer
-@api {SushiJSON} addTransfer:{JSON} add transfer with protocol. root > identity > protocol.
+@api {SushiJSON} addTransfer:{JSON} add transfer with protocol. root > transferIdentity(protocol) > connectionIdentity.
 @apiExample [example]
-
+now loading...
+@apiParam {String} transferIdentity the transfer's identity of the new transfer's first connection.
 @apiParam {String} connectionIdentity the connection's identity of the new transfer's first connection.
 @apiParam {String} protocol the protocol of the new transfer.
 @apiParam {JSON} params the parameters for setup of the new transfer.
 """
-API_ADDTRANSFER             = "addTransfer"
+API_ADDTRANSFER                 = "addTransfer"
 ADDTRANSFER_TRANSFERIDENTITY    = "transferIdentity"
 ADDTRANSFER_CONNECTIONIDENTITY  = "connectionIdentity"
-ADDTRANSFER_PROTOCOL        = "protocol"
-ADDTRANSFER_PARAMS          = "params"
+ADDTRANSFER_PROTOCOL            = "protocol"
+ADDTRANSFER_PARAMS              = "params"
+ADDTRANSFER_INJECTIONS          = [ADDTRANSFER_TRANSFERIDENTITY, ADDTRANSFER_CONNECTIONIDENTITY, ADDTRANSFER_PROTOCOL]
 
+"""
+@apiGroup removeTransfer
+@api {SushiJSON} removeTransfer:{JSON} remove transfer with transferIdentity.
+@apiExample [example]
+now loading...
+@apiParam {String} transferIdentity the transfer's identity for remove.
+"""
+API_REMOVETRANSFER              = "removeTransfer"
+REMOVETRANSFER_TRANSFERIDENTITY = "transferIdentity"
+REMOVETRANSFER_INJECTIONS       = [REMOVETRANSFER_TRANSFERIDENTITY]
 
 """
 @apiGroup connectedCall
@@ -116,6 +129,7 @@ ADDTRANSFER_PARAMS          = "params"
 # public APIs
 API_CONNECTEDCALL 			= "connectedCall"
 # no injection, no key, no value.
+
 
 """
 @apiGroup versionVerify

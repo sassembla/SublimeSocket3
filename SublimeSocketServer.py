@@ -11,6 +11,7 @@ from .KVS import KVS
 # choose transfer method from below.
 from .protocols.RunSushiJSON.RunSushiJSONServer import RunSushiJSONServer
 from .protocols.WebSocket.WSServer import WSServer
+from .protocols.HTTP.HTTPServer import HTTPServer
 from .protocols.TailMachine.TailMachine import TailMachine
 
 
@@ -126,55 +127,67 @@ class SublimeSocketServer:
 
 	# control transfer.
 
-	def setupTransfer(self, transferProtocol, params):
+	def setupTransfer(self, params):
+		assert SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL in params, "setupTransfer require 'protocol' param."
 		assert SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY in params, "setupTransfer require 'transferIdentity' param."
+		assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "setupTransfer require 'connectionIdentity' param for add new transfer."
+
 		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
 
 		if self.transfers:
 			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has  taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
 		
-		if transferProtocol in SublimeSocketAPISettings.TRANSFER_METHODS:
-
-			assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "setupTransfer require 'connectionIdentity' param for add new transfer."
+		transferProtocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
+		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_METHODS, "protocol:" + transferProtocol + " is not supported."
 			
-			for case in PythonSwitch(transferProtocol):
-				if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
-					assert "path" in params, "RunSushiJSONServer require 'path' param."
-					
-					self.transfers[transferIdentity] = RunSushiJSONServer(self, transferIdentity)
-					self.transfers[transferIdentity].setup(params)
+		for case in PythonSwitch(transferProtocol):
+			if case(SublimeSocketAPISettings.RUNSUSHIJSON_SERVER):
+				assert "path" in params, "RunSushiJSONServer require 'path' param."
+				
+				self.transfers[transferIdentity] = RunSushiJSONServer(self, transferIdentity)
+				self.transfers[transferIdentity].setup(params)
 
-					break
-					
-				if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
-					assert "host" in params, "WebSocketServer require 'host' param."
-					assert "port" in params, "WebSocketServer require 'port' param."
-					
-					self.transfers[transferIdentity] = WSServer(self, transferIdentity)
-					self.transfers[transferIdentity].setup(params)
+				break
+				
+			if case(SublimeSocketAPISettings.WEBSOCKET_SERVER):
+				assert "host" in params, "WebSocketServer require 'host' param."
+				assert "port" in params, "WebSocketServer require 'port' param."
+				
+				self.transfers[transferIdentity] = WSServer(self, transferIdentity)
+				self.transfers[transferIdentity].setup(params)
 
-					break
+				break
 
-				if case(SublimeSocketAPISettings.TAIL_MACHINE):
-					assert "result" in params, "TailMachine require 'result' param."
-					result = params["result"]
-					
-					# not file, reactor body.
-					if result == -1:
-					    assert "tailPath" in params, "TailMachine require 'tailPath' param."
-					    assert "reactors" in params, "TailMachine require 'reactors' param."
+			if case(SublimeSocketAPISettings.HTTP_SERVER):
+				assert "host" in params, "WebSocketServer require 'host' param."
+				assert "port" in params, "WebSocketServer require 'port' param."
+				
+				self.transfers[transferIdentity] = HTTPServer(self, transferIdentity)
+				self.transfers[transferIdentity].setup(params)
 
-					# file path. reactor string.
-					else:
-					    assert "tailPath" in params, "TailMachine require 'tailPath' param."
-					    assert "reactorsSource" in params, "TailMachine require 'reactorsSource' param."
-
-					self.transfers[transferIdentity] = TailMachine(self)
-					self.transfers[transferIdentity].setup(params)
-					break
+				break
 
 
-			return transferIdentity
+			if case(SublimeSocketAPISettings.TAIL_MACHINE):
+				assert "result" in params, "TailMachine require 'result' param."
+				result = params["result"]
+				
+				# not file, reactor body.
+				if result == -1:
+				    assert "tailPath" in params, "TailMachine require 'tailPath' param."
+				    assert "reactors" in params, "TailMachine require 'reactors' param."
+
+				# file path. reactor string.
+				else:
+				    assert "tailPath" in params, "TailMachine require 'tailPath' param."
+				    assert "reactorsSource" in params, "TailMachine require 'reactorsSource' param."
+
+				self.transfers[transferIdentity] = TailMachine(self)
+				self.transfers[transferIdentity].setup(params)
+				break
+
+
+		return transferIdentity
 
 	def addConnectionToTransfer():
 		print("not yet implemented.")
@@ -185,6 +198,11 @@ class SublimeSocketServer:
 	def spinupLatestTransfer(self):
 		assert self.transfers, "should setupTransfer before spinup."
 		transferIdentity = list(self.transfers)[-1]
+		self.spinupTransfer(transferIdentity)
+
+
+	def spinupTransfer(self, transferIdentity):
+		assert transferIdentity in self.transfers, "there are no transfer:"+transferIdentity
 		self.transfers[transferIdentity].spinup()
 
 
@@ -200,7 +218,7 @@ class SublimeSocketServer:
 		if transferIdentity in self.transfers:
 			self.transfers[transferIdentity].teardown()
 		else:
-			self.transferTeardowned("no transfer running.", transferIdentity)
+			self.transferTeardowned(transferIdentity, "no transfer running.")
 
 	def appendOnConnectedTriggers(self, transferIdentity, funcs):
 		for addedFunctionDict in self.onConnectedTriggers:

@@ -217,13 +217,13 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 class Socket_on(sublime_plugin.TextCommand):
     def run(self, edit, params=None):
         if params:
-            assert "type" in params, "SocketOn require 'type' params."
-            transferMethod = params["type"]
+            assert SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL in params, "SocketOn require 'protocol' params."
         else:
-            transferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
-            params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
+            transferProtocol = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferProtocol")
+            params = sublime.load_settings("SublimeSocket.sublime-settings").get(transferProtocol)
+            params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL] = transferProtocol
 
-        self.startServer(transferMethod, params)
+        self.startServer(params)
 
 
     @classmethod
@@ -239,24 +239,24 @@ class Socket_on(sublime_plugin.TextCommand):
 
 
     @classmethod
-    def startServer(self, transferMethod, args):
+    def startServer(self, args):
         global thread
         
         if thread and thread.is_alive():
-            thread.setupThread(transferMethod, args)
+            thread.setupThread(args)
 
         else:
-            thread = SublimeSocketThread(transferMethod, args)
+            thread = SublimeSocketThread(args)
             thread.start()
 
 
 class Socket_on_then_test(sublime_plugin.TextCommand):
     def run(self, edit):
-        transferMethod = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferMethod")
-        baseArgs = sublime.load_settings("SublimeSocket.sublime-settings").get(transferMethod)
+        transferProtocol = sublime.load_settings("SublimeSocket.sublime-settings").get("defaultTransferProtocol")
+        baseArgs = sublime.load_settings("SublimeSocket.sublime-settings").get(transferProtocol)
             
         params = baseArgs
-        params["type"] = transferMethod
+        params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL] = transferProtocol
         params["runTests"] = True
 
         def start():
@@ -310,18 +310,18 @@ class Transfer_info(sublime_plugin.TextCommand):
 
 # threading
 class SublimeSocketThread(threading.Thread):
-    def __init__(self, transferMethod, args):
+    def __init__(self, args):
         threading.Thread.__init__(self)
         self.server = SublimeSocketServer()
         
         # setup and get identity for transfer.
-        self.setupThread(transferMethod, args)
+        self.setupThread(args)
 
 
 
-    def setupThread(self, transferMethod, params):
+    def setupThread(self, params):
         # get transferIdentity for prepare action.
-        transferIdentity = self.server.setupTransfer(transferMethod, params)
+        transferIdentity = self.server.setupTransfer(params)
         if "runTests" in params:
             Openhtml.openSublimeSocketTest(params)
             

@@ -76,6 +76,10 @@ class SublimeSocketAPI:
 				self.addTransfer(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_REMOVETRANSFER):
+				self.removeTransfer(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_CONNECTEDCALL):
 				self.server.transferConnected(transferId, connectionId)
 				break
@@ -1201,15 +1205,41 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY in params, "addTransfer require 'transferIdentity' param."
 		assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "addTransfer require 'connectionIdentity' param."
 		assert SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL in params, "addTransfer require 'protocol' param."
-		assert SublimeSocketAPISettings.ADDTRANSFER_PARAMS in params, "addTransfer require 'params' param."
+		assert SublimeSocketAPISettings.ADDTRANSFER_PARAMS in params, "addTrasnfer require 'params' param."
 
-		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
-		connectonIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY]
-		protocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
-		settingParams = params[SublimeSocketAPISettings.ADDTRANSFER_PARAMS]
+		# add params[SublimeSocketAPISettings.ADDTRANSFER_PARAMS] to params.
+		transferParams = params[SublimeSocketAPISettings.ADDTRANSFER_PARAMS]
+		for key in transferParams.keys():
+			params[key] = transferParams[key]
 
-		# self.server.に対して、transferを追加する部分に繋ぐ
-		assert False, ("not yet implemented.")
+		# add Transfer from API.
+		transferIdentity = self.server.setupTransfer(params)
+		self.server.spinupTransfer(transferIdentity)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.ADDTRANSFER_INJECTIONS,
+			[
+				params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY],
+				params[SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY],
+				params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
+			],
+			self.runAPI
+		)
+	
+
+	def removeTransfer(self, params):
+		assert SublimeSocketAPISettings.REMOVETRANSFER_TRANSFERIDENTITY in params, "removeTransfer require 'transferIdentiy' param."
+		transferIdentiy = params[SublimeSocketAPISettings.REMOVETRANSFER_TRANSFERIDENTITY]
+		self.server.teardownTransfer(transferIdentiy)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.REMOVETRANSFER_INJECTIONS,
+			[transferIdentiy],
+			self.runAPI
+		)
+
 	
 	## change identity of the client of transfer.
 	## there is two layer. transfer > connection.

@@ -3,7 +3,7 @@
 
 	"defaultRunSushiJSONPath" : "",
 
-	"defaultTransferMethod" : "WebSocketServer",
+	"defaultTransferProtocol" : "WebSocketServer",
 
 	"WebSocketServer": {
 		"transferIdentity" : "wsdefault",
@@ -13,7 +13,7 @@
 	},
 
 	// sublimeSocketServerTests
-	"testSuiteFilePath" : "tests/tests.js",
+	"testSuiteFilePath" : "tests/sublimeSocketServerTests.js",
 
 	"preference browser" : "Safari.app",
 

@@ -47,17 +47,18 @@ class RunSushiJSONServer:
 		data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"path\": \"" + self.path + "\"}"
 		
 		self.sublimeSocketServer.transferInputted(data, self.transferId)
-
 		while self.continuation:
 			time.sleep(0.1)
 
 	## teardown the server
 	def teardown(self):
+		self.continuation = False
 		self.sublimeSocketServer.transferSpinupped('SublimeSocket RunSushiJSONServer teardowned')
 
 	## return connection IDs
 	def connectionIdentities(self):
-		pass
+		# runSushiJSONServer has no connections.
+		return []
 		
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
