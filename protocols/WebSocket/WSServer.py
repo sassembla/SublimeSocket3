@@ -12,7 +12,6 @@ from .WSEncoder import WSEncoder
 from ...PythonSwitch import PythonSwitch
 from ... import SublimeSocketAPISettings
 
-BUF_SIZE = 1024
 
 class WSServer:
 	def __init__(self, server, transferId):
@@ -85,64 +84,13 @@ class WSServer:
 				
 				self.clientIds[identity] = client
 
-				threading.Thread(target = self.handle, args = (identity, conn, addr)).start()
+				threading.Thread(target = client.handle, args = (conn,addr)).start()
 			except socket.error as msg:
 				errorMsg = "SublimeSocket WebSocketServing crashed @ " + str(self.host) + ":" + str(self.port) + " reason:" + str(msg)
 				self.sublimeSocketServer.transferNoticed(errorMsg)
 			
 		message = "SublimeSocket WebSocketServing closed @ " + str(self.host) + ":" + str(self.port)
-		self.sublimeSocketServer.transferTeardowned(self.transferId, message)		
-
-
-	def reverse(self, identity, protocol, data):
-		print("data", data)
-
-		# このへんで、protocolに関した反応をSSServer側に返して、データを得る。
-
-		client = self.clientIds[identity]
-
-		currentBytes = (
-			'hahaha!!\r\n'
-			'\r\n')
-
-		b = bytes(currentBytes, 'utf-8')
-
-		client.send(b)
-		pass
-
-
-	# check data for each client for reverse-proxy checking.
-	def handle(self, identity, conn, addr):
-		client = self.clientIds[identity]
-		client.conn = conn
-		client.addr = addr
-
-		client.setStatus('CONNECTING')
-
-		line = bytearray()
-
-		# handshake関連のモノ以外は拒否とかしたいところ
-		while client.hasStatus('CONNECTING') and len(line) < BUF_SIZE:
-			c = client.receive(1)
-			line = line + c
-
-			if c == b'\n':
-				break
-
-			if line == b'<policy-file-request/>':
-				self.reverse(identity, SublimeSocketAPISettings.PROTOCOL_BYTESERVER, line.decode('utf-8'))
-				return
-				
-		decodedLine = line.decode('utf-8')
-
-		try:
-			client.handshake(decodedLine)
-		except ValueError as error:
-			print("ss: handle error", error)
-
-		else:
-			client.connected()
-
+		self.sublimeSocketServer.transferTeardowned(self.transferId, message)
 
 	## teardown the server
 	def teardown(self):	

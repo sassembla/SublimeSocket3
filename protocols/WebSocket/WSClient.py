@@ -72,8 +72,7 @@ class WSClient:
 			remaining = bufsize - len(preBytes)
 		return bytes
 
-
-	## read line.
+	## Read data until line return (used by handshake)
 	def readlineheader(self):
 		line = bytearray()
 
@@ -86,18 +85,17 @@ class WSClient:
 				
 		return line.decode('utf-8')
 
-
 	## Send handshake according to RFC
-	def handshake(self, line):
+	def handshake(self):
 		headers = {}
+
+		# Ignore first line with GET
+		line = self.readlineheader()
 
 		while self.hasStatus('CONNECTING'):
 			if len(headers)>64:
 				raise ValueError('Header too long.')
-
-			# read again.
 			line = self.readlineheader()
-			
 			if not self.hasStatus('CONNECTING'):
 				raise ValueError('Client left.')
 			if len(line) == 0 or len(line) == BUF_SIZE:
@@ -155,21 +153,31 @@ class WSClient:
 		
 
 	## Handle incoming datas
-	def connected(self):
-		# connected
-		# generate decoder for this client.
-		decoder = WSDecoder()
-		
-		self.setStatus('OPEN')
-		
-		while self.hasStatus('OPEN'):
-			(ctrl, data) = decoder.decode(self)
-			if ctrl and data:
-				self.cont.run(ctrl, data)
+	#  @param conn Socket of WebSocket client (from WSServer).
+	#  @param addr Adress of WebSocket client (from WSServer).
+	def handle(self, conn, addr):
+		self.conn = conn
+		self.addr = addr
+		self.setStatus('CONNECTING')
+		try:
+			self.handshake()
+		except ValueError as error:
+			print("ss: handle error", error)
 
-			if not ctrl:
-				self.server.thisClientIsDead(self.clientId)
+		else:
+			# generate decoder for this client.
+			decoder = WSDecoder()
 			
+			self.setStatus('OPEN')
+			
+			while self.hasStatus('OPEN'):
+				(ctrl, data) = decoder.decode(self)
+				if ctrl and data:
+					self.cont.run(ctrl, data)
+
+				if not ctrl:
+					self.server.thisClientIsDead(self.clientId)
+				
 	## Send an unicast frame
 	#  @param bytes Bytes to send.
 	def send(self, bytes):
