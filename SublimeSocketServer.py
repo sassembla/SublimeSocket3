@@ -136,7 +136,7 @@ class SublimeSocketServer:
 		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
 
 		if self.transfers:
-			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has  taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
+			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
 		
 		transferProtocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
 		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_PROTOCOLS, "protocol:" + transferProtocol + " is not supported."
@@ -169,7 +169,7 @@ class SublimeSocketServer:
 				break
 
 			if case(SublimeSocketAPISettings.PROTOCOL_BYTEDATA_SERVER):
-				assert "reactors" in params, "ByteDataServer require 'reactors' param."
+				assert "binders" in params, "ByteDataServer require 'binders' param."
 				self.transfers[transferIdentity] = ByteDataServer(self, transferIdentity)
 				self.transfers[transferIdentity].setup(params)
 				break

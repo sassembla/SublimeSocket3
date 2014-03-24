@@ -176,22 +176,57 @@ test>httpServerを上げて下げる/afterAsync: {
 }
 
 
-test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、reverseを試す/addTransfer: {
-    "transferIdentity": "byteDataServer",
-    "connectionIdentity": "byteDataConnection",
-    "protocol": "ByteDataServer",
-    "params":{
-        "reactors": [
-            {
-                "request":"response"
+test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、消す/afterAsync: {
+    "identity": "addTransfer",
+    "ms": 1,
+    "selectors":[
+        {
+            "addTransfer": {
+                "transferIdentity": "byteDataServer",
+                "connectionIdentity": "byteDataConnection",
+                "protocol": "ByteDataServer",
+                "params":{
+                    "binders": [
+                        {
+                            "<policy-file-request/>":"<?xml version=\"1.0\"?><cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>"
+                        }
+                    ],
+                    "host": "127.0.0.1",
+                    "port": 8824
+                },
+                "selectors": [
+                    {
+                        "showAtLog<-transferIdentity": {
+                            "format": "transfer [transferIdentity] added."
+                        }
+                    }
+                
+                ]
             }
-        ]
-    }
-}->適当なdataを送り込んで、responseを期待する。条件としては、WebSocketServerに向かってrawDataをソケットに直接ぶん投げる、とかだ。リバプロの仕組み自体は放置しよう。/showAtLog: {
-    "message": "testing"
-}->removeTransfer: {
-    "transferIdentity": "byteDataServer"
+        },
+        {
+            "wait in same thread./assertResult": {
+                "id": "websocketServer added",
+                "contains": {
+                    "showAtLog": {
+                        "output": "transfer byteDataServer added."
+                    }
+                },
+                "description": "not match."
+            }
+        }
+    ]
+}->wait: {
+    "ms": 100
+// }->removeTransfer: {
+//     "transferIdentity": "byteDataServer"
+}->wait: {
+    // wait for sending result to WebSocketClient. because of latency of WebSocketServer.
+    "ms": 10
 }
+
+
+
 
 
 
