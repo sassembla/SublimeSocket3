@@ -218,8 +218,8 @@ test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、消す/afterAsync: {
     ]
 }->wait: {
     "ms": 100
-// }->removeTransfer: {
-//     "transferIdentity": "byteDataServer"
+}->removeTransfer: {
+    "transferIdentity": "byteDataServer"
 }->wait: {
     // wait for sending result to WebSocketClient. because of latency of WebSocketServer.
     "ms": 10
