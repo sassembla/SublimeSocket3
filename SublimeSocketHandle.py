@@ -176,7 +176,12 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 
             if status == 1:
                 runPath = path
-                self.view.run_command("socket_on", {"params":{"type": SublimeSocketAPISettings.RUNSUSHIJSON_SERVER, "path": path, "continuation": True}})
+                self.view.run_command("socket_on", {SublimeSocketAPISettings.ADDTRANSFER_PARAMS:{
+                    SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL: SublimeSocketAPISettings.PROTOCOL_RUNSUSHIJSON_SERVER,
+                    SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY: "RUNSUSHIJSON_HANDLED_DEFAULT_TRANSFER",
+                    SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY: "RUNSUSHIJSON_HANDLED_DEFAULT_CONNECTION",
+                    "path": path
+                    }})
 
             else:
                 result = "runSushiJSON:cannot run:" + path
