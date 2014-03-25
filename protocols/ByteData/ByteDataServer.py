@@ -150,10 +150,10 @@ class ByteDataServer:
 		self.sublimeSocketServer.transferInputted(data, self.transferId, clientId)
 
 	def sendMessage(self, targetId, message):
-		pass
+		return (False, "no imple")
 
 	def broadcastMessage(self, message):
-		pass
+		return []
 
 
 

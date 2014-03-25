@@ -82,13 +82,7 @@ class RunSushiJSONServer:
 
 
 	def sendMessage(self, targetId, message):
-		if message:
-			pass
-		else:
-			return (False, "no data to:"+targetId)
-		
-		print("call with data", data, "to", clientId)
-
+		return (False, "no imple")
 
 	def broadcastMessage(self, message):
-		print("broadcastMessage do nothing.")
+		return []

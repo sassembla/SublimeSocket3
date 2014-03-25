@@ -114,11 +114,10 @@ class TailMachine:
 
 
 	def sendMessage(self, targetId, message):
-		pass
+		return (False, "no imple")
 
 	def broadcastMessage(self, message):
-		print("broadcastMessage do nothing")
-		pass
+		return []
 
 	def generateTailThread(self, command):
 		process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
