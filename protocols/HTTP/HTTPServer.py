@@ -59,12 +59,9 @@ class HTTPServer:
 
 	## teardown the server
 	def teardown(self):
-		print("http teardown")
 		self.listening = False
 		if self.httpd:
 			self.httpd.shutdown()
-
-		print("http teardown2")
 		
 
 	## return current connection Ids.
