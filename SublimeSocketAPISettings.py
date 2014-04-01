@@ -625,6 +625,7 @@ on_query_completions
 
 on_pre_save
 on_post_save
+
 on_selection_modified
 
 ss_on_selection_modified_by_setselection

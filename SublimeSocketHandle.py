@@ -24,6 +24,9 @@ tailReactor = ""
 runPath = ""
 
 
+STATUS_OK = 1
+STATUS_NG = -1
+
 
 class Socket_start_tailmachine(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -41,19 +44,18 @@ class Socket_start_tailmachine(sublime_plugin.TextCommand):
 
 
         def getMessageAndStatus(pathCandidate):
-            status = -1
-
+            
             if os.path.isdir(pathCandidate):
                 message = "tailMachine:" + pathCandidate + " is folder."
-
+                return (message, STATUS_NG)
             else:
                 if os.path.exists(pathCandidate):
                     message = "tailMachine:" + pathCandidate + " is exists."
-                    status = 1                    
+                    return (message, STATUS_OK)
                 else:
                     message = "tailMachine:" + pathCandidate + " is not exists."
-
-            return (message, status)
+                    return (message, STATUS_NG)
+            
 
 
         def on_done(path):
@@ -120,17 +122,18 @@ class Socket_start_tailmachine_repeat(sublime_plugin.TextCommand):
 
         if tailPath and tailReactor:
             def getMessageAndStatus(pathCandidate):
-                status = -1
 
                 if os.path.isdir(pathCandidate):
                     pass
                 else:
                     if os.path.exists(pathCandidate):
-                        status = 1                    
+                        return STATUS_OK
                     else:
                         pass
 
-                return status
+                return STATUS_NG
+
+                
 
             # do not check if file or string here.
             result = getMessageAndStatus(currentTailReactor)
@@ -155,26 +158,24 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 
 
         def getMessageAndStatus(pathCandidate):
-            status = -1
-
             if os.path.isdir(pathCandidate):
                 message = "runSushiJSON:" + pathCandidate + " is folder."
+                return (message, STATUS_NG)
 
             else:
                 if os.path.exists(pathCandidate):
                     message = "runSushiJSON:" + pathCandidate + " is exists."
-                    status = 1                    
+                    return (message, STATUS_OK)
                 else:
                     message = "runSushiJSON:" + pathCandidate + " is not exists."
-
-            return (message, status)
+                    return (message, STATUS_NG)
 
 
         def on_done(path):
             global runPath
             _, status = getMessageAndStatus(path)
 
-            if status == 1:
+            if status == STATUS_OK:
                 runPath = path
                 self.view.run_command("socket_on", {SublimeSocketAPISettings.ADDTRANSFER_PARAMS:{
                     SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL: SublimeSocketAPISettings.PROTOCOL_RUNSUSHIJSON_SERVER,
