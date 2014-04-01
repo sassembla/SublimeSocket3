@@ -14,12 +14,13 @@ from ... import SublimeSocketAPISettings
 
 
 class WSServer:
-	def __init__(self, server, serverIdentity):
-		self.methodName = SublimeSocketAPISettings.WEBSOCKET_SERVER
+	def __init__(self, server, transferId):
+		self.methodName = SublimeSocketAPISettings.PROTOCOL_WEBSOCKET_SERVER
+		self.transferId = transferId
+
 		self.clientIds = {}
 		
 		self.args = None
-		self.wsServerIdentity = serverIdentity
 		
 		self.socket = ''
 		self.host = ''
@@ -89,7 +90,7 @@ class WSServer:
 				self.sublimeSocketServer.transferNoticed(errorMsg)
 			
 		message = "SublimeSocket WebSocketServing closed @ " + str(self.host) + ":" + str(self.port)
-		self.sublimeSocketServer.transferTeardowned(self.wsServerIdentity, message)		
+		self.sublimeSocketServer.transferTeardowned(self.transferId, message)
 
 	## teardown the server
 	def teardown(self):	
@@ -100,7 +101,7 @@ class WSServer:
 			client = self.clientIds[clientId]
 			client.close()
 
-		self.clientIds = []
+		self.clientIds = {}
 
 		# stop receiving
 		self.listening = False
@@ -109,6 +110,9 @@ class WSServer:
 		self.socket.close()
 
 
+	## return current connection Ids.
+	def connectionIdentities(self):
+		return self.clientIds
 
 	## update specific client's id
 	def updateClientId(self, clientId, newIdentity):
@@ -141,7 +145,7 @@ class WSServer:
 
 	# call SublimeSocket server. transfering datas.
 	def call(self, data, clientId):
-		self.sublimeSocketServer.transferInputted(data, clientId)
+		self.sublimeSocketServer.transferInputted(data, self.transferId, clientId)
 
 
 	def sendMessage(self, targetId, message):
@@ -159,28 +163,17 @@ class WSServer:
 		return (False, "no target found in:" + str(self.clientIds))
 
 
-	def broadcastMessage(self, targetIds, message):
+	def broadcastMessage(self, message):
 		buf = self.encoder.text(str(message), mask=0)
 		
 		clients = self.clientIds.values()
-
 		targets = []
 
-		# broadcast to specific clients.
-		if targetIds:
-			idAndClient = [(client.clientId, client) for client in clients]
-			for targetId in targetIds:
-				for clientId, client in idAndClient:
-					if targetId == clientId:
-						client.send(buf)
-						targets.append(clientId)
-
 		# broadcast
-		else:
-			for client in clients:
-				client.send(buf)
+		for client in clients:
+			client.send(buf)
 
-				targets.append(client.clientId)
+			targets.append(client.clientId)
 
 		return targets
 

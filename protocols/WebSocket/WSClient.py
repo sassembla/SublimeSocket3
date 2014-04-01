@@ -6,6 +6,7 @@ from .WSDecoder import WSDecoder
 from .WSController import WSController
 
 VERSION = 13
+BUF_SIZE = 1024
 
 class WSClient:
 	CONNECTION_STATUS = {
@@ -75,7 +76,7 @@ class WSClient:
 	def readlineheader(self):
 		line = bytearray()
 
-		while self.hasStatus('CONNECTING') and len(line)<1024:
+		while self.hasStatus('CONNECTING') and len(line) < BUF_SIZE:
 			c = self.receive(1)
 			line = line + c
 
@@ -97,7 +98,7 @@ class WSClient:
 			line = self.readlineheader()
 			if not self.hasStatus('CONNECTING'):
 				raise ValueError('Client left.')
-			if len(line) == 0 or len(line) == 1024:
+			if len(line) == 0 or len(line) == BUF_SIZE:
 				raise ValueError('Invalid line in header.')
 
 			if line == '\r\n':

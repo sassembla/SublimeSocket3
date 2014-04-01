@@ -58,22 +58,30 @@ class SublimeSocketAPI:
 
 
 	## Parse the API command
-	def parse(self, data, clientId=None):
+	def parse(self, data, transferId=None, connectionId=None):
 		runnable = SushiJSONParser.parseStraight(data)
 
 		if runnable:
 			for commandSource, paramsSource in runnable:
 				command, params = SushiJSONParser.composeParams(commandSource, paramsSource, None)
-				self.runAPI(command, params, clientId)
+				self.runAPI(command, params, transferId, connectionId)
 		
 
 	## run the specified API with JSON parameters. Dict or Array of JSON.
-	def runAPI(self, command, params, clientId=None):
+	def runAPI(self, command, params, transferId=None, connectionId=None):
 						
   		# python-switch
 		for case in PythonSwitch(command):
+			if case(SublimeSocketAPISettings.API_ADDTRANSFER):
+				self.addTransfer(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_REMOVETRANSFER):
+				self.removeTransfer(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_CONNECTEDCALL):
-				self.server.transferConnected(clientId)
+				self.server.transferConnected(transferId, connectionId)
 				break
 
 			if case(SushiJSON.SETTESTBEFOREAFTER_BEFORESELECTORS):
@@ -95,7 +103,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_CHANGEIDENTITY):
-				self.changeIdentity(params, clientId)
+				self.changeConnectionIdentity(params, transferId, connectionId)
 				break
 
 			if case(SublimeSocketAPISettings.API_ASSERTRESULT):
@@ -207,7 +215,7 @@ class SublimeSocketAPI:
 				break
 
 			if case(SublimeSocketAPISettings.API_MONOCASTMESSAGE):
-				self.monocastMessage(params)
+				self.monocastMessage(transferId, params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SHOWATLOG):
@@ -275,7 +283,7 @@ class SublimeSocketAPI:
 				break
 
 			if case (SublimeSocketAPISettings.API_VERSIONVERIFY):
-				self.versionVerify(params, clientId)
+				self.versionVerify(params, transferId, connectionId)
 				break
 
 			if case():
@@ -411,7 +419,7 @@ class SublimeSocketAPI:
 		reactors = params[SublimeSocketAPISettings.STARTTAILING_REACTORS]
 		reactorsDict = {"selectors": reactors}
 		
-		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.TAIL_MACHINE, 
+		tailTransferIdentity = self.server.setupTransfer(SublimeSocketAPISettings.PROTOCOL_TAIL_MACHINE, 
 			{
 				"tailPath": tailTarget,
 				"reactors": json.dumps(reactorsDict)
@@ -544,8 +552,17 @@ class SublimeSocketAPI:
 	## run shellScript
 	# params is array that will be evaluated as commandline parameters.
 	def runShell(self, params):
-		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param."
+		
+		if SublimeSocketAPISettings.RUNSHELL_FORMAT in params:
+			assert not SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell reject 'main' param with 'format' param. please use 'main' or 'format' only."
+			format = self.formattingMessageParameters(params, SublimeSocketAPISettings.RUNSHELL_FORMAT, SublimeSocketAPISettings.RUNSHELL_MAIN)
+			del params[SublimeSocketAPISettings.RUNSHELL_FORMAT]
 
+			self.runShell(format)
+			return
+
+		assert SublimeSocketAPISettings.RUNSHELL_MAIN in params, "runShell require 'main' param."
+		
 		if SublimeSocketAPISettings.RUNSHELL_DELAY in params:
 			delay = params[SublimeSocketAPISettings.RUNSHELL_DELAY]
 			del params[SublimeSocketAPISettings.RUNSHELL_DELAY]
@@ -599,7 +616,7 @@ class SublimeSocketAPI:
 
 		kvPairArray = [genKeyValuePair(key) for key in params.keys() if key not in SublimeSocketAPISettings.RUNSHELL_LIST_IGNORES]
 		kvPairArray.insert(0, main) 
-
+		
 		runnable = ' '.join(kvPairArray)
 		debugFlag = False
 
@@ -614,7 +631,7 @@ class SublimeSocketAPI:
 			
 			
 
-	## emit message to all clients.
+	## emit message to all transfers & connections.
 	def broadcastMessage(self, params):
 		if SublimeSocketAPISettings.BROADCASTMESSAGE_FORMAT in params:
 			currentParams = self.formattingMessageParameters(params, SublimeSocketAPISettings.BROADCASTMESSAGE_FORMAT, SublimeSocketAPISettings.BROADCASTMESSAGE_MESSAGE)
@@ -624,43 +641,41 @@ class SublimeSocketAPI:
 		assert SublimeSocketAPISettings.BROADCASTMESSAGE_MESSAGE in params, "broadcastMessage require 'message' param."
 		
 		message = params[SublimeSocketAPISettings.BROADCASTMESSAGE_MESSAGE]
-
-		sendedTargetIds = []
-
-		if SublimeSocketAPISettings.BROADCASTMESSAGE_TARGETS in params:
-			sendedTargetIds = self.server.broadcastMessage(params[SublimeSocketAPISettings.BROADCASTMESSAGE_TARGETS], message)
-		else:
-			sendedTargetIds = self.server.broadcastMessage([], message)
+		sendedTargetTransferIds = self.server.transferIdentities()
+		sendedTargetConnectionIds = self.server.broadcastMessage(message)
 		
 		SushiJSONParser.runSelectors(
 			params,
 			SublimeSocketAPISettings.BROADCASTMESSAGE_INJECTIONS,
-			[sendedTargetIds, message],
+			[sendedTargetTransferIds, sendedTargetConnectionIds, message],
 			self.runAPI
 		)
 		
 	
 
 	## send message to the specific client.
-	def monocastMessage(self, params):
+	def monocastMessage(self, transferId, params):
 		if SublimeSocketAPISettings.MONOCASTMESSAGE_FORMAT in params:
 			currentParams = self.formattingMessageParameters(params, SublimeSocketAPISettings.MONOCASTMESSAGE_FORMAT, SublimeSocketAPISettings.MONOCASTMESSAGE_MESSAGE)
-			self.monocastMessage(currentParams)
+			self.monocastMessage(transferId, currentParams)
 			return
 
 		assert SublimeSocketAPISettings.MONOCASTMESSAGE_TARGET in params, "monocastMessage require 'target' param."
 		assert SublimeSocketAPISettings.MONOCASTMESSAGE_MESSAGE in params, "monocastMessage require 'message' param."
-		
+			
+		if SublimeSocketAPISettings.MONOCASTMESSAGE_TRANSFERIDENTITY in params:
+			transferId = params[SublimeSocketAPISettings.MONOCASTMESSAGE_TRANSFERIDENTITY]
+
 		target = params[SublimeSocketAPISettings.MONOCASTMESSAGE_TARGET]
 		message = params[SublimeSocketAPISettings.MONOCASTMESSAGE_MESSAGE]
 		
-		succeeded, reason = self.server.sendMessage(target, message)
+		succeeded, reason = self.server.sendMessage(transferId, target, message)
 
 		if succeeded:
 			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.MONOCASTMESSAGE_INJECTIONS,
-				[target, message],
+				[transferId, target, message],
 				self.runAPI
 			)
 
@@ -949,7 +964,7 @@ class SublimeSocketAPI:
 
 
 
-	def runTests(self, params, clientId):
+	def runTests(self, params, transferId, connectionId):
 		assert SublimeSocketAPISettings.RUNTESTS_PATH in params, "runTests require 'path' param."
 
 		filePath = params[SublimeSocketAPISettings.RUNTESTS_PATH]
@@ -979,7 +994,7 @@ class SublimeSocketAPI:
 					currentFailedCount = 1
 
 			result = assertResultBody[SublimeSocketAPISettings.ASSERTRESULT_RESULT]
-			self.server.broadcastMessage([], result)
+			self.server.broadcastMessage(result)
 
 			return (currentPassedCount, currentFailedCount)
 		
@@ -994,7 +1009,7 @@ class SublimeSocketAPI:
 			for testCommand, testParams in testCase:
 				command, params = SushiJSONParser.composeParams(testCommand, testParams, None)
 
-				self.runAPI(command, params, clientId)
+				self.runAPI(command, params, transferId, connectionId)
 
 			# reduce results
 			for results in self.globalResults[testSuitesIdentity]:
@@ -1012,7 +1027,7 @@ class SublimeSocketAPI:
 
 		# count ASSERTRESULT_VALUE_PASS or ASSERTRESULT_VALUE_FAIL
 		totalResultMessage = "TOTAL:" + str(passedCount + failedCount) + " passed:" + str(passedCount) + " failed:" + str(failedCount)
-		self.server.broadcastMessage([], totalResultMessage)
+		self.server.broadcastMessage(totalResultMessage)
 
 
 	## assertions
@@ -1185,24 +1200,83 @@ class SublimeSocketAPI:
 			"assertion aborted in assertResult API.")
 		return
 		
-	
-	## change identity of client.
-	def changeIdentity(self, params, currentClientIdentity):
-		assert SublimeSocketAPISettings.CHANGEIDENTITY_TO in params, "updateClientId requre 'to' param"
-		
-		currentIdentityCandicate = currentClientIdentity
 
-		if SublimeSocketAPISettings.CHANGEIDENTITY_FROM in params:
-			currentIdentityCandicate = params[SublimeSocketAPISettings.CHANGEIDENTITY_FROM]
+	def addTransfer(self, params):
+		assert SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY in params, "addTransfer require 'transferIdentity' param."
+		assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "addTransfer require 'connectionIdentity' param."
+		assert SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL in params, "addTransfer require 'protocol' param."
+		assert SublimeSocketAPISettings.ADDTRANSFER_PARAMS in params, "addTrasnfer require 'params' param."
 
-		newIdentity = params[SublimeSocketAPISettings.CHANGEIDENTITY_TO]
+		# add params[SublimeSocketAPISettings.ADDTRANSFER_PARAMS] to params.
+		transferParams = params[SublimeSocketAPISettings.ADDTRANSFER_PARAMS]
+		for key in transferParams.keys():
+			params[key] = transferParams[key]
 
-		self.server.transfers[self.server.mainTransferId].updateClientId(currentIdentityCandicate, newIdentity)
+		# add Transfer from API.
+		transferIdentity = self.server.setupTransfer(params)
+		self.server.spinupTransfer(transferIdentity)
 
 		SushiJSONParser.runSelectors(
 			params,
+			SublimeSocketAPISettings.ADDTRANSFER_INJECTIONS,
+			[
+				params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY],
+				params[SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY],
+				params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
+			],
+			self.runAPI
+		)
+	
+
+	def removeTransfer(self, params):
+		assert SublimeSocketAPISettings.REMOVETRANSFER_TRANSFERIDENTITY in params, "removeTransfer require 'transferIdentiy' param."
+		transferIdentiy = params[SublimeSocketAPISettings.REMOVETRANSFER_TRANSFERIDENTITY]
+		self.server.teardownTransfer(transferIdentiy)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.REMOVETRANSFER_INJECTIONS,
+			[transferIdentiy],
+			self.runAPI
+		)
+
+	
+	## change identity of the client of transfer.
+	## there is two layer. transfer > connection.
+	def changeConnectionIdentity(self, params, currentTransferIdentity, currentConnectionIdentity):
+		assert SublimeSocketAPISettings.CHANGEIDENTITY_TO in params, "updateClientId requre 'to' param"
+		
+		# by default. target "transfer" who has "connection" is current "transfer".
+		targetTransferId = currentTransferIdentity
+
+		if SublimeSocketAPISettings.CHANGEIDENTITY_TRANSFERIDENTITY in params:
+			targetTransferId = params[SublimeSocketAPISettings.CHANGEIDENTITY_TRANSFERIDENTITY]
+
+		assert self.server.isValidTransferId(targetTransferId), "failed to change client id, because transferIdentity:" + targetTransferId + " is not exist."
+
+
+
+		# set target "connection" identity under the "transfer".
+		# by default. target "connection" is current "connection".
+		currentTargetConnectionIdentityCandicate = currentConnectionIdentity
+
+		if SublimeSocketAPISettings.CHANGEIDENTITY_FROM in params:
+			currentTargetConnectionIdentityCandicate = params[SublimeSocketAPISettings.CHANGEIDENTITY_FROM]
+		
+		assert self.server.isValidConnectionId(targetTransferId, currentTargetConnectionIdentityCandicate), "failed to change client id from:" + currentTargetConnectionIdentityCandicate + " to:" + newIdentity
+
+		
+
+		newIdentity = params[SublimeSocketAPISettings.CHANGEIDENTITY_TO]
+
+		
+		self.server.updateTransferClientIdOf(targetTransferId, currentTargetConnectionIdentityCandicate, newIdentity)
+
+		
+		SushiJSONParser.runSelectors(
+			params,
 			SublimeSocketAPISettings.CHANGEIDENTITY_INJECTIONS,
-			[currentIdentityCandicate, newIdentity],
+			[currentTargetConnectionIdentityCandicate, newIdentity],
 			self.runAPI
 		)
 
@@ -2075,8 +2149,9 @@ class SublimeSocketAPI:
 		
 		
 	## verify SublimeSocket API-version and SublimeSocket version
-	def versionVerify(self, params, clientId):
-		assert clientId, "versionVerify require 'client' object."
+	def versionVerify(self, params, transferId, connectionId):
+		assert transferId, "versionVerify require 'transferId' param."
+		assert connectionId, "versionVerify require 'connectionId' param."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_SOCKETVERSION in params, "versionVerify require 'socketVersion' param."
 		assert SublimeSocketAPISettings.VERSIONVERIFY_APIVERSION in params, "versionVerify require 'apiVersion' param."
 		
@@ -2101,7 +2176,7 @@ class SublimeSocketAPI:
 
 		# check socket version
 		if targetSocketVersion is not currentSocketVersion:
-			self.sendVerifiedResultMessage(0, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+			self.sendVerifiedResultMessage(0, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 			return
 
 		# SublimeSocket version matched.
@@ -2126,24 +2201,24 @@ class SublimeSocketAPI:
 		# major check
 		if targetMajor < currentMajor:
 			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE
-			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 
 		elif targetMajor == currentMajor:
 			if targetMinor < currentMinor:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE
-				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 
 			elif targetMinor == currentMinor:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED
-				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 
 			else:
 				code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
-				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+				message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 				
 		else:
 			code = SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE
-			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, clientId)
+			message = self.sendVerifiedResultMessage(code, isDryRun, targetSocketVersion, SublimeSocketAPISettings.SSSOCKET_VERSION, targetVersion, currentVersion, transferId, connectionId)
 
 
 		SushiJSONParser.runSelectors(
@@ -2156,42 +2231,42 @@ class SublimeSocketAPI:
 		
 
 	## send result to client then exit or continue WebSocket connection.
-	def sendVerifiedResultMessage(self, resultCode, isDryRun, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, clientId):
+	def sendVerifiedResultMessage(self, resultCode, isDryRun, targetSocketVersion, currentSocketVersion, targetAPIVersion, currentAPIVersion, transferId, connectionId):
 		# python-switch
 		for case in PythonSwitch(resultCode):
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_DIFFERENT_SUBLIMESOCKET):
 				message = "REFUSED/DIFFERENT_SUBLIMESOCKET:	The current running SublimeSocket version = "+str(currentSocketVersion)+", please choose the other version of SublimeSocket. this client requires SublimeSocket "+str(targetSocketVersion)+", see https://github.com/sassembla/SublimeSocket"
 
-				self.server.sendMessage(clientId, message)
+				self.server.sendMessage(transferId, connectionId, message)
 
 				if not isDryRun:
-					self.server.purgeConnection(clientId)
+					self.server.purgeConnection(transferId, connectionId)
 			
 				break
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED):
 				message = "VERIFIED:	The current running SublimeSocket api version = "+currentAPIVersion+", SublimeSocket "+str(currentSocketVersion)
-				self.server.sendMessage(clientId, message)
+				self.server.sendMessage(transferId, connectionId, message)
 				break
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_VERIFIED_CLIENT_UPDATE):
 				message = "VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", please update this client if possible."
-				self.server.sendMessage(clientId, message)
+				self.server.sendMessage(transferId, connectionId, message)
 				break
 
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_SUBLIMESOCKET_UPDATE):
 				message = "REFUSED/SUBLIMESOCKET_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this is out of date. please update SublimeSocket. this client requires SublimeSocket "+str(targetAPIVersion)+", see https://github.com/sassembla/SublimeSocket"
-				self.server.sendMessage(clientId, message)
+				self.server.sendMessage(transferId, connectionId, message)
 				
 				if not isDryRun:
-					self.server.purgeConnection(clientId)
+					self.server.purgeConnection(transferId, connectionId)
 
 				break
 
 			if case(SublimeSocketAPISettings.VERIFICATION_CODE_REFUSED_CLIENT_UPDATE):
 				message = "REFUSED/CLIENT_UPDATE:	The current running SublimeSocket api version = "+currentAPIVersion+", this client requires api version = "+str(targetAPIVersion)+", required api version is too old. please update this client."
-				self.server.sendMessage(clientId, message)
+				self.server.sendMessage(transferId, connectionId, message)
 				
 				if not isDryRun:
-					self.server.purgeConnection(clientId)
+					self.server.purgeConnection(transferId, connectionId)
 					
 				break
 
@@ -2267,7 +2342,7 @@ class SublimeSocketAPI:
 		for key in params:
 			if key != formatKey:
 				currentParam = str(currentParams[key])
-				currentFormat = currentFormat.replace("["+key+"]", currentParam)
+				currentFormat = currentFormat.replace(SublimeSocketAPISettings.FORMAT_BEFORE + key + SublimeSocketAPISettings.FORMAT_AFTER, currentParam)
 
 		
 		currentParams[outputKey] = currentFormat
