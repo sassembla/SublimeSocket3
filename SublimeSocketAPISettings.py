@@ -101,7 +101,21 @@ RUNTESTS_PATH				= "path"
 @apiGroup addTransfer
 @api {SushiJSON} addTransfer:{JSON} add transfer with protocol. root > transferIdentity(protocol) > connectionIdentity.
 @apiExample [example]
-now loading...
+addTransfer: {
+    "transferIdentity": "testAdditionalSushiJSONServer",
+    "connectionIdentity": "testAdditionalSushiJSONConnection",
+    "protocol": "RunSushiJSONServer",
+    "params": {
+        "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt"
+    },
+    "selectors": [
+        {
+            "showAtLog<-transferIdentity": {
+                "format": "transfer [transferIdentity] added."
+            }
+        }
+    ]
+}
 @apiParam {String} transferIdentity the transfer's identity of the new transfer's first connection.
 @apiParam {String} connectionIdentity the connection's identity of the new transfer's first connection.
 @apiParam {String} protocol the protocol of the new transfer.
@@ -113,6 +127,19 @@ ADDTRANSFER_CONNECTIONIDENTITY  = "connectionIdentity"
 ADDTRANSFER_PROTOCOL            = "protocol"
 ADDTRANSFER_PARAMS              = "params"
 ADDTRANSFER_INJECTIONS          = [ADDTRANSFER_TRANSFERIDENTITY, ADDTRANSFER_CONNECTIONIDENTITY, ADDTRANSFER_PROTOCOL]
+
+"""
+@apiGroup inputToTransfer
+@api {SushiJSON} inputToTransfer:{JSON} input data to transfer. Behaviour is depends on protocol.
+@apiExample [example]
+now loading...
+@apiParam {String} transferIdentity the target transfer's identity. Raise error if not exist.
+@apiParam {SushiJSON} data the data for input of the transfer.
+"""
+API_INPUTTOTRANSFER             = "inputToTransfer"
+INPUTTOTRANSFER_TRANSFERIDENTITY    = "transferIdentity"
+INPUTTOTRANSFER_DATA                = "data"
+INPUTTOTRANSFER_INJECTIONS          = [INPUTTOTRANSFER_TRANSFERIDENTITY]
 
 """
 @apiGroup removeTransfer

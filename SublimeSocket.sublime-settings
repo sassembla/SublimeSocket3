@@ -12,8 +12,8 @@
 		"port" : 8823
 	},
 
-	// sublimeSocketServerTests
-	"testSuiteFilePath" : "tests/tests.js",
+	// sublimeSocketServerTests tests
+	"testSuiteFilePath" : "tests/sublimeSocketServerTests.js",
 
 	"preference browser" : "Safari.app",
 

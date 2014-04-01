@@ -226,6 +226,39 @@ test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、消す/afterAsync: {
 }
 
 
+test>runSushiJSONサーバを立てて、そこにdataでのインプットを行う/afterAsync: {
+    "identity": "runSushiJSONServer for input",
+    "ms": 1,
+    "selectors": [
+        {
+            "addTransfer": {
+                "transferIdentity": "runSushiJSONServer for input identity",
+                "connectionIdentity": "runSushiJSONServer for input connection identity",
+                "protocol": "RunSushiJSONServer",
+                "params": {
+                    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
+                    "continuation": true
+                }
+            }
+        }
+    ]
+}->wait: {
+    "ms": 100
+}->inputToTransfer: {
+    "transferIdentity": "runSushiJSONServer for input identity",
+    "data": "showAtLog:{\"message\":\"hereComes! through transfer!\"}"
+}->assertResult: {
+    "id": "runSushiJSON through SublimeSocketServer is OK!",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes! through transfer!"
+        }
+    },
+    "description": "not match."
+}
+
+
+// test>setTransferRoundaboutのテスト、WSサーバを2台立てて、とかになるのか？Outが存在するサーバが少ないからツラいな。
 
 
 

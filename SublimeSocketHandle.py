@@ -203,7 +203,8 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
 
 
 
-
+class Socket_pour_sushijson(sublime_plugin.TextCommand):
+    print("まだこれから作るが、データラインはこっちで、identityを求める。runはsetup用で、dataの入力を持たない。")
 
 # states are below.
 # not active -> active == serving <-> transfering

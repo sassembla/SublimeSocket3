@@ -93,8 +93,10 @@ class SublimeSocketServer:
 	# by raw string. main API data incoming method.
 	def transferInputted(self, data, transferId, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
+
 		self.api.parse(apiData, transferId, clientId)
 		
+		print("roundaboutがあるとしたらこのへん。parse後かな。")
 
 	# by command and params. direct igniton of API.
 	def transferRunAPI(self, command, params, transferId, clientId=None):
@@ -195,6 +197,18 @@ class SublimeSocketServer:
 
 
 		return transferIdentity
+
+	def inputToTransfer(self, params):
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY in params, "inputToTransfer require 'transferIdentity' param."
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_DATA in params, "inputToTransfer require 'data' param."
+		
+		transferIdentity = params[SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY]
+		assert transferIdentity in self.transfers, "transferIdentity:" + transferIdentity + " is not in current transfers."
+
+		data = params[SublimeSocketAPISettings.INPUTTOTRANSFER_DATA]
+		self.transfers[transferIdentity].input(data)
+		
+
 
 	def addConnectionToTransfer():
 		print("not yet implemented.")
