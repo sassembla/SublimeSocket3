@@ -1245,7 +1245,7 @@ class SublimeSocketAPI:
 
 	def inputToTransfer(self, params):
 		assert SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY in params, "inputToTransfer require 'transferIdentity' param."
-		assert SublimeSocketAPISettings.INPUTTOTRANSFER_DATA in params, "inputToTransfer require 'data' param."
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS in params, "inputToTransfer require 'params' param."
 
 		self.server.inputToTransfer(params)
 

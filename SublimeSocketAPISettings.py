@@ -134,11 +134,11 @@ ADDTRANSFER_INJECTIONS          = [ADDTRANSFER_TRANSFERIDENTITY, ADDTRANSFER_CON
 @apiExample [example]
 now loading...
 @apiParam {String} transferIdentity the target transfer's identity. Raise error if not exist.
-@apiParam {SushiJSON} data the data for input of the transfer.
+@apiParam {JSON} params the parameters for input of the transfer.
 """
 API_INPUTTOTRANSFER             = "inputToTransfer"
 INPUTTOTRANSFER_TRANSFERIDENTITY    = "transferIdentity"
-INPUTTOTRANSFER_DATA                = "data"
+INPUTTOTRANSFER_PARAMS              = "params"
 INPUTTOTRANSFER_INJECTIONS          = [INPUTTOTRANSFER_TRANSFERIDENTITY]
 
 """

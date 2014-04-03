@@ -95,8 +95,6 @@ class SublimeSocketServer:
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
 
 		self.api.parse(apiData, transferId, clientId)
-		
-		print("roundaboutがあるとしたらこのへん。parse後かな。")
 
 	# by command and params. direct igniton of API.
 	def transferRunAPI(self, command, params, transferId, clientId=None):
@@ -136,9 +134,11 @@ class SublimeSocketServer:
 		assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "setupTransfer require 'connectionIdentity' param for add new transfer."
 
 		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
+		
+		print("self.transfers", self.transfers)
 
 		if self.transfers:
-			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
+			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
 		
 		transferProtocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
 		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_PROTOCOLS, "protocol:" + transferProtocol + " is not supported."
@@ -200,13 +200,13 @@ class SublimeSocketServer:
 
 	def inputToTransfer(self, params):
 		assert SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY in params, "inputToTransfer require 'transferIdentity' param."
-		assert SublimeSocketAPISettings.INPUTTOTRANSFER_DATA in params, "inputToTransfer require 'data' param."
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS in params, "inputToTransfer require 'params' param."
 		
 		transferIdentity = params[SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY]
 		assert transferIdentity in self.transfers, "transferIdentity:" + transferIdentity + " is not in current transfers."
 
-		data = params[SublimeSocketAPISettings.INPUTTOTRANSFER_DATA]
-		self.transfers[transferIdentity].input(data)
+		currentParams = params[SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS]
+		self.transfers[transferIdentity].input(currentParams)
 		
 
 
