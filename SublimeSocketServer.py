@@ -96,6 +96,9 @@ class SublimeSocketServer:
 
 		self.api.parse(apiData, transferId, clientId)
 
+		# should run for stub.
+		# self.dummyOutput(apiData)
+
 	# by command and params. direct igniton of API.
 	def transferRunAPI(self, command, params, transferId, clientId=None):
 		self.api.runAPI(command, params, transferId, clientId)
@@ -433,3 +436,10 @@ class SublimeSocketServer:
 	def updateFiltersDict(self, filtersDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_FILTERS, filtersDict)
 	
+
+
+	# def dummyOutput(self, data):
+	# 	# 適当に書き出してしまおう。
+	# 	print("d",data)
+
+	# 	pass

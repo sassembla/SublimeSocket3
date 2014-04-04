@@ -202,10 +202,6 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
         sublime.active_window().show_input_panel(caption, initial_text, on_done, on_change, on_cancel)
 
 
-
-class Socket_pour_sushijson(sublime_plugin.TextCommand):
-    print("まだこれから作るが、データラインはこっちで、identityを求める。runはsetup用で、dataの入力を持たない。")
-
 # states are below.
 # not active -> active == serving <-> transfering
 
