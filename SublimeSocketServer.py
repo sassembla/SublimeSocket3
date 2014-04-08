@@ -93,8 +93,11 @@ class SublimeSocketServer:
 	# by raw string. main API data incoming method.
 	def transferInputted(self, data, transferId, clientId=None):
 		apiData = data.split(SublimeSocketAPISettings.SSAPI_DEFINE_DELIM, 1)[1]
+
 		self.api.parse(apiData, transferId, clientId)
-		
+
+		# should run for stub.
+		# self.dummyOutput(apiData)
 
 	# by command and params. direct igniton of API.
 	def transferRunAPI(self, command, params, transferId, clientId=None):
@@ -134,9 +137,11 @@ class SublimeSocketServer:
 		assert SublimeSocketAPISettings.ADDTRANSFER_CONNECTIONIDENTITY in params, "setupTransfer require 'connectionIdentity' param for add new transfer."
 
 		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
+		
+		print("self.transfers", self.transfers)
 
 		if self.transfers:
-			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " in " + str(params) + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
+			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."
 		
 		transferProtocol = params[SublimeSocketAPISettings.ADDTRANSFER_PROTOCOL]
 		assert transferProtocol in SublimeSocketAPISettings.TRANSFER_PROTOCOLS, "protocol:" + transferProtocol + " is not supported."
@@ -195,6 +200,18 @@ class SublimeSocketServer:
 
 
 		return transferIdentity
+
+	def inputToTransfer(self, params):
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY in params, "inputToTransfer require 'transferIdentity' param."
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS in params, "inputToTransfer require 'params' param."
+		
+		transferIdentity = params[SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY]
+		assert transferIdentity in self.transfers, "transferIdentity:" + transferIdentity + " is not in current transfers."
+
+		currentParams = params[SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS]
+		self.transfers[transferIdentity].input(currentParams)
+		
+
 
 	def addConnectionToTransfer():
 		print("not yet implemented.")
@@ -419,3 +436,10 @@ class SublimeSocketServer:
 	def updateFiltersDict(self, filtersDict):
 		self.kvs.setKeyValue(SublimeSocketAPISettings.DICT_FILTERS, filtersDict)
 	
+
+
+	# def dummyOutput(self, data):
+	# 	# 適当に書き出してしまおう。
+	# 	print("d",data)
+
+	# 	pass

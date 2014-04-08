@@ -76,6 +76,10 @@ class SublimeSocketAPI:
 				self.addTransfer(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_INPUTTOTRANSFER):
+				self.inputToTransfer(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_REMOVETRANSFER):
 				self.removeTransfer(params)
 				break
@@ -495,10 +499,10 @@ class SublimeSocketAPI:
 			self.editorAPI.printMessage("runSushiJSON:" + replacedFilePath)
 			
 			with open(replacedFilePath, encoding='utf8') as f:
-				setting = f.read()
+				dataSource = f.read()
 			
 			# remove //comment line
-			removeCommented_setting = re.sub(r'//.*', r'', setting)
+			removeCommented_setting = re.sub(r'//.*', r'', dataSource)
 			
 			# remove spaces
 			removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
@@ -509,7 +513,19 @@ class SublimeSocketAPI:
 			data = removeCRLF_setting
 
 		elif SublimeSocketAPISettings.RUNSUSHIJSON_DATA in params:
-			data = params[SublimeSocketAPISettings.RUNSUSHIJSON_DATA]
+			dataSource = params[SublimeSocketAPISettings.RUNSUSHIJSON_DATA]
+
+			# remove //comment line
+			removeCommented_setting = re.sub(r'//.*', r'', dataSource)
+			
+			# remove spaces
+			removeSpaces_setting = re.sub(r'(?m)^\s+', '', removeCommented_setting)
+			
+			# remove CRLF
+			removeCRLF_setting = removeSpaces_setting.replace("\n", "")
+			
+			data = removeCRLF_setting
+			
 
 
 		contextIdentity = str(self.runSushiJSON.__name__) + ":" + str(uuid.uuid4())
@@ -1226,7 +1242,20 @@ class SublimeSocketAPI:
 			],
 			self.runAPI
 		)
-	
+
+	def inputToTransfer(self, params):
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY in params, "inputToTransfer require 'transferIdentity' param."
+		assert SublimeSocketAPISettings.INPUTTOTRANSFER_PARAMS in params, "inputToTransfer require 'params' param."
+
+		self.server.inputToTransfer(params)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.INPUTTOTRANSFER_INJECTIONS,
+			[params[SublimeSocketAPISettings.INPUTTOTRANSFER_TRANSFERIDENTITY]],
+			self.runAPI
+		)
+
 
 	def removeTransfer(self, params):
 		assert SublimeSocketAPISettings.REMOVETRANSFER_TRANSFERIDENTITY in params, "removeTransfer require 'transferIdentiy' param."

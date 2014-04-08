@@ -5,6 +5,7 @@ from ... import SublimeSocketAPISettings
 
 import time
 
+THREAD_INTERVAL = 1.0
 
 class RunSushiJSONServer:
 	def __init__(self, server, transferId):
@@ -42,18 +43,21 @@ class RunSushiJSONServer:
 
 
 	def spinup(self):
-		self.sublimeSocketServer.transferSpinupped('SublimeSocket RunSushiJSONServer spinupped')
+		self.sublimeSocketServer.transferSpinupped('SublimeSocket RunSushiJSONServer spinupped'+self.transferId)
 
 		data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"path\": \"" + self.path + "\"}"
 		
 		self.sublimeSocketServer.transferInputted(data, self.transferId)
 		while self.continuation:
-			time.sleep(0.1)
+			time.sleep(THREAD_INTERVAL)
+
+		message = "SublimeSocket RunSushiJSONServer closed:"+self.transferId
+		self.sublimeSocketServer.transferTeardowned(self.transferId, message)
 
 	## teardown the server
 	def teardown(self):
 		self.continuation = False
-		self.sublimeSocketServer.transferSpinupped('SublimeSocket RunSushiJSONServer teardowned')
+		
 
 	## return connection IDs
 	def connectionIdentities(self):
@@ -75,10 +79,29 @@ class RunSushiJSONServer:
 	# remove from Client dict
 	def closeClient(self, clientId):
 		print("closeClient do nothing.", clientId)
+		
 
-	# call SublimeSocket server. transfering datas.
-	def call(self, data, clientId):
-		print("call with data", data, "to", clientId)
+	# transfering datas as runSushiJSON API input.
+	def input(self, params):
+
+		if "path" in params:
+			assert not "data" in params, "RunSushiJSONServer require 'path' or 'data' param. Not both."
+			path = params["path"]
+			data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"path\": \"" + path + "\"}"
+			
+			self.call(data, None)
+
+		elif "data" in params:
+			dataSource = params["data"]
+			escapedDataSource = dataSource.replace("\"", "\\\"")
+			data = SublimeSocketAPISettings.SSAPI_PREFIX_SUB + SublimeSocketAPISettings.SSAPI_DEFINE_DELIM + SublimeSocketAPISettings.API_RUNSUSHIJSON + ":" + "{\"data\": \"" + escapedDataSource + "\"}"
+
+			self.call(data, None)
+
+
+	# call SublimeSocket server.
+	def call(self, dataSource, clientId):
+		self.sublimeSocketServer.transferInputted(dataSource, self.transferId)
 
 
 	def sendMessage(self, targetId, message):

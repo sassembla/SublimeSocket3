@@ -202,9 +202,6 @@ class Socket_run_sushijson(sublime_plugin.TextCommand):
         sublime.active_window().show_input_panel(caption, initial_text, on_done, on_change, on_cancel)
 
 
-
-
-
 # states are below.
 # not active -> active == serving <-> transfering
 

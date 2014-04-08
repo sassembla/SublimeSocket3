@@ -84,8 +84,6 @@ test>oneShotのrunSushiJSONのrunnerをaddTransferで生成する/addTransfer: {
         }
     },
     "description": "not match."
-}->removeTransfer: {
-    "transferIdentity": "testAdditionalSushiJSONServer"
 }
 
 
@@ -128,7 +126,7 @@ test>continuationのあるrunSushiJSONのrunnerをaddTransferで生成する/aft
 }->removeTransfer: {
     "transferIdentity": "testAdditionalSushiJSONServer2"
 }->wait: {
-    // wait for sending result to WebSocketClient. because of latency of runSushiJSONServer.
+    // wait for sending result to RunSushiJSONServer. because of latency of runSushiJSONServer.
     "ms": 200
 }
 
@@ -226,7 +224,81 @@ test>PROTOCOL_BYTEDATA_SERVERを一つ立てて、消す/afterAsync: {
 }
 
 
+test>runSushiJSONサーバを立てて、そこにdataでのインプットを行う。data版/afterAsync: {
+    "identity": "runSushiJSONServer for input",
+    "ms": 1,
+    "selectors": [
+        {
+            "addTransfer": {
+                "transferIdentity": "runSushiJSONServerForInputIdentity",
+                "connectionIdentity": "runSushiJSONServerForInputConnectionIdentity",
+                "protocol": "RunSushiJSONServer",
+                "params": {
+                    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
+                    "continuation": true
+                }
+            }
+        }
+    ]
+}->wait: {
+    "ms": 100
+}->inputToTransfer: {
+    "transferIdentity": "runSushiJSONServerForInputIdentity",
+    "params": {
+        "data": "showAtLog:{\"message\":\"hereComes! through transfer!\"}"
+    }
+}->assertResult: {
+    "id": "runSushiJSON through SublimeSocketServer is OK!",
+    "contains": {
+        "showAtLog": {
+            "output": "hereComes! through transfer!"
+        }
+    },
+    "description": "not match."
+}->removeTransfer: {
+    "transferIdentity": "runSushiJSONServerForInputIdentity"
+}->wait: {
+    "ms": 1000
+}
 
 
+test>runSushiJSONサーバを立てて、そこにdataでのインプットを行う。path版/afterAsync: {
+    "identity": "runSushiJSONServer for input",
+    "ms": 1,
+    "selectors": [
+        {
+            "addTransfer": {
+                "transferIdentity": "runSushiJSONServerForInputIdentity",
+                "connectionIdentity": "runSushiJSONServerForInputConnectionIdentity",
+                "protocol": "RunSushiJSONServer",
+                "params": {
+                    "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt",
+                    "continuation": true
+                }
+            }
+        }
+    ]
+}->wait: {
+    "ms": 100
+}->showAtLog: {
+    "message": "start!" 
+}->inputToTransfer: {
+    "transferIdentity": "runSushiJSONServerForInputIdentity",
+    "params": {
+        "path": "SUBLIMESOCKET_PATH:tests/testResources/sample_SushiJSON.txt"
+    }
+}->assertResult: {
+    "id": "runSushiJSON through SublimeSocketServer2 is OK!",
+    "contains": {
+        "showAtLog": {
+            "output": "done."
+        }
+    },
+    "description": "not match."
+}->removeTransfer: {
+    "transferIdentity": "runSushiJSONServerForInputIdentity"
+}->wait: {
+    "ms": 1000
+}
 
 
