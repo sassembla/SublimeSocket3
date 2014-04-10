@@ -13,7 +13,7 @@
 	},
 
 	// sublimeSocketServerTests tests
-	"testSuiteFilePath" : "tests/sublimeSocketServerTests.js",
+	"testSuiteFilePath" : "tests/tests.js",
 
 	"preference browser" : "Safari.app",
 
