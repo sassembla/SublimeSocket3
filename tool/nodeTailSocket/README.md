@@ -2,7 +2,7 @@
 
 
 ======
-![SS](/screenshot.png)
+![SS](/tool/nodeTailSocket/screenshot.png)
 
 This feature depends on node.js and these packages.
 
