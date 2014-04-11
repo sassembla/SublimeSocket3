@@ -2,8 +2,8 @@
 
 
 ======
-![SS](/tool/nodeTailSocket/SublimeSocket+NodeTailSocket.png)
-![SS](/tool/nodeTailSocket/screenshot.png)
+![SS](/tool/nodeTailSocket/TypeScript/SublimeSocket+NodeTailSocket.png)
+![SS](/tool/nodeTailSocket/TypeScript/screenshot.png)
 
 ##Compile TypeScript with SublimeText + SublimeSocket + Node.js + tsc
 
