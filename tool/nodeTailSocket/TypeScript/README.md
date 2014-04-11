@@ -1,4 +1,4 @@
-#TypeScript Filter
+#NodeTailSocket + TypeScript Filter
 
 
 ======
@@ -18,7 +18,7 @@ Also depends on SublimeSocket(This repo).
 
 
 ##ready project folder:
-This feature compiles *.ts which are in the single folder by default.
+This feature compiles *.ts which are located in the **single folder by default**.
 
 And you need to prepare empty "tscompile.log" file in the folder too.
 
@@ -27,6 +27,7 @@ And you need to prepare empty "tscompile.log" file in the folder too.
 		
 		tscompile.log //<- need it!
 		
+If you wanna compile more huge project, you can modify **tscwithenv.sh**.
 
 ##ignite
 
@@ -47,3 +48,12 @@ And you need to prepare empty "tscompile.log" file in the folder too.
 
 That's all.
 
+
+##troubleShooting
+
+1.compile never end:
+	
+	Maybe the path of tsc is wrong.
+	By default the tsc path is defined as "/usr/local/bin/tsc" in the tscwithenv.sh .
+	You should change it.
+	
