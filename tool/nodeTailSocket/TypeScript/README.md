@@ -5,14 +5,24 @@
 ![SS](/tool/nodeTailSocket/TypeScript/SublimeSocket+NodeTailSocket.png)
 ![SS](/tool/nodeTailSocket/TypeScript/screenshot.png)
 
+##movie
+[the quickstart usage](https://vimeo.com/91687931)
+
+
 ##quickstart
 #####0.copy this folder to your Desktop
 	
 	YourDesktop/
 		TypeScript/
 			node_tailsocket_typescript.js
-			README.md(this)
+			tscwithenv.sh
+			
 			sample/
+				Greet.ts
+				tscompile.log
+							
+			README.md(this)
+			and more..
 				
 	
 	
@@ -27,7 +37,9 @@
 	node node_tailsocket_typescript.js tscwithenv.sh FOLDER_PATH_OF_sample
 	
 	
-#####3.Start compiling and show error if exist after SAVE(command + s) action.
+#####3.Open Greet.ts in Sublime Text
+
+#####4.Start compiling and show error if exist after SAVE(command + s) action.
 
 
 
