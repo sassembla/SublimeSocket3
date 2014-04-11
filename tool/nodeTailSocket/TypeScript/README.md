@@ -5,6 +5,34 @@
 ![SS](/tool/nodeTailSocket/TypeScript/SublimeSocket+NodeTailSocket.png)
 ![SS](/tool/nodeTailSocket/TypeScript/screenshot.png)
 
+##quickstart
+#####0.copy this folder to your Desktop
+	
+	YourDesktop/
+		TypeScript/
+			node_tailsocket_typescript.js
+			README.md(this)
+			sample/
+				
+	
+	
+#####1.kickstart SublimeSocket
+
+	In Sublime Text:
+	⌘ + shift + p -> SublimeSocket: on
+
+
+#####2.kickstart node.js from commandline.
+
+	node node_tailsocket_typescript.js tscwithenv.sh FOLDER_PATH_OF_sample
+	
+	
+#####3.Start compiling and show error if exist after SAVE(command + s) action.
+
+
+
+That's all.
+
 ##Compile TypeScript with SublimeText + SublimeSocket + Node.js + tsc
 
 
@@ -28,25 +56,6 @@ And you need to prepare empty "tscompile.log" file in the folder too.
 		tscompile.log //<- need it!
 		
 If you wanna compile more huge project, you can modify **tscwithenv.sh**.
-
-##ignite
-
-#####1.kickstart SublimeSocket
-
-	In Sublime Text:
-	⌘ + shift + p -> SublimeSocket: on
-
-
-#####2.kickstart node.js from commandline.
-
-	node node_tailsocket_typescript.js tscwithenv.sh FOLDER_PATH_OF_sample
-	
-	
-#####3.Start compiling and show error if exist after SAVE(command + s) action.
-
-
-
-That's all.
 
 
 ##troubleShooting
