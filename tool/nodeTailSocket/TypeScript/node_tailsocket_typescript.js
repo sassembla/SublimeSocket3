@@ -165,7 +165,8 @@ ws.on('open', function() {
                                     tscwithenvPath,
                                     targetFilePath,
                                     logPath
-                                ]
+                                ],
+                                "debug": true
                             }
                         }
                     ]
