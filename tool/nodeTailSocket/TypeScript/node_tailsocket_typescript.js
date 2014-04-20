@@ -1,24 +1,56 @@
-// for TypeScript ver 1.0.0
+// for TypeScript ver 1.1.0
 
 // process.argv.forEach(function (val, index, array) {
 //   console.log(index + ': ' + val);
 // });
 
-// requires ws, nodetail
+
+// requires ws, nodetail and tsc
 var WebSocket = require('ws');
+var Tail = require('tail').Tail;
+
 
 var assert = require('assert');
-// var msgpack = require('msgpack');
+var fs = require('fs'); 
 var ws = new WebSocket('ws://127.0.0.1:8823/');
 
-Tail = require('tail').Tail;
-var tscwithenvPath = process.argv[2];
-var targetFilePath = process.argv[3]+"/*.ts";
-var logPath = process.argv[3] + "/tscompile.log";
+
+var projectPathWithNodeTailSocketJSPath = process.argv[1];// path of SOMEWHERE/node_tailsocket_typescript.js
+
+
+
+var projectPath = "";
+
+if (3 <= process.argv.length) {
+    projectPath = process.argv[2];
+} else {
+    // assume that project's path is where "node_tailsocket_typescript.js" located. 
+    // get last component path.
+    var segements = projectPathWithNodeTailSocketJSPath.split("/");
+    segements.splice(segements.length - 1, segements.length - 1);
+    projectPath = segements.join("/");
+}
+
+
+console.log("nodeTailSocket: projectPath is:"+projectPath);
+
+
+// path of compiler shell.
+var tscwithenvPath = projectPath + "/tscwithenv.sh";
+fs.exists(tscwithenvPath, function(exists) {
+    assert(exists, "nodeTailSocket: " + tscwithenvPath + " is not exist. please put it.");
+});
+
+
+// generate log file.
+var logPath = projectPath + "/tscompile.log";
+fs.openSync(logPath, 'w');
+
+
+
 
 console.log("connecting to SublimeSocket...");
 
-tail = new Tail(logPath);
 
 ws.on('open', function() {
     console.log("connected to SublimeSocket.");
@@ -27,7 +59,7 @@ ws.on('open', function() {
     {
         "to" : "nodetail"
     }
-    var defineFilterJSON = 
+    var compilationFilterJSON = 
     {
         "name": "typescript",
         "filters": [
@@ -67,18 +99,25 @@ ws.on('open', function() {
                 }
             },
             {
+                "(.*)": {
+                    "injects": {
+                        "groups[0]": "message"
+                    },
+                    "selectors": [
+                        {
+                            "showAtLog<-message": {}
+                        }
+                    ]
+                }
+            },
+            {
                  "^typescript compile succeeded.": {
                     "selectors": [
                         {
                             "showStatusMessage": {
                                 "message": "typescript compile succeeded."
                             }
-                        },
-                        {
-                            "showAtLog": {
-                                "message": "typescript compile succeeded."
-                            }
-                        },
+                        }
                     ]
                 }
             },
@@ -89,17 +128,44 @@ ws.on('open', function() {
                             "showStatusMessage": {
                                 "message": "typescript compile failure."
                             }
-                        },
-                        {
-                            "showAtLog": {
-                                "message": "typescript compile failure."
-                            }
-                        },
+                        }
                     ]
                 }
             }
         ]
     };
+
+    var quickfixFilterJSON = {
+        "name": "quickfix",
+        "filters": [
+            {
+                // open it.
+                "^open:(.*) :.*": {
+                    "injects": {
+                        "groups[0]": "path"
+                    },
+                    "selectors": [
+                        {
+                            "openFile<-path": {}
+                        }
+                    ]
+                }
+            },
+            {
+                "(.*)": {
+                    "injects": {
+                        "groups[0]": "message"
+                    },
+                    "selectors": [
+                        {
+                            "showAtLog<-message": {}
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+
     var cursorModifyReactorJSON = {
         "react": "on_selection_modified",
         "delay": 100,
@@ -162,10 +228,9 @@ ws.on('open', function() {
                             "runShell": {
                                 "main": "/bin/sh",
                                 "":[
-                                    tscwithenvPath,
-                                    targetFilePath,
-                                    logPath
+                                    tscwithenvPath, projectPath
                                 ]
+                                // , "debug": true
                             }
                         }
                     ]
@@ -174,34 +239,53 @@ ws.on('open', function() {
             
         ] 
     };
+
+    var showUnopenedFile = {
+        "react": "ss_f_noViewFound",
+        "injects": {
+            "name": "targetViewName",
+            "message": "reason"
+        },
+        "reactors": [
+            {
+                "appendRegion<-targetViewName, reason": {
+                    "format": "open:[targetViewName] :[reason]",
+                    "name": "ss_viewkey_current",
+                    "line": 1,
+                    "condition": "constant.language"
+                }
+            }
+        ]
+    }
     
     var setUpDone = {
         "message": "SublimeSocket : typescript-compilation sequence ready!"
     };
 
     ws.send("ss@changeIdentity:"+JSON.stringify(inputIdentityJSON)
-        +"->defineFilter:"+JSON.stringify(defineFilterJSON)
+        +"->defineFilter:"+JSON.stringify(compilationFilterJSON)
+        +"->defineFilter:"+JSON.stringify(quickfixFilterJSON)
         +"->setViewReactor:"+JSON.stringify(cursorModifyReactorJSON)
         +"->setViewReactor:"+JSON.stringify(saveReactorJSON)
+        +"->setViewReactor:"+JSON.stringify(showUnopenedFile)
         +"->showAtLog:"+JSON.stringify(setUpDone)
+        +"->showStatusMessage:"+JSON.stringify(setUpDone)
     );
-});
 
-tail.on("line", function(message) {
-    console.log("original   "+message);
+    tail = new Tail(logPath);
+    tail.on("line", function(message) {
+        console.log("tsc: "+message);
 
-    var json = 
-    {
-        "name": "typescript",
-        "source": message
-        // "debug": true
-    };
-    
-    apiModifiedData = "ss@filtering:" + JSON.stringify(json);
-    
-    ws.send(apiModifiedData);
+        var tailedLogMessage = {
+            "name": "typescript",
+            "source": message
+            // , "debug": true
+        };
+        
+        ws.send("ss@filtering:" + JSON.stringify(tailedLogMessage));
+    });
 });
 
 ws.on('message', function(data, flags) {
-    console.log("input:"+data);    
+    // do nothing yet.
 });

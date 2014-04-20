@@ -11,6 +11,8 @@ var Sayings;
     })();
     Sayings.Greeter = Greeter;
 })(Sayings || (Sayings = {}));
+
+var asa = "";
 var greeter = new Sayings.Greeter("world");
 
 var button = document.createElement('button');
