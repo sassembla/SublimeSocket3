@@ -90,15 +90,6 @@ ws.on('open', function() {
                 }
             },
             {
-                 "^start": {
-                    "selectors": [
-                        {
-                            "eraseAllRegions":{}
-                        }
-                    ]
-                }
-            },
-            {
                 "(.*)": {
                     "injects": {
                         "groups[0]": "message"
@@ -209,6 +200,17 @@ ws.on('open', function() {
         "react": "on_post_save",
         "delay": 100,
         "reactors": [
+            {
+                "eraseAllRegions":{
+                    "selectors": [
+                        {
+                            "showAtLog<-deletes": {
+                                "format": "the [deletes]"
+                            }
+                        }
+                    ]
+                }
+            },
             {
                 "afterAsync": {
                     "identity": "typescript-compilation",

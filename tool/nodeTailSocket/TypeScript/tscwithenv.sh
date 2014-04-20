@@ -2,13 +2,13 @@
 export PATH=/usr/local/bin:/usr/bin
 
 # $1 = project path.
-
 projectPath=$1
 logPath=$projectPath/tscompile.log
 
 # add sign for starting compiling
 echo start > $logPath
 
+# collect *.ts files
 allTypeScriptPaths=$(find $projectPath -name *.ts) 
 
 
