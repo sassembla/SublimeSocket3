@@ -9,7 +9,7 @@ v1.1.0
 ![SS](/tool/nodeTailSocket/TypeScript/screenshot.png)
 
 ##movie
-uploading...
+[the quickstart usage](https://vimeo.com/91687931)
 
 
 ##quickstart
