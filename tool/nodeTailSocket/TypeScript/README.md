@@ -2,24 +2,29 @@
 
 
 ======
+v1.1.0
+
+
 ![SS](/tool/nodeTailSocket/TypeScript/SublimeSocket+NodeTailSocket.png)
 ![SS](/tool/nodeTailSocket/TypeScript/screenshot.png)
 
 ##movie
-[the quickstart usage](https://vimeo.com/91687931)
+uploading...
 
 
 ##quickstart
 #####0.copy this folder to your Desktop
 	
-	YourDesktop/
+	YourDesktopOrElse/
 		TypeScript/
 			node_tailsocket_typescript.js
 			tscwithenv.sh
 			
 			sample/
-				Greet.ts
-				tscompile.log
+				src/
+					Greet.ts
+					deep/
+						Greet2.ts
 							
 			README.md(this)
 			and more..
@@ -34,12 +39,17 @@
 
 #####2.kickstart node.js from commandline.
 
-	node node_tailsocket_typescript.js tscwithenv.sh FOLDER_PATH_OF_sample
+	node PATH_OF_PROJECT/node_tailsocket_typescript.js
+	
+or
+
+	node PATH_OF_node_tailsocket_typescript.js PATH_OF_PROJECT
+	
 	
 	
 #####3.Open Greet.ts in Sublime Text
 
-#####4.Start compiling and show error if exist after SAVE(command + s) action.
+#####4.Do SAVE(command + s) action, system automatically starts compiling and show error if exist.
 
 
 
@@ -58,16 +68,16 @@ Also depends on SublimeSocket(This repo).
 
 
 ##ready project folder:
-This feature compiles *.ts which are located in the **single folder by default**.
+This feature compiles all *.ts" files which are located under the project folder.
 
-And you need to prepare empty "tscompile.log" file in the folder too.
-
-	sample/
-		*.ts
+	project/
+		src_folder/
+			*.ts
+			other_folder/
+				*.ts
+				...
 		
-		tscompile.log //<- need it!
-		
-If you wanna compile more huge project, you can modify **tscwithenv.sh**.
+If you wanna change compilation behavior, please modify **tscwithenv.sh**.
 
 
 ##troubleShooting
@@ -76,5 +86,3 @@ If you wanna compile more huge project, you can modify **tscwithenv.sh**.
 	
 	Maybe the path of tsc is wrong.
 	By default the tsc path is defined as "/usr/local/bin/tsc" in the tscwithenv.sh .
-	You should change it.
-	
