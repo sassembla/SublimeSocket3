@@ -207,7 +207,7 @@ VERIFICATION_CODE_REFUSED_CLIENT_UPDATE				= -2
 
 
 """
-no document. this is method only for test.
+no document. this is the method that only for test.
 """
 API_ASSERTRESULT			= "assertResult"
 ASSERTRESULT_CONTEXT		= "context"
@@ -266,7 +266,7 @@ WAIT_MS						= "ms"
 
 
 """
-@apiGroup startTailing
+@apiGroup startTailing(deprecated)
 @api {SushiJSON} startTailing:{JSON} start tailing the target file and run reactor.
 @apiExample [example]
 startTailing: {
@@ -560,7 +560,7 @@ closeAllBuffer: {
 
 @apiParam {Selectors(Optional)} selectors selectors.
 
-@apiSuccess {Strings} closeds the list of closed buffer's names.
+@apiSuccess {String[]} closeds the list of closed buffer's names.
 """
 API_CLOSEALLBUFFER			= "closeAllBuffer"
 CLOSEALLBUFFER_CLOSEDS		= "closeds"
@@ -667,12 +667,12 @@ ss_v_increased
 @apiSuccess {JSON} reactors reactors block.
 @apiSuccess {Int} delay 0 or inputted value.
 
-@apiError {String} path the full path of the view when the view-event appeared. if the view is buffer, path becomes last path of buffer = name.
-@apiError {String} name the last path of the view.
+@apiError {String} path the full path of the file. if the file is not exist, = buffer, path becomes name of buffer.
+@apiError {String} name the last path of the file.
 @apiError {[[Int, Int]]} selecteds the list of list(from, to).
 @apiError {Bool} isExist the view is exist or not.
 @apiError {String} identity the generated uuid4 string for each event.
-@apiError {ViewInstance} view the instance of view.(not good to use. use "name", "path" to find view.)
+@apiError {ViewInstance} view the instance of view.(not good to use. use "name", "path" to find file.)
 """
 API_SETVIEWREACTOR			= "setViewReactor"
 
@@ -734,6 +734,22 @@ VIEWEMIT_ROWCOL				= "rowcol"
 VIEWEMIT_INJECTIONS 		= [VIEWEMIT_BODY, VIEWEMIT_PATH, VIEWEMIT_NAME, VIEWEMIT_MODIFIEDPATH, VIEWEMIT_ROWCOL]
 
 
+"""
+@apiGroup eventEmit
+@api {SushiJSON} eventEmit:{JSON} emit specific event
+
+@apiExample [example]
+eventEmit: {
+    "event": "event_eventWithIdentity",
+    "sample-key": "sample-value"
+}
+
+@apiParam {String} event event name. shoud start with [event_].
+@apiParam {*(Optional)} * This API is vector of any key-param value. Can emit event with any keys and values of injected.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} event emitted event name.
+"""
 API_EVENTEMIT				= "eventEmit"
 EVENTEMIT_EVENT				= "event"
 EVENTEMIT_INJECTIONS		= [EVENTEMIT_EVENT]
@@ -751,6 +767,27 @@ REACTIVE_CURRENT_COMPLETINGS		= "currentcompletings"
 
 # view series
 
+"""
+@apiGroup modifyView
+@api {SushiJSON} modifyView:{JSON} modify specific view
+
+@apiExample [example]
+modifyView: {
+    "name": "sample.txt",
+    "add": "1"
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {String(Optional)} add add string value. if position is not specified, add the end of file.
+@apiParam {String(Optional)} to the point to insert.
+@apiParam {String(Optional)} line the line to insert.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} path modified file's path.
+@apiSuccess {String} name modified file's name.
+@apiSuccess {Int} line modified file's specified line.
+@apiSuccess {Int} to modified file's specified point.
+"""
 API_MODIFYVIEW				= "modifyView"
 MODIFYVIEW_VIEW				= "view"
 MODIFYVIEW_NAME				= "name"
@@ -762,6 +799,31 @@ MODIFYVIEW_REDUCE			= "reduce"
 MODIFYVIEW_INJECTIONS		= [MODIFYVIEW_PATH, MODIFYVIEW_NAME, MODIFYVIEW_LINE, MODIFYVIEW_TO]
 
 
+"""
+@apiGroup setSelection
+@api {SushiJSON} setSelection:{JSON} set selection to the file.
+
+@apiExample [example]
+setSelection: {
+    "name": "sample.txt",
+    "selections": [
+        {
+            "from": 10,
+            "to": 11
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {Dictionary} selections pair of key-value of selecting regions. [from]:Int and [to]:Int
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {Event} ss_on_selection_modified_by_setselection the ss_on_selection_modified_by_setselection event will raise.
+
+@apiSuccess {String} path selected file's path.
+@apiSuccess {String} name selected file's name.
+@apiSuccess {Array} selecteds the list of [from] and [to].
+"""
 API_SETSELECTION			= "setSelection"
 SETSELECTION_VIEW			= "view"
 SETSELECTION_NAME			= "name"
@@ -774,6 +836,29 @@ SETSELECTION_INJECTIONS		= [SETSELECTION_PATH, SETSELECTION_NAME, SETSELECTION_S
 SS_VIEW_ON_SELECTION_MODIFIED_BY_SETSELECTION = "ss_on_selection_modified_by_setselection"
 
 
+"""
+@apiGroup clearSelection
+@api {SushiJSON} clearSelection:{JSON} clear the selection of file
+
+@apiExample [example]
+clearSelection: {
+    "name": "clearSelection.txt",
+    "selectors": [
+        {
+            "showAtLog<-name, cleards": {
+                "format": "[name] + [cleards]."
+            }
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} path target file's path.
+@apiSuccess {String} name target file's name.
+@apiSuccess {Array} cleards the list of cleared [from] and [to].
+"""
 API_CLEARSELECTION			= "clearSelection"
 CLEARSELECTION_VIEW			= "view"
 CLEARSELECTION_NAME			= "name"
@@ -782,6 +867,65 @@ CLEARSELECTION_CLEARDS		= "cleards"
 CLEARSELECTION_INJECTIONS	= [CLEARSELECTION_PATH, CLEARSELECTION_NAME, CLEARSELECTION_CLEARDS]
 
 
+"""
+@apiGroup defineFilter
+@api {SushiJSON} defineFilter:{JSON} define regexp filter & selector, use with filtering API
+
+@apiExample [example]
+defineFilter: {
+    "name": "test",
+    "filters": [
+        {
+            "(.*)1 (.*)2 ([0-9].*?)a3 (.*)4": {
+                "injects": {
+                    "groups[3]": "name",
+                    "groups[1]": "add",
+                    "groups[2]": "to"
+                },
+                "selectors": [
+                    {
+                        "showAtLog<-name, add, to": {
+                            "format": "[name], [add], [to]"
+                        }
+                    }
+                ],
+                "dotall": false
+            }
+        },
+        {
+            "(.*)": {
+                "selectors": [
+                    {
+                        "showAtLog<-groups[0]": {
+                            "format": "[groups[0]]"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "selectors": [
+        {
+            "showAtLog<-name, patterns": {
+                "format": "[name], [patterns]"
+            }
+        }
+    ]
+}->filtering: {
+    "name": "test",
+    "source": "the1 test2 4a3 nestedFilterCase.txt4"
+}
+
+@apiParam {String} name the name of filter.
+@apiParam {String} regexp regular expression for filtering. Matched parameters will injects as [groups[INDEX]](partial) and [group](whole)
+@apiParam {Selectors} selectors selectors of filter. automatically injects matched parameters.
+@apiParam {String(Optional)} comments comment for the filter. show if filtering contains debug: true.
+@apiParam {Bool(Optional)} dotall use dotall option of regexp. By default false.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} name filter's path.
+@apiSuccess {String} patterns defined regexp patterns.
+"""
 API_DEFINEFILTER				= "defineFilter"
 DEFINEFILTER_FILTERS			= "filters"
 DEFINEFILTER_PATTERNS			= "patterns"
@@ -791,12 +935,62 @@ DEFINEFILTER_COMMENT			= "comments"
 DEFINEFILTER_INJECTIONS			= [DEFINEFILTER_NAME, DEFINEFILTER_PATTERNS]
 
 
+"""
+@apiGroup filtering
+@api {SushiJSON} filtering:{JSON} input source string to specific filter, use with defineFilter API
+
+@apiExample [example]
+filtering: {
+    "name": "test",
+    "source": "the1 test2 4a3 nestedFilterCase.txt4",
+    "debug": true
+}
+
+@apiParam {String} name the target filter's name.
+@apiParam {String} source the input for regexp filtering.
+@apiParam {Bool(Optional)} debug show debug info. By default false.
+"""
 API_FILTERING					= "filtering"
 FILTERING_NAME					= "name"
 FILTERING_SOURCE				= "source"
 FILTERING_DEBUG					= "debug"
 
 
+"""
+@apiGroup selectedRegions
+@api {SushiJSON} selectedRegions:{JSON} output the contents of region if the selection contains region
+
+@apiExample [example]
+setViewReactor: {
+    "react": "on_selection_modified",
+    "reactors": [
+        {
+            "selectedRegions<-name, selecteds": {
+                "isexactly": false,
+                "selectors": [
+                    {
+                        "showAtLog<-line, from, to": {
+                            "format": "L:[line], ([from], [to])"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
+
+@apiParam {String} name the name of file.
+@apiParam {List} selecteds the list of selections. e,g, [ [from1, to1], [from2, to2] ].
+@apiParam {Bool(Optional)} isexactly if false, react with contains region exactly. By default this is true.
+
+@apiSuccess {String} path the full path of the file.
+@apiSuccess {String} name the name of the file.
+@apiSuccess {String} crossed the displayed contents of the selected region.
+@apiSuccess {Int} line the line count where the selected region located.
+@apiSuccess {Int} from start point of region.
+@apiSuccess {Int} to end point of region.
+@apiSuccess {String} message the message parameter of the selected region.
+"""
 API_SELECTEDREGIONS				= "selectedRegions"
 SELECTEDREGIONS_SELECTEDS		= "selecteds"
 SELECTEDREGIONS_ISEXACTLY		= "isexactly"
@@ -813,11 +1007,56 @@ SELECTEDREGIONS_MESSAGES		= "messages"
 SELECTEDREGIONS_INJECTIONS 		= [SELECTEDREGIONS_PATH, SELECTEDREGIONS_NAME, SELECTEDREGIONS_CROSSED, SELECTEDREGIONS_LINE, SELECTEDREGIONS_FROM, SELECTEDREGIONS_TO, SELECTEDREGIONS_MESSAGES]
 
 
+"""
+@apiGroup collectViews
+@api {SushiJSON} collectViews:{JSON} collect all window's all opened file's path
+
+@apiExample [example]
+collectViews: {
+    "selectors": [
+        {
+            "showAtLog<-collecteds": {
+                "format": "[collecteds]"
+            }
+        }
+    ]
+}
+
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {Array} collecteds all opened file's paths.
+"""
 API_COLLECTVIEWS				= "collectViews"
 COLLECTVIEWS_COLLECTEDS			= "collecteds"
 COLLECTVIEWS_INJECTIONS 		= [COLLECTVIEWS_COLLECTEDS]
 
 
+"""
+@apiGroup appendRegion
+@api {SushiJSON} appendRegion:{JSON} append region and input parameter to the file
+
+@apiExample [example]
+appendRegion: {
+    "name": "target.txt",
+    "line": "1",
+    "message": "test",
+    "condition": "keyword"
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {String} message message contents. will raise event.
+@apiParam {String} condition set the color of region. "keyword", "string", and more. depends on Sublime Text's theme.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} path the full path of the file.
+@apiSuccess {String} name the name of the file.
+@apiSuccess {String} identity automatically defined identity.
+@apiSuccess {Int} line the line count where the region located.
+@apiSuccess {Int} from start point of region.
+@apiSuccess {Int} to end point of region.
+@apiSuccess {String} message the message parameter of the region.
+@apiSuccess {String} condition the condition parameter of the region.
+"""
 API_APPENDREGION			= "appendRegion"
 APPENDREGION_NAME			= "name"
 APPENDREGION_VIEW			= "view"
@@ -831,6 +1070,27 @@ APPENDREGION_CONDITION 		= "condition"
 APPENDREGION_INJECTIONS		= [APPENDREGION_PATH, APPENDREGION_NAME, APPENDREGION_IDENTITY, APPENDREGION_LINE, APPENDREGION_FROM, APPENDREGION_TO, APPENDREGION_MESSAGE, APPENDREGION_CONDITION]
 
 
+"""
+@apiGroup eraseAllRegions
+@api {SushiJSON} eraseAllRegions:{JSON} erase all regions(sometimes this API fails...)
+
+@apiExample [example]
+eraseAllRegions: {
+    "injects": {
+        "deletes": "message"
+    },
+    "selectors": [
+        {
+            "showAtLog<-message": {}
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {Array} deletes deleted regions's [from] and [to] pairs.
+"""
 API_ERASEALLREGIONS			= "eraseAllRegions"
 ERASEALLREGIONS_NAME		= "name"
 ERASEALLREGIONS_DELETES		= "deletes"
@@ -838,7 +1098,7 @@ ERASEALLREGIONS_INJECTIONS	= [ERASEALLREGIONS_DELETES]
 
 
 
-# other series
+# other series (not api documented yet.)
 
 API_RUNSHELL					= "runShell"
 RUNSHELL_MAIN					= "main"
