@@ -45,7 +45,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "afterAsync",
@@ -99,7 +99,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "appendRegion",
@@ -120,7 +120,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -209,7 +209,116 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "broadcastMessage",
+    "type": "SushiJSON",
+    "url": "broadcastMessage:{JSON}",
+    "title": "broadcast message to transfers.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "broadcastMessage: {\n  \"message\": \"broadcasting\",\n  \"selectors\": [\n      {\n          \"showAtLog<-targets, message\": {\n              \"format\": \"[targets], [message]\"\n          }\n      }\n  ]\n}\nor\n\"broadcastMessage<-head, body, tail\": {\n  \"format\": \"broadcasting [head] [body] [tail]\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "contents."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          },
+          {
+            "group": "Parameter",
+            "type": "String[](Optional)",
+            "field": "targets",
+            "optional": false,
+            "description": "specify targets for broadcasting by identity of transfers."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String[]",
+            "field": "transferIdentities",
+            "optional": false,
+            "description": "broadcasted identities of transfer."
+          },
+          {
+            "group": "Injects",
+            "type": "String[]",
+            "field": "targets",
+            "optional": false,
+            "description": "setuped targets of transfer."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "broadcasted message."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "cancelCompletion",
+    "type": "SushiJSON",
+    "url": "cancelCompletion:{JSON}",
+    "title": "close completion window and delete completion candidate data.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "cancelCompletion: {\n  \"name\": \"sample.txt\",\n  \"injects\": {\n      \"name\": \"name\"\n  },\n  \"selectors\": [\n      {\n          \"showAtLog<-name\": {\n              \"format\": \"completion cancelled at [name]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "changeIdentity",
@@ -277,7 +386,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "clearSelection",
@@ -298,7 +407,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -338,7 +447,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "closeAllBuffer",
@@ -378,7 +487,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "closeAllFiles",
@@ -432,13 +541,13 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "closeFile",
     "type": "SushiJSON",
     "url": "closeFile:{JSON}",
-    "title": "open the file which is exist.",
+    "title": "close the file which is exist.",
     "examples": [
       {
         "title": "[example]",
@@ -453,7 +562,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -486,7 +595,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "collectViews",
@@ -526,7 +635,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "connectedCall",
@@ -534,7 +643,7 @@
     "url": "connectedCall:{}",
     "title": "raise SublimeSocketServer's connected event.",
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "countUp",
@@ -595,7 +704,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "createBuffer",
@@ -649,7 +758,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "defineFilter",
@@ -674,17 +783,10 @@
           },
           {
             "group": "Parameter",
-            "type": "String",
+            "type": "SelectorsWithKey",
             "field": "regexp",
             "optional": false,
-            "description": "regular expression for filtering. Matched parameters will injects as [groups[INDEX]](partial) and [group](whole)"
-          },
-          {
-            "group": "Parameter",
-            "type": "Selectors",
-            "field": "selectors",
-            "optional": false,
-            "description": "selectors of filter. automatically injects matched parameters."
+            "description": "regular expression for filtering with selectors. Matched parameters will injects as [groups[INDEX]](partial) and [group](whole). Matched parameters are automatically injected to selectors."
           },
           {
             "group": "Parameter",
@@ -699,6 +801,13 @@
             "field": "dotall",
             "optional": false,
             "description": "use dotall option of regexp. By default false."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
           }
         ]
       }
@@ -724,7 +833,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "eraseAllRegions",
@@ -745,7 +854,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -771,7 +880,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "eventEmit",
@@ -825,7 +934,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "filtering",
@@ -866,7 +975,129 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "forcelySave",
+    "type": "SushiJSON",
+    "url": "forcelySave:{JSON}",
+    "title": "forcely save file.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "forcelySave: {\n  \"name\": \"sample.txt\",\n  \"injects\": {\n      \"name\": \"message\"\n  },\n  \"selectors\": [\n      {\n          \"showAtLog<-message\": {\n    \n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": "file's path."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "file's name."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "getAllFilePath",
+    "type": "SushiJSON",
+    "url": "getAllFilePath:{JSON}",
+    "title": "get all file's paths with direction.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "getAllFilePath: {\n  \"anchor\": \"tests.html\",\n  \"limit\": 1,\n  \"selectors\": [\n      {\n          \"showAtLog<-paths, fullpaths, basedir\": {\n              \"format\": \"the [basedir] + [paths] + [fullpaths]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "anchor",
+            "optional": false,
+            "description": "the target file's name(part or whole path). seek the current folder with limit of seek depth. go above folder and search the file. then get all file's path under anchor path."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int",
+            "field": "limit",
+            "optional": false,
+            "description": "limit depth of seek."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "basedir",
+            "optional": false,
+            "description": "found anchor file's path."
+          },
+          {
+            "group": "Injects",
+            "type": "String[]",
+            "field": "paths",
+            "optional": false,
+            "description": "found file's paths."
+          },
+          {
+            "group": "Injects",
+            "type": "String[]",
+            "field": "fullpaths",
+            "optional": false,
+            "description": "found file's full-paths."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "inputToTransfer",
@@ -900,7 +1131,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "modifyView",
@@ -921,7 +1152,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -989,7 +1220,96 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "monocastMessage",
+    "type": "SushiJSON",
+    "url": "monocastMessage:{JSON}",
+    "title": "monocast message to transfer.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "monocastMessage: {\n  \"target\": \"noTarget\",\n  \"message\": \"the message for you!\",\n  \"injects\": {\n      \"message\": \"body\"\n  },\n  \"selectors\": [\n      {\n          \"showAtLog<-target, body\": {\n              \"format\": \"[target], [body]\"\n          }\n      }\n  ]\n}\nor\n\"monocastMessage<-head, body, tail\": {\n  \"target\": \"noTarget\",\n  \"format\": \"the message for you! [head] [body] [tail]\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "contents."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "target",
+            "optional": false,
+            "description": "specify target for monocasting by identity of transfer."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "transferIdentity",
+            "optional": false,
+            "description": "monocasted identitiy of the transfer."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "target",
+            "optional": false,
+            "description": "setuped targets of transfer."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "monocasted message."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "notify(deprecated)",
+    "type": "SushiJSON",
+    "url": "notify:{JSON}",
+    "title": "show notification.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "notify: {\n  \"title\": \"test_notify\",\n  \"message\": \"notice!\",\n  \"selectors\": [\n      {\n          \"showAtLog<-title, message\": {\n              \"format\": \"[title], [message]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "openFile",
@@ -1043,7 +1363,61 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "readFile",
+    "type": "SushiJSON",
+    "url": "readFile:{JSON}",
+    "title": "read file's contents.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "readFile: {\n  \"path\": \"~/tests/sample.txt\",\n  \"injects\": {\n      \"data\": \"data\"\n  }, \n  \"selectors\": [\n      {\n          \"showAtLog<-path, data\": {\n              \"format\": \"[path], [data]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": "the target file's full path."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": "file's path."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "data",
+            "optional": false,
+            "description": "whole contents of file."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "removeTransfer",
@@ -1070,7 +1444,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "resetCounts",
@@ -1117,7 +1491,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "resetReactors",
@@ -1144,7 +1518,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "resetReactors",
@@ -1171,7 +1545,82 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "runCompletion",
+    "type": "SushiJSON",
+    "url": "runCompletion:{JSON}",
+    "title": "show completion candidate datas.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "runCompletion: {\n  \"name\": \"completionTestView.txt\",\n  \"completion\": [\n      {\n          \"HEAD\": \"DrawLine\",\n          \"paramsTargetFmt\": \"(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})\",\n          \"return\": \"Void\",\n          \"paramsTypeDef\": \"(Vector3,Vector3,Color,Single,Boolean)\",\n          \"head\": \"DrawLine\"\n      }\n  ],\n  \"formathead\": \"HEADparamsTypeDef\\treturn\",\n  \"formattail\": \"headparamsTargetFmt$0\",\n  \"selectors\": [\n      {\n          \"showAtLog<-name\": {\n              \"format\": \"[name]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "completion",
+            "optional": false,
+            "description": "parts of completion string sources. Will become completion string."
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "formathead",
+            "optional": false,
+            "description": "header part of completion string. constructed bt the contents of completion's key-value."
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "formattail",
+            "optional": false,
+            "description": "footer part of completion string. constructed bt the contents of completion's key-value."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": "file's path."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "file's name."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "runSelectorsWithInjects",
@@ -1205,7 +1654,69 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "runShell",
+    "type": "SushiJSON",
+    "url": "runShell:{JSON}",
+    "title": "run shell(Mac only)",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "runShell: {\n  \"main\": \"pwd\",\n  \"debug\": true\n}\nor\nrunShell: {\n  \"main\": \"ls\",\n  \"\": [\"-l\"]\n}\nor\nrunShell: {\n  \"main\": \"find\",\n  \"\": \"/target/folder\",\n  \"-name\": \"targetName\"\n}\nor\n\"runShell<-main, sub, option\": {\n  \"format\": \"[main] [sub] -o [option]\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String(Reserved)",
+            "field": "main",
+            "optional": false,
+            "description": "the head of command line phrase. In many case this should be full-path. not good."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Reserved)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional, Reserved)",
+            "field": "\"",
+            "optional": false,
+            "description": "\"(empty) is allowed for using String array."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "ANYSTRING",
+            "optional": false,
+            "description": "the key and value pair will be translated to [ANYSTRING value]. every array contents will concat with space."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int(Optional, Reserved)",
+            "field": "delay",
+            "optional": false,
+            "description": "ruh shellScript after delay in another thread."
+          },
+          {
+            "group": "Parameter",
+            "type": "Bool(Optional, Reserved)",
+            "field": "debug",
+            "optional": false,
+            "description": "show eventual executed command string. By default false."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "runSushiJSON",
@@ -1259,7 +1770,103 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "scrollTo",
+    "type": "SushiJSON",
+    "url": "scrollTo:{JSON}",
+    "title": "scroll to the point of file.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "scrollTo: {\n  \"name\": \"sample.txt\",\n  \"line\": 30,\n  \"selectors\": [\n      {\n          \"showAtLog\": {\n              \"message\": \"scroll done.\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int(Optional)",
+            "field": "line",
+            "optional": false,
+            "description": "target line number."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int(Optional)",
+            "field": "count",
+            "optional": false,
+            "description": "target point."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "scrollTo",
+    "type": "SushiJSON",
+    "url": "scrollTo:{JSON}",
+    "title": "scroll to the point of file.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "scrollTo: {\n  \"name\": \"sample.txt\",\n  \"line\": 30,\n  \"selectors\": [\n      {\n          \"showAtLog\": {\n              \"message\": \"scroll done.\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int(Optional)",
+            "field": "line",
+            "optional": false,
+            "description": "target line number."
+          },
+          {
+            "group": "Parameter",
+            "type": "Int(Optional)",
+            "field": "count",
+            "optional": false,
+            "description": "target point."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "selectedRegions",
@@ -1355,7 +1962,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "setEventReactor",
@@ -1447,7 +2054,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "setSelection",
@@ -1468,7 +2075,7 @@
             "type": "String",
             "field": "name",
             "optional": false,
-            "description": "the target file's last part of file path or fullpath."
+            "description": "the target file's last part of file path or fullpath or parts."
           },
           {
             "group": "Parameter",
@@ -1522,7 +2129,54 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "setSublimeSocketWindowBasePath",
+    "type": "SushiJSON",
+    "url": "setSublimeSocketWindowBasePath:{JSON}",
+    "title": "set current file's path to SublimeSocketWindowBasePath param. this param is set to latest opened file's path automatically.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "setSublimeSocketWindowBasePath: {\n  \"selectors\": [\n      {\n          \"showAtLog<-basename\": {\n              \"format\": \"[basename]\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": "file's path."
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "file's name."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "setViewReactor",
@@ -1643,7 +2297,225 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "showAtLog",
+    "type": "SushiJSON",
+    "url": "showAtLog:{JSON}",
+    "title": "show message to log with prefix.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "showAtLog: {\n  \"message\": \"Hello world\"\n}\nor\n\"showAtLog<-head, body, tail\": {\n  \"format\": \"Hello, [head], [body] and [tail]!\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "contents."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "showDialog",
+    "type": "SushiJSON",
+    "url": "showDialog:{JSON}",
+    "title": "show dialog with specific message.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "showDialog: {\n  \"message\": \"here comes daredevil\",\n  \"selectors\": [\n      {\n          \"showAtLog<-message\": {\n           }\n      }\n  ]\n}\nor\n\"showDialog<-head, body\": {\n  \"format\": \"here comes [head] [body]\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "contents."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "inputted message."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "showStatusMessage",
+    "type": "SushiJSON",
+    "url": "showStatusMessage:{JSON}",
+    "title": "show message to statusbar.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "showStatusMessage: {\n  \"message\": \"testStatusMessage\",\n  \"debug\": true\n}\nor\n\"showStatusMessage<-head, body, tail\": {\n  \"format\": \"testStatusMessage, [head], [body], [tail]\"\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "message",
+            "optional": false,
+            "description": "contents."
+          },
+          {
+            "group": "Parameter",
+            "type": "String(Optional)",
+            "field": "format",
+            "optional": false,
+            "description": "construct string with bracket([, and ]) injected value."
+          },
+          {
+            "group": "Parameter",
+            "type": "Bool(Optional)",
+            "field": "debug",
+            "optional": false,
+            "description": "also show message into log or not. By default false."
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
+  },
+  {
+    "group": "showToolTip",
+    "type": "SushiJSON",
+    "url": "showToolTip:{JSON}",
+    "title": "show tooltip with titles & selectors.",
+    "examples": [
+      {
+        "title": "[example]",
+        "content": "showToolTip: {\n  \"name\": \"sample.txt\",\n  \"onselected\": [\n      {\n          \"sample!\": [\n              {\n                  \"showAtLog\": {\n                      \"message\": \"sample! selected!\"\n                  }\n              }\n          ]\n      }\n  ],\n  \"oncancelled\": [\n      {\n          \"showAtLog\": {\n              \"message\": \"sample selected!\"\n          }\n      }\n  ]\n}\n"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": "the target file's last part of file path or fullpath or parts."
+          },
+          {
+            "group": "Parameter",
+            "type": "SelectorsWithKey",
+            "field": "onselected",
+            "optional": false,
+            "description": "titles and selectors which will be ignite when the title of tooltip selected."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors",
+            "field": "oncancelled",
+            "optional": false,
+            "description": "selectors which will be ignite when the tooltip cancelled."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "finally",
+            "optional": false,
+            "description": "selectors which will be ignite when the tooltip disappeared."
+          },
+          {
+            "group": "Parameter",
+            "type": "Selectors(Optional)",
+            "field": "selectors",
+            "optional": false,
+            "description": "selectors."
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Injects": [
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "path",
+            "optional": false,
+            "description": ""
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "name",
+            "optional": false,
+            "description": ""
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "titles",
+            "optional": false,
+            "description": ""
+          },
+          {
+            "group": "Injects",
+            "type": "String",
+            "field": "selectedtitle",
+            "optional": false,
+            "description": ""
+          }
+        ]
+      }
+    },
+    "version": "0.0.0",
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "startTailing(deprecated)",
@@ -1704,7 +2576,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "tearDown",
@@ -1718,7 +2590,7 @@
       }
     ],
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "versionVerify",
@@ -1807,7 +2679,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   },
   {
     "group": "wait",
@@ -1834,6 +2706,6 @@
       }
     },
     "version": "0.0.0",
-    "filename": "/Users/highvision/Library/Application Support/Sublime Text 3/Packages/SublimeSocket3/SublimeSocketAPISettings.py"
+    "filename": "/Users/highvision/Desktop/SublimeSocket3/SublimeSocketAPISettings.py"
   }
 ]
