@@ -61,7 +61,7 @@ define([
 	 * 
 	 */
 	Handlebars.registerHelper("toLowerCase", function(value) {
-		return (value && typeof value === "string") ? value.toLowerCase()+"we" : '';
+		return (value && typeof value === "string") ? value.toLowerCase() : '';
 	});
 
 	/**
