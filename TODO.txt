@@ -1,11 +1,11 @@
 TODO
 
 1.5.x
-
-ST2/3　Both target mode launch
-	use six
+	KVS for logreplay
 
 
+
+1.4.x
 √	injects & accepts
 	injectsをparamsにセットすると、selectors内のAPIに値をinjectする
 	injectされた値は、APIの実行直前にacceptする形で行われる
@@ -16,7 +16,8 @@ ST2/3　Both target mode launch
 	複合系のAPIはまとめてしまうのがいいような気がする。
 	Dobe
 
-1.4.x
+√	ST2/3　Both target mode launch
+
 √	Assertion API
 	KVSに関するAssertionを作成し、Testableにする。
 	Resultに関するAssertionを作成し、Testableにする。
