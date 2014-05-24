@@ -12,17 +12,16 @@ ver 1.4.1
 
 
 ##demos & samples
-* [Ruby show runtime error on code sample](https://vimeo.com/88961966) 
-	[https://github.com/sassembla/SublimeSocket3/tree/master/samples/rubySample](https://github.com/sassembla/SublimeSocket3/tree/master/samples/rubySample)
+* [**TypeScript**: show runtime error on code sample](https://vimeo.com/88961966) 
+	[tool/nodeTailSocket/TypeScript](https://github.com/sassembla/SublimeSocket3/tree/master/tool/nodeTailSocket/TypeScript)
 	
-* [Work with Unity	:	Build and show parameters and errors](https://vimeo.com/71323225)  
+* [**Work with Unity**	:Build and show parameters and errors](https://vimeo.com/71323225)  
 
 
 ##installation
 1. DL.
 2. move SublimeSocket3 folder to Sublime Text 3's packages folder.
 3. that's all.
-4. 
 
 
 ##usage: CommandPalette >  
