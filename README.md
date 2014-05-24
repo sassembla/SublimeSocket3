@@ -12,10 +12,10 @@ ver 1.4.1
 
 
 ##demos & samples
-* [TypeScript show runtime error on code sample](https://vimeo.com/88961966) 
+* [**TypeScript**: show runtime error on code sample](https://vimeo.com/88961966) 
 	[tool/nodeTailSocket/TypeScript](https://github.com/sassembla/SublimeSocket3/tree/master/tool/nodeTailSocket/TypeScript)
 	
-* [Work with Unity	:	Build and show parameters and errors](https://vimeo.com/71323225)  
+* [**Work with Unity**	:Build and show parameters and errors](https://vimeo.com/71323225)  
 
 
 ##installation
