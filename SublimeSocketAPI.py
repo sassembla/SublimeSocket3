@@ -39,6 +39,8 @@ class SublimeSocketAPI:
 
 		self.setSublimeSocketWindowBasePath({})
 
+		self.completionPool = {}
+
 
 	## initialize results as the part of globalResults.
 	def addResultContext(self, resultIdentity):
@@ -2095,6 +2097,9 @@ class SublimeSocketAPI:
 			# hide completion
 			self.editorAPI.runCommandOn(view, "hide_auto_complete")
 
+			# reset
+			self.completionPool = {}
+
 			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.CANCELCOMPLETION_INJECTIONS,
@@ -2111,7 +2116,7 @@ class SublimeSocketAPI:
 		if view == None:
 			return
 
-		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
+		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -2133,6 +2138,29 @@ class SublimeSocketAPI:
 			
 		completionStrs = list(map(transformToFormattedTuple, completions))
 		
+		identity = ""
+		if SublimeSocketAPISettings.RUNCOMPLETION_POOL in params:
+			poolIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_POOL]
+
+			if identity in self.completionPool:
+				self.completionPool[poolIdentity] = self.completionPool[poolIdentity] + completionStrs
+
+			else:
+				self.completionPool = {}
+				self.completionPool[poolIdentity] = completionStrs
+
+			if SublimeSocketAPISettings.RUNCOMPLETION_SHOW in params:
+				showIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_SHOW]
+				if self.completionPool and showIdentity in self.completionPool:
+					completionStrs = self.completionPool[showIdentity]
+
+					# exhaust
+					self.completionPool = {}
+
+			else:
+				# return if identity is exist but showIdentity is not.
+				return
+
 		
 		# set completion
 		self.updateCompletion(path, completionStrs)
@@ -2146,7 +2174,7 @@ class SublimeSocketAPI:
 			[path, name],
 			self.runAPI
 		)
-			
+
 
 	def forcelySave(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)

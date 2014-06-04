@@ -872,6 +872,303 @@ test>補完ウインドウを表示してcancelCompletionで閉じる/createBuff
 }
 
 
+test>補完を外部から貯める/createBuffer: {
+    "name": "completionTestView3.txt"
+}->runCompletion: {
+    "name": "completionTestView3.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 22:33:49",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "runCompletion not includes 2 completion beacuse of pooling.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "runCompletion done at completionTestView3.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>補完を外部から二件貯める/createBuffer: {
+    "name": "completionTestView4.txt"
+}->runCompletion: {
+    "name": "completionTestView4.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 23:00:00",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->runCompletion: {
+    "name": "completionTestView4.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 23:00:00",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "runCompletion not includes 2 completion beacuse of pooling.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "runCompletion done at completionTestView4.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>外部から貯めた一件の補完を出力する/createBuffer: {
+    "name": "completionTestView5.txt"
+}->runCompletion: {
+    "name": "completionTestView5.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 23:33:50",
+    "show": "2014/06/04 23:33:50",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "runCompletion not includes 2 completion beacuse of pooling.",
+    "contains": {
+        "showAtLog": {
+            "output": "runCompletion done at completionTestView5.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>外部から貯めた二件の補完を出力する/createBuffer: {
+    "name": "completionTestView6.txt"
+}->runCompletion: {
+    "name": "completionTestView6.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 23:33:50",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->runCompletion: {
+    "name": "completionTestView6.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 23:33:50",
+    "show": "2014/06/04 23:33:50",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "runCompletion not includes 2 completion beacuse of pooling.",
+    "contains": {
+        "showAtLog": {
+            "output": "runCompletion done at completionTestView6.txt"
+        }
+    },
+    "description": "not match."
+}
+
+
+test>外部から貯めた一件の補完をキャンセル、その後showしようとするが、出ない/createBuffer: {
+    "name": "completionTestView7.txt"
+}->runCompletion: {
+    "name": "completionTestView7.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 24:00:00",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->cancelCompletion: {
+    "name": "completionCloseTestView.txt",
+    "injects": {
+        "name": "name"
+    }
+}->runCompletion: {
+    "name": "completionTestView6.txt",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "2014/06/04 24:00:00",
+    "show": "2014/06/04 24:00:00",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done 2nd"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "runCompletion not includes 2 completion beacuse of pooling.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "runCompletion done 2nd"
+        }
+    },
+    "description": "not match."
+}
+
+
 test>存在するファイルのviewに対してselectorを実行する,
 viewEmit/openFile: {
     "path": "SUBLIMESOCKET_PATH:tests/testResources/sample.txt"

@@ -1578,6 +1578,8 @@ runCompletion: {
 @apiParam {String} completion parts of completion string sources. Will become completion string.
 @apiParam {String} formathead header part of completion string. constructed bt the contents of completion's key-value.
 @apiParam {String} formattail footer part of completion string. constructed bt the contents of completion's key-value.
+@apiParam {String(Optional)} pool identity of completion pool. use for pooling completion resource. Will show when 'show' parameter appended.
+@apiParam {String(Optional)} show key identity of showing pooled completions. if identity & this 'show' param exist and has same value, show pooled completions.
 @apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} path file's path.
@@ -1590,7 +1592,8 @@ RUNCOMPLETION_NAME			= "name"
 RUNCOMPLETION_COMPLETIONS	= "completion"
 RUNCOMPLETION_FORMATHEAD	= "formathead"
 RUNCOMPLETION_FORMATTAIL	= "formattail"
-RUNCOMPLETION_ID			= "id"
+RUNCOMPLETION_POOL            = "pool"
+RUNCOMPLETION_SHOW          = "show"
 RUNCOMPLETION_INJECTIONS	= [RUNCOMPLETION_PATH, RUNCOMPLETION_NAME]
 
 
