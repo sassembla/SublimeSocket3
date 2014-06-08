@@ -2117,6 +2117,7 @@ class SublimeSocketAPI:
 			return
 
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
+		
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -2138,22 +2139,22 @@ class SublimeSocketAPI:
 			
 		completionStrs = list(map(transformToFormattedTuple, completions))
 		
-		identity = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_POOL in params:
 			poolIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_POOL]
 
-			if identity in self.completionPool:
-				self.completionPool[poolIdentity] = self.completionPool[poolIdentity] + completionStrs
+			if poolIdentity in self.completionPool:
+				self.completionPool[poolIdentity] = list(set(self.completionPool[poolIdentity] + completionStrs))
 
 			else:
 				self.completionPool = {}
-				self.completionPool[poolIdentity] = completionStrs
+				self.completionPool[poolIdentity] = completionStrs # set list
 
 			if SublimeSocketAPISettings.RUNCOMPLETION_SHOW in params:
+				
 				showIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_SHOW]
 				if self.completionPool and showIdentity in self.completionPool:
-					completionStrs = self.completionPool[showIdentity]
-
+					completionStrs = list(set(self.completionPool[showIdentity]))
+					
 					# exhaust
 					self.completionPool = {}
 
