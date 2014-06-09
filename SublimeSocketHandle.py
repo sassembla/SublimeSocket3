@@ -461,7 +461,6 @@ class CaptureEditing(sublime_plugin.EventListener):
         self.update(SublimeSocketAPISettings.REACTABLE_VIEW_ON_SELECTION_MODIFIED, view)
 
     def on_query_completions(self, view, prefix, locations):
-        print("ここに来ちゃうってことは、runCompletionが通ってるねえ。")
         completions = self.getDataFromThread(SublimeSocketAPISettings.REACTABLE_VIEW_ON_QUERY_COMPLETIONS, view)
         if completions:
             # add prefix for prevent force-input.

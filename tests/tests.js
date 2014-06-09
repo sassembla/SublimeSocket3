@@ -4562,3 +4562,27 @@ test>closeAllFiles: {
     "description": "is empty."
 }
 
+
+test>get settings of view/createBuffer: {
+    "name": "setting.txt"
+}->getViewSetting: {
+    "name": "setting.txt",
+    "selectors": [
+        {
+            "showAtLog<-indentationsize, usingspace": {
+                "format": "size?:[indentationsize], is using tab?:[usingspace]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "get setting of view.",
+    "contains": {
+        "showAtLog": {
+            "output": "size?:4, is using tab?:False"
+        }
+    },
+    "description": "not match."
+}
+
+
+

@@ -204,6 +204,10 @@ class SublimeSocketAPI:
 				self.modifyView(params)
 				break
 
+			if case(SublimeSocketAPISettings.API_GETVIEWSETTING):
+				self.getViewSetting(params)
+				break
+
 			if case(SublimeSocketAPISettings.API_SETSELECTION):
 				self.setSelection(params)
 				break
@@ -1793,6 +1797,21 @@ class SublimeSocketAPI:
 			self.runAPI
 		)
 
+	def getViewSetting(self, params):
+		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.GETVIEWSETTING_VIEW, SublimeSocketAPISettings.GETVIEWSETTING_NAME)
+
+		if view == None:
+			return
+
+		(indentationsize, usingspace) = self.editorAPI.getViewSetting(view)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.GETVIEWSETTING_INJECTIONS,
+			[indentationsize, usingspace],
+			self.runAPI
+		)
+
 	## generate selection to view
 	def setSelection(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
@@ -2128,7 +2147,6 @@ class SublimeSocketAPI:
 		# reset
 		completionsDict[path] = {}
 
-		print("prepare, completionIdentity", completionIdentity, "path", path)
 
 		# set
 		completionsDict[path][completionIdentity] = {}
@@ -2152,7 +2170,7 @@ class SublimeSocketAPI:
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
 		
 		completionIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_IDENTITY]
-		print("in runCompletion,", completionIdentity)
+		
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -2199,10 +2217,9 @@ class SublimeSocketAPI:
 
 		# set completion
 		result = self.updateCompletion(path, completionIdentity, completionStrs)
-		print("runCompletion over, result", result)
-
+		
 		if result:
-			print("runCompletion succeeded, completion fired.")
+			# close for update completion. this is because of that Sublime Text will open completion window automatically.
 			self.editorAPI.runCommandOn(view, "hide_auto_complete")
 			
 			# display completions
@@ -2723,7 +2740,6 @@ class SublimeSocketAPI:
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
-		print("consumption! "+viewIdentity)
 		completions = self.server.completionsDict()
 		if completions:
 			if viewIdentity in list(completions):
@@ -2740,8 +2756,6 @@ class SublimeSocketAPI:
 	def updateCompletion(self, name, completionId, composedCompletions):
 		completionsDict = self.server.completionsDict()
 
-		print("name", name, "completionId", completionId)
-		print("completionsDict.keys", completionsDict.keys())
 		if name in completionsDict:
 			if completionId in completionsDict[name]:
 				completionsDict[name][completionId] = composedCompletions

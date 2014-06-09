@@ -800,6 +800,37 @@ MODIFYVIEW_INJECTIONS		= [MODIFYVIEW_PATH, MODIFYVIEW_NAME, MODIFYVIEW_LINE, MOD
 
 
 """
+@apiGroup getViewSetting
+@api {SushiJSON} getViewSetting:{JSON} get setting of the file.
+
+@apiExample [example]
+getViewSetting: {
+    "name": "sample.txt",
+    "selectors": [
+        {
+            "showAtLog<-indentationsize, usingspace": {
+                "format": "size?:[indentationsize], is using tab?:[usingspace]"
+            }
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath or parts.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} indentationsize size of indentation tab.
+@apiSuccess {Bool} usingspace using space for indentation or not.
+"""
+API_GETVIEWSETTING          = "getViewSetting"
+GETVIEWSETTING_VIEW         = "view"
+GETVIEWSETTING_NAME         = "name"
+GETVIEWSETTING_PATH         = "path"
+GETVIEWSETTING_INDENTATIONSIZE  = "indentationsize"
+GETVIEWSETTING_USINGSPACE   = "usingspace"
+GETVIEWSETTING_INJECTIONS   = [GETVIEWSETTING_INDENTATIONSIZE, GETVIEWSETTING_USINGSPACE]
+
+
+"""
 @apiGroup setSelection
 @api {SushiJSON} setSelection:{JSON} set selection to the file.
 
