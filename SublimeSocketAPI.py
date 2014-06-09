@@ -2119,16 +2119,19 @@ class SublimeSocketAPI:
 		if view == None:
 			return
 
+
 		completionIdentity = params[SublimeSocketAPISettings.PREPARECOMPLETION_IDENTITY]
 
 		# load for generate box
 		completionsDict = self.server.completionsDict()
 
 		# reset
-		completionsDict[name] = {}
+		completionsDict[path] = {}
+
+		print("prepare, completionIdentity", completionIdentity, "path", path)
 
 		# set
-		completionsDict[name][completionIdentity] = {}
+		completionsDict[path][completionIdentity] = {}
 		self.server.updateCompletionsDict(completionsDict)
 
 		SushiJSONParser.runSelectors(
@@ -2149,6 +2152,7 @@ class SublimeSocketAPI:
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
 		
 		completionIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_IDENTITY]
+		print("in runCompletion,", completionIdentity)
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -2195,10 +2199,14 @@ class SublimeSocketAPI:
 
 		# set completion
 		result = self.updateCompletion(path, completionIdentity, completionStrs)
+		print("runCompletion over, result", result)
 
 		if result:
+			print("runCompletion succeeded, completion fired.")
+			self.editorAPI.runCommandOn(view, "hide_auto_complete")
+			
 			# display completions
-			self.editorAPI.runCommandOn(view, "auto_complete")
+			self.editorAPI.runCommandOn(view, "auto_complete", completionIdentity)
 
 			SushiJSONParser.runSelectors(
 				params,
@@ -2715,15 +2723,15 @@ class SublimeSocketAPI:
 
 	## return completion then delete.
 	def consumeCompletion(self, viewIdentity, eventName):
+		print("consumption! "+viewIdentity)
 		completions = self.server.completionsDict()
 		if completions:
 			if viewIdentity in list(completions):
 				for key in completions[viewIdentity]:
-					print("key?", key)
-					completion = ompletions[viewIdentity][key]
-				
-					self.server.deleteCompletion(viewIdentity)
-					return completion
+					completion = completions[viewIdentity][key]
+					if completion:
+						self.server.deleteCompletion(viewIdentity)
+						return completion
 
 		return None
 
@@ -2732,6 +2740,8 @@ class SublimeSocketAPI:
 	def updateCompletion(self, name, completionId, composedCompletions):
 		completionsDict = self.server.completionsDict()
 
+		print("name", name, "completionId", completionId)
+		print("completionsDict.keys", completionsDict.keys())
 		if name in completionsDict:
 			if completionId in completionsDict[name]:
 				completionsDict[name][completionId] = composedCompletions
