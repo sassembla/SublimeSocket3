@@ -655,7 +655,13 @@ test>完了通知が出ない。突破してはいる。組み合わせでエラ
     "name": "completionTestView.txt",
     "selectors": [
         {
+            "prepareCompletion<-name": {
+                "identity": "completionTestView"
+            }
+        },
+        {
             "このCompletionはnameを使っているのでキー間違いで着火しない。あくまで再現用。/runCompletion<-name": {
+                "identity": "completionTestView",
                 "completion": [
                     {
                         "HEAD": "DrawLine",
@@ -780,10 +786,251 @@ test>modifyViewのポイント指定バージョン/openFile: {
 }
 
 
-test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。/createBuffer: {
+test>補完の予約を行う/createBuffer:{
+    "name": "prepareCompletionTestView1.txt"
+}->prepareCompletion:{
+    "name": "prepareCompletionTestView1.txt",
+    "identity": "prepareCompletionTestView1",
+    "selectors": [
+        {
+            "showAtLog<-identity": {
+                "format": "prepared [identity]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "prepare succeeded",
+    "contains": {
+        "showAtLog": {
+            "output": "prepared prepareCompletionTestView1"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "completionTestView1.txt"
+}
+
+
+test>補完の予約を行わず、runCompletionを行い、completionが実行されない/createBuffer: {
+    "name": "noPreparedCompretion.txt"
+}->runCompletion: {
+    "name": "noPreparedCompretion.txt",
+    "identity": "noPreparedCompretion",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "[name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "noPreparedCompretion will fail.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "noPreparedCompretion"
+        }
+    },
+    "description": "executed, failure."
+}->closeFile: {
+    "name": "noPreparedCompretion.txt"
+}
+
+
+test>perpareからcompletionをpoolするが、別prepareでidを変化させ、poolしたprepareを発生させるがcompletionが出ない/createBuffer: {
+    "name": "cascadePrepareCompletion.txt"
+}->prepareCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion"
+}->pool completion/runCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "cascadePrepareCompletion"
+}->prepareCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion2"
+}->pool completion/runCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "cascadePrepareCompletion",
+    "show": "cascadePrepareCompletion",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "prepareCompletion changed identity. never show completion with old identity.",
+    "notcontains": {
+        "showAtLog": {
+            "output": "runCompletion done at cascadePrepareCompletion.txt"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "cascadePrepareCompletion.txt"
+}
+
+
+test>perpareからcompletionをpoolするが、別prepareでidを変化させ、poolしたprepareを発生させるがcompletionが出ず、その後別completionが出る/createBuffer: {
+    "name": "cascadePrepareCompletion.txt"
+}->prepareCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion"
+}->pool completion/runCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "cascadePrepareCompletion"
+}->prepareCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion2"
+}->pool completion/runCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "cascadePrepareCompletion",
+    "show": "cascadePrepareCompletion",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "runCompletion done at [name]"
+            }
+        }
+    ]
+}->run new identity completion/runCompletion: {
+    "name": "cascadePrepareCompletion.txt",
+    "identity": "cascadePrepareCompletion2",
+    "completion": [
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        },
+        {
+            "HEAD": "DrawLine",
+            "paramsTargetFmt": "(${1:start}, ${2:end}, ${3:color}, ${4:duration}, ${5:depthTest})",
+            "return": "Void",
+            "paramsTypeDef": "(Vector3,Vector3,Color,Single,Boolean)",
+            "head": "DrawLine"
+        }
+    ],
+    "formathead": "HEADparamsTypeDef\treturn",
+    "formattail": "headparamsTargetFmt$0",
+    "pool": "cascadePrepareCompletion2",
+    "show": "cascadePrepareCompletion2",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "renewed runCompletion done at [name]"
+            }
+        }
+    ]
+}->assertResult: {
+    "id": "prepareCompletion changed identity. show completion with new identity.",
+    "contains": {
+        "showAtLog": {
+            "output": "renewed runCompletion done at cascadePrepareCompletion.txt"
+        }
+    },
+    "description": "not match."
+}->closeFile: {
+    "name": "cascadePrepareCompletion.txt"
+}
+
+
+test>補完を外部からセット、そのままウインドウ表示する。候補が2つ以上のため、補完ウインドウが表示される。prepare必須/createBuffer: {
     "name": "completionTestView2.txt"
+}->prepareCompletion: {
+    "name": "completionTestView2.txt",
+    "identity": "completionTestView2"
 }->runCompletion: {
     "name": "completionTestView2.txt",
+    "identity": "completionTestView2",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -823,11 +1070,16 @@ test>補完を外部からセット、そのままウインドウ表示する。
 test>補完ウインドウを表示してcancelCompletionで閉じる/createBuffer: {
     "name": "completionCloseTestView.txt"
 }->viewEmit: {
-    "identity": "completionCloseTestView",
     "name": "completionCloseTestView.txt",
     "selectors": [
         {
+            "prepareCompletion<-name": {
+                "identity": "1111"
+            }
+        },
+        {
             "runCompletion<-name": {
+                "identity": "1111",
                 "completion": [
                     {
                         "HEAD": "DrawLine",
@@ -874,8 +1126,12 @@ test>補完ウインドウを表示してcancelCompletionで閉じる/createBuff
 
 test>補完を外部から貯める/createBuffer: {
     "name": "completionTestView3.txt"
+}->prepareCompletion: {
+    "name": "completionTestView3.txt",
+    "identity": "3333"
 }->runCompletion: {
     "name": "completionTestView3.txt",
+    "identity": "3333",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -915,8 +1171,12 @@ test>補完を外部から貯める/createBuffer: {
 
 test>補完を外部から二件貯める/createBuffer: {
     "name": "completionTestView4.txt"
+}->prepareCompletion: {
+    "name": "completionTestView4.txt",
+    "identity": "2014/06/04 23:00:00"
 }->runCompletion: {
     "name": "completionTestView4.txt",
+    "identity": "2014/06/04 23:00:00",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -945,6 +1205,7 @@ test>補完を外部から二件貯める/createBuffer: {
     ]
 }->runCompletion: {
     "name": "completionTestView4.txt",
+    "identity": "2014/06/04 23:00:00",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -984,8 +1245,12 @@ test>補完を外部から二件貯める/createBuffer: {
 
 test>外部から貯めた一件の補完を出力する/createBuffer: {
     "name": "completionTestView5.txt"
+}->prepareCompletion: {
+    "name": "completionTestView5.txt",
+    "identity": "2014/06/04 23:33:50"
 }->runCompletion: {
     "name": "completionTestView5.txt",
+    "identity": "2014/06/04 23:33:50",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -1026,8 +1291,12 @@ test>外部から貯めた一件の補完を出力する/createBuffer: {
 
 test>外部から貯めた二件の補完を出力する/createBuffer: {
     "name": "completionTestView6.txt"
+}->prepareCompletion: {
+    "name": "completionTestView6.txt",
+    "identity": "2014/06/04 23:33:50"
 }->runCompletion: {
     "name": "completionTestView6.txt",
+    "identity": "2014/06/04 23:33:50",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -1056,6 +1325,7 @@ test>外部から貯めた二件の補完を出力する/createBuffer: {
     ]
 }->runCompletion: {
     "name": "completionTestView6.txt",
+    "identity": "2014/06/04 23:33:50",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -1096,8 +1366,12 @@ test>外部から貯めた二件の補完を出力する/createBuffer: {
 
 test>外部から貯めた一件の補完をキャンセル、その後showしようとするが、出ない/createBuffer: {
     "name": "completionTestView7.txt"
+}->prepareCompletion: {
+    "name": "completionTestView7.txt",
+    "identity": "2014/06/04 24:00:00"
 }->runCompletion: {
     "name": "completionTestView7.txt",
+    "identity": "2014/06/04 24:00:00",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -1131,6 +1405,7 @@ test>外部から貯めた一件の補完をキャンセル、その後showし�
     }
 }->runCompletion: {
     "name": "completionTestView6.txt",
+    "identity": "2014/06/04 24:00:00",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -3775,7 +4050,7 @@ test>バージョンの出力/versionVerify: {
     "id": "code and message will enable.",
     "contains": {
         "showAtLog": {
-            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.2, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3799,7 +4074,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
     "id": "situation-please update possible",
     "contains": {
         "showAtLog": {
-            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.4.2, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3808,7 +4083,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 
 test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
-    "apiVersion": "1.4.2",
+    "apiVersion": "1.5.0",
     "injects": {
         "message": "reason"
     },
@@ -3823,7 +4098,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     "id": "situation-latest version",
     "contains": {
         "showAtLog": {
-            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.4.2, SublimeSocket 3"
+            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.5.0, SublimeSocket 3"
         }
     },
     "description": "not match."
@@ -3848,7 +4123,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -3873,7 +4148,7 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     "id": "situation-should update client",
     "contains": {
         "showAtLog": {
-            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this client requires api version = 0.0.0, required api version is too old. please update this client."
+            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this client requires api version = 0.0.0, required api version is too old. please update this client."
         }
     },
     "description": "not match."
@@ -3898,7 +4173,7 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.4.2, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -4015,8 +4290,12 @@ test>存在するファイルを開く/openFile: {
 
 test>補完を外部からセット。候補が1つのため、強制的に補完される。/createBuffer: {
     "name": "completionTestView.txt"
+}->prepareCompletion: {
+    "name": "completionTestView.txt",
+    "identity": "completionTestView"
 }->一つだと一択のため勝手に入力される/runCompletion: {
     "name": "completionTestView.txt",
+    "identity": "completionTestView",
     "completion": [
         {
             "HEAD": "DrawLine",

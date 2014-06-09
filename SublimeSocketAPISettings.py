@@ -1548,12 +1548,45 @@ CANCELCOMPLETION_INJECTIONS = []
 
 
 """
+@apiGroup prepareCompletion
+@api {SushiJSON} prepareCompletion:{JSON} prepare completion. 
+
+@apiExample [example]
+prepareCompletion: {
+    "name": "completionTestView.txt",
+    "identity": "1234567890",
+    "selectors": [
+        {
+            "showAtLog<-name": {
+                "format": "[name]"
+            }
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath or parts.
+@apiParam {String} identity gateway id for completion.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} path file's path.
+@apiSuccess {String} name file's name.
+@apiSuccess {String} identity identity of prepared completion.
+""" 
+API_PREPARECOMPLETION       = "prepareCompletion"
+PREPARECOMPLETION_VIEW      = "view"
+PREPARECOMPLETION_PATH      = "path"
+PREPARECOMPLETION_NAME      = "name"
+PREPARECOMPLETION_IDENTITY  = "identity"
+PREPARECOMPLETION_INJECTIONS= [PREPARECOMPLETION_PATH, PREPARECOMPLETION_NAME, PREPARECOMPLETION_IDENTITY]
+
+"""
 @apiGroup runCompletion
 @api {SushiJSON} runCompletion:{JSON} show completion candidate datas. 
 
 @apiExample [example]
 runCompletion: {
     "name": "completionTestView.txt",
+    "identity": "1234567890",
     "completion": [
         {
             "HEAD": "DrawLine",
@@ -1576,6 +1609,7 @@ runCompletion: {
 
 @apiParam {String} name the target file's last part of file path or fullpath or parts.
 @apiParam {String} completion parts of completion string sources. Will become completion string.
+@apiParam {String} identity gateway id for completion.
 @apiParam {String} formathead header part of completion string. constructed bt the contents of completion's key-value.
 @apiParam {String} formattail footer part of completion string. constructed bt the contents of completion's key-value.
 @apiParam {String(Optional)} pool identity of completion pool. use for pooling completion resource. Will show when 'show' parameter appended.
@@ -1584,17 +1618,19 @@ runCompletion: {
 
 @apiSuccess {String} path file's path.
 @apiSuccess {String} name file's name.
+@apiSuccess {String} identity identity of showed identity.
 """	
 API_RUNCOMPLETION			= "runCompletion"
 RUNCOMPLETION_VIEW			= "view"
 RUNCOMPLETION_PATH			= "path"
 RUNCOMPLETION_NAME			= "name"
 RUNCOMPLETION_COMPLETIONS	= "completion"
+RUNCOMPLETION_IDENTITY      = "identity"
 RUNCOMPLETION_FORMATHEAD	= "formathead"
 RUNCOMPLETION_FORMATTAIL	= "formattail"
 RUNCOMPLETION_POOL          = "pool"
 RUNCOMPLETION_SHOW          = "show"
-RUNCOMPLETION_INJECTIONS	= [RUNCOMPLETION_PATH, RUNCOMPLETION_NAME]
+RUNCOMPLETION_INJECTIONS	= [RUNCOMPLETION_PATH, RUNCOMPLETION_NAME, RUNCOMPLETION_IDENTITY]
 
 
 """
