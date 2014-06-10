@@ -2707,9 +2707,9 @@ class SublimeSocketAPI:
 		if completions:
 			if viewIdentity in list(completions):
 				completion = completions[viewIdentity]
-				
-				self.server.deleteCompletion(viewIdentity)
-				return completion
+				if completion:
+					self.server.deleteCompletion(viewIdentity)
+					return completion
 
 		return None
 
