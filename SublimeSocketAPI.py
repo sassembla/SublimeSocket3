@@ -272,10 +272,6 @@ class SublimeSocketAPI:
 				self.cancelCompletion(params)
 				break
 
-			if case(SublimeSocketAPISettings.API_PREPARECOMPLETION):
-				self.prepareCompletion(params)
-				break
-
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
 				self.runCompletion(params)
 				break
@@ -2130,46 +2126,16 @@ class SublimeSocketAPI:
 				self.runAPI
 			)
 			
-	# initialize & reset completion data gateway
-	def prepareCompletion(self, params):
-		assert SublimeSocketAPISettings.PREPARECOMPLETION_IDENTITY in params, "prepareCompletion require 'identity' param."
-		
-		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.PREPARECOMPLETION_VIEW, SublimeSocketAPISettings.PREPARECOMPLETION_NAME)
-		if view == None:
-			return
 
-
-		completionIdentity = params[SublimeSocketAPISettings.PREPARECOMPLETION_IDENTITY]
-
-		# load for generate box
-		completionsDict = self.server.completionsDict()
-
-		# reset
-		completionsDict[path] = {}
-
-
-		# set
-		completionsDict[path][completionIdentity] = {}
-		self.server.updateCompletionsDict(completionsDict)
-
-		SushiJSONParser.runSelectors(
-			params,
-			SublimeSocketAPISettings.PREPARECOMPLETION_INJECTIONS,
-			[path, name, completionIdentity],
-			self.runAPI
-		)
 	
 	def runCompletion(self, params):
 		assert SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS in params, "runCompletion require 'completion' param."
-		assert SublimeSocketAPISettings.RUNCOMPLETION_IDENTITY in params, "runCompletion require 'identity' param."
 		
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.RUNCOMPLETION_VIEW, SublimeSocketAPISettings.RUNCOMPLETION_NAME)
 		if view == None:
 			return
 
 		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
-		
-		completionIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_IDENTITY]
 		
 
 		formatHead = ""
@@ -2215,22 +2181,19 @@ class SublimeSocketAPI:
 				# return if identity is exist but showIdentity is not.
 				return
 
-		# set completion
-		result = self.updateCompletion(path, completionIdentity, completionStrs)
 		
-		if result:
-			# close for update completion. this is because of that Sublime Text will open completion window automatically.
-			self.editorAPI.runCommandOn(view, "hide_auto_complete")
-			
-			# display completions
-			self.editorAPI.runCommandOn(view, "auto_complete", completionIdentity)
+		# set completion
+		self.updateCompletion(path, completionStrs)
 
-			SushiJSONParser.runSelectors(
-				params,
-				SublimeSocketAPISettings.RUNCOMPLETION_INJECTIONS,
-				[path, name, completionIdentity],
-				self.runAPI
-			)
+		# display completions
+		self.editorAPI.runCommandOn(view, "auto_complete")
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.RUNCOMPLETION_INJECTIONS,
+			[path, name],
+			self.runAPI
+		)
 
 
 	def forcelySave(self, params):
@@ -2743,27 +2706,19 @@ class SublimeSocketAPI:
 		completions = self.server.completionsDict()
 		if completions:
 			if viewIdentity in list(completions):
-				for key in completions[viewIdentity]:
-					completion = completions[viewIdentity][key]
-					if completion:
-						self.server.deleteCompletion(viewIdentity)
-						return completion
+				completion = completions[viewIdentity]
+				
+				self.server.deleteCompletion(viewIdentity)
+				return completion
 
 		return None
 
-
-	## save completion for show.
-	def updateCompletion(self, name, completionId, composedCompletions):
+	def updateCompletion(self, name, composedCompletions):
 		completionsDict = self.server.completionsDict()
 
-		if name in completionsDict:
-			if completionId in completionsDict[name]:
-				completionsDict[name][completionId] = composedCompletions
-				self.server.updateCompletionsDict(completionsDict)
-				return True
-
-		return False
-	
+		completionsDict[name] = composedCompletions
+		self.server.updateCompletionsDict(completionsDict)
+		
 
 	# other
 
