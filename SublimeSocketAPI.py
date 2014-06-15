@@ -2185,6 +2185,8 @@ class SublimeSocketAPI:
 		# set completion
 		self.updateCompletion(path, completionStrs)
 
+		self.editorAPI.runCommandOn(view, "hide_auto_complete")
+
 		# display completions
 		self.editorAPI.runCommandOn(view, "auto_complete")
 
