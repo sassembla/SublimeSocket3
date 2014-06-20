@@ -118,7 +118,7 @@ class EditorAPI:
 		views = list(chain.from_iterable([window.views() for window in self.windows()]))
 		for view in views:
 			if self.nameOfView(view) == fullpath:
-			 	return view
+				return view
 
 	def setNameToView(self, view, name):
 		view.set_name(name)
@@ -217,3 +217,6 @@ class EditorAPI:
 		
 	def getLineFromPoint(self, view, count):
 		return view.rowcol(count)
+
+	def getViewSetting(self, view):
+		return (view.settings().get('tab_size'), view.settings().get('translate_tabs_to_spaces'))	

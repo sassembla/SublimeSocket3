@@ -138,7 +138,6 @@ class SublimeSocketServer:
 
 		transferIdentity = params[SublimeSocketAPISettings.ADDTRANSFER_TRANSFERIDENTITY]
 		
-		print("self.transfers", self.transfers)
 
 		if self.transfers:
 			assert not transferIdentity in self.transfers, "identity:" + transferIdentity + " has already taken. please define other identity. taken by:" + str(self.transfers[transferIdentity]) + " please use 'addConnectionToTransfer' API."

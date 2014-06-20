@@ -62,7 +62,7 @@ SSAPI_PREFIX_SUB			= "ss"
 SSAPI_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]->
 
 
-SSAPI_VERSION				= "1.4.2"
+SSAPI_VERSION				= "1.5.0"
 SSSOCKET_VERSION			= 3	# for Sublime Text 3
 
 
@@ -797,6 +797,37 @@ MODIFYVIEW_TO				= "to"
 MODIFYVIEW_LINE				= "line"
 MODIFYVIEW_REDUCE			= "reduce"
 MODIFYVIEW_INJECTIONS		= [MODIFYVIEW_PATH, MODIFYVIEW_NAME, MODIFYVIEW_LINE, MODIFYVIEW_TO]
+
+
+"""
+@apiGroup getViewSetting
+@api {SushiJSON} getViewSetting:{JSON} get setting of the file.
+
+@apiExample [example]
+getViewSetting: {
+    "name": "sample.txt",
+    "selectors": [
+        {
+            "showAtLog<-indentationsize, usingspace": {
+                "format": "size?:[indentationsize], is using tab?:[usingspace]"
+            }
+        }
+    ]
+}
+
+@apiParam {String} name the target file's last part of file path or fullpath or parts.
+@apiParam {Selectors(Optional)} selectors selectors.
+
+@apiSuccess {String} indentationsize size of indentation tab.
+@apiSuccess {Bool} usingspace using space for indentation or not.
+"""
+API_GETVIEWSETTING          = "getViewSetting"
+GETVIEWSETTING_VIEW         = "view"
+GETVIEWSETTING_NAME         = "name"
+GETVIEWSETTING_PATH         = "path"
+GETVIEWSETTING_INDENTATIONSIZE  = "indentationsize"
+GETVIEWSETTING_USINGSPACE   = "usingspace"
+GETVIEWSETTING_INJECTIONS   = [GETVIEWSETTING_INDENTATIONSIZE, GETVIEWSETTING_USINGSPACE]
 
 
 """
@@ -1578,6 +1609,8 @@ runCompletion: {
 @apiParam {String} completion parts of completion string sources. Will become completion string.
 @apiParam {String} formathead header part of completion string. constructed bt the contents of completion's key-value.
 @apiParam {String} formattail footer part of completion string. constructed bt the contents of completion's key-value.
+@apiParam {String(Optional)} pool identity of completion pool. use for pooling completion resource. Will show when 'show' parameter appended.
+@apiParam {String(Optional)} show key identity of showing pooled completions. if identity & this 'show' param exist and has same value, show pooled completions.
 @apiParam {Selectors(Optional)} selectors selectors.
 
 @apiSuccess {String} path file's path.
@@ -1590,7 +1623,8 @@ RUNCOMPLETION_NAME			= "name"
 RUNCOMPLETION_COMPLETIONS	= "completion"
 RUNCOMPLETION_FORMATHEAD	= "formathead"
 RUNCOMPLETION_FORMATTAIL	= "formattail"
-RUNCOMPLETION_ID			= "id"
+RUNCOMPLETION_POOL          = "pool"
+RUNCOMPLETION_SHOW          = "show"
 RUNCOMPLETION_INJECTIONS	= [RUNCOMPLETION_PATH, RUNCOMPLETION_NAME]
 
 

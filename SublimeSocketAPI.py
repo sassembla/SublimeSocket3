@@ -39,6 +39,8 @@ class SublimeSocketAPI:
 
 		self.setSublimeSocketWindowBasePath({})
 
+		self.completionPool = {}
+
 
 	## initialize results as the part of globalResults.
 	def addResultContext(self, resultIdentity):
@@ -200,6 +202,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_MODIFYVIEW):
 				self.modifyView(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_GETVIEWSETTING):
+				self.getViewSetting(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_SETSELECTION):
@@ -1787,6 +1793,21 @@ class SublimeSocketAPI:
 			self.runAPI
 		)
 
+	def getViewSetting(self, params):
+		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.GETVIEWSETTING_VIEW, SublimeSocketAPISettings.GETVIEWSETTING_NAME)
+
+		if view == None:
+			return
+
+		(indentationsize, usingspace) = self.editorAPI.getViewSetting(view)
+
+		SushiJSONParser.runSelectors(
+			params,
+			SublimeSocketAPISettings.GETVIEWSETTING_INJECTIONS,
+			[indentationsize, usingspace],
+			self.runAPI
+		)
+
 	## generate selection to view
 	def setSelection(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.SETSELECTION_VIEW, SublimeSocketAPISettings.SETSELECTION_NAME)
@@ -2095,6 +2116,9 @@ class SublimeSocketAPI:
 			# hide completion
 			self.editorAPI.runCommandOn(view, "hide_auto_complete")
 
+			# reset
+			self.completionPool = {}
+
 			SushiJSONParser.runSelectors(
 				params,
 				SublimeSocketAPISettings.CANCELCOMPLETION_INJECTIONS,
@@ -2111,7 +2135,8 @@ class SublimeSocketAPI:
 		if view == None:
 			return
 
-		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]		
+		completions = params[SublimeSocketAPISettings.RUNCOMPLETION_COMPLETIONS]
+		
 
 		formatHead = ""
 		if SublimeSocketAPISettings.RUNCOMPLETION_FORMATHEAD in params:
@@ -2133,9 +2158,34 @@ class SublimeSocketAPI:
 			
 		completionStrs = list(map(transformToFormattedTuple, completions))
 		
+		if SublimeSocketAPISettings.RUNCOMPLETION_POOL in params:
+			poolIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_POOL]
+
+			if poolIdentity in self.completionPool:
+				self.completionPool[poolIdentity] = list(set(self.completionPool[poolIdentity] + completionStrs))
+
+			else:
+				self.completionPool = {}
+				self.completionPool[poolIdentity] = completionStrs # set list
+
+			if SublimeSocketAPISettings.RUNCOMPLETION_SHOW in params:
+				
+				showIdentity = params[SublimeSocketAPISettings.RUNCOMPLETION_SHOW]
+				if self.completionPool and showIdentity in self.completionPool:
+					completionStrs = list(set(self.completionPool[showIdentity]))
+					
+					# exhaust
+					self.completionPool = {}
+
+			else:
+				# return if identity is exist but showIdentity is not.
+				return
+
 		
 		# set completion
 		self.updateCompletion(path, completionStrs)
+
+		self.editorAPI.runCommandOn(view, "hide_auto_complete")
 
 		# display completions
 		self.editorAPI.runCommandOn(view, "auto_complete")
@@ -2146,7 +2196,7 @@ class SublimeSocketAPI:
 			[path, name],
 			self.runAPI
 		)
-			
+
 
 	def forcelySave(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)
@@ -2457,13 +2507,19 @@ class SublimeSocketAPI:
 				viewSearchKey = viewKey.replace("\\", "&")
 				viewSearchKey = viewSearchKey.replace("/", "&")
 				if re.findall(viewSearchSource, viewSearchKey):
-					return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					if viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]:
+						return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					else:
+						return (None, None)
 			
 			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
 				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_NAME]
 				if viewBasename in viewSearchSource:
-					return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					if viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]:
+						return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					else:
+						return (None, None)
 		
 		# totally, return None and do nothing
 		return (None, None)
@@ -2659,9 +2715,9 @@ class SublimeSocketAPI:
 		if completions:
 			if viewIdentity in list(completions):
 				completion = completions[viewIdentity]
-				
-				self.server.deleteCompletion(viewIdentity)
-				return completion
+				if completion:
+					self.server.deleteCompletion(viewIdentity)
+					return completion
 
 		return None
 
