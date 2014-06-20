@@ -2507,13 +2507,19 @@ class SublimeSocketAPI:
 				viewSearchKey = viewKey.replace("\\", "&")
 				viewSearchKey = viewSearchKey.replace("/", "&")
 				if re.findall(viewSearchSource, viewSearchKey):
-					return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					if viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]:
+						return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					else:
+						return (None, None)
 			
 			# partial match in viewSearchSource. "ccc.d" vs "********* ccc.d ************"
 			for viewKey in viewKeys:
 				viewBasename = viewDict[viewKey][SublimeSocketAPISettings.VIEW_NAME]
 				if viewBasename in viewSearchSource:
-					return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					if viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF]:
+						return (viewDict[viewKey][SublimeSocketAPISettings.VIEW_SELF], name)
+					else:
+						return (None, None)
 		
 		# totally, return None and do nothing
 		return (None, None)
