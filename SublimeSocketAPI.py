@@ -41,6 +41,8 @@ class SublimeSocketAPI:
 
 		self.completionPool = {}
 
+		self.dataPool = []
+
 
 	## initialize results as the part of globalResults.
 	def addResultContext(self, resultIdentity):
@@ -274,6 +276,10 @@ class SublimeSocketAPI:
 
 			if case(SublimeSocketAPISettings.API_RUNCOMPLETION):
 				self.runCompletion(params)
+				break
+
+			if case(SublimeSocketAPISettings.API_POOL):
+				self.pool(params)
 				break
 
 			if case(SublimeSocketAPISettings.API_FORCELYSAVE):
@@ -2197,6 +2203,104 @@ class SublimeSocketAPI:
 			self.runAPI
 		)
 
+	def pool(self, params):
+		assert SublimeSocketAPISettings.POOL_METHOD in params, "pool require 'method' param."
+		method = params[SublimeSocketAPISettings.POOL_METHOD]
+		assert method in SublimeSocketAPISettings.POOL_METHODS, "method sould be in:" + ",".join(SublimeSocketAPISettings.POOL_METHODS)
+
+		# initialize return data as empty list
+		datas = []
+
+		if self.dataPool:
+			pass
+		else:
+			self.dataPool = []
+
+
+		for case in PythonSwitch(method):
+			if case(SublimeSocketAPISettings.POOL_METHOD_WRITE):
+				assert SublimeSocketAPISettings.POOL_DATA in params, "pool write require 'data' param."
+				writeData = params[SublimeSocketAPISettings.POOL_DATA]
+
+				datas.append(writeData)
+				
+				self.dataPool.append(writeData)
+				break
+
+			if case(SublimeSocketAPISettings.POOL_METHOD_OVERWRITE):
+				assert SublimeSocketAPISettings.POOL_DATA in params, "pool overwrite require 'data' param."
+				writeData = params[SublimeSocketAPISettings.POOL_DATA]
+
+				datas.append(writeData)
+
+				self.dataPool = []
+				self.dataPool.append(writeData)
+				break
+
+			if case(SublimeSocketAPISettings.POOL_METHOD_READ):
+				assert SublimeSocketAPISettings.POOL_DATA not in params, "pool read must run without 'data' param."
+				
+				if SublimeSocketAPISettings.POOL_RANGE in params:
+					rangeDict = params[SublimeSocketAPISettings.POOL_RANGE]
+					
+					fromParam = 0
+					toParam = 0
+
+					if SublimeSocketAPISettings.POOL_RANGE_FROM in rangeDict:
+						fromParam = rangeDict[SublimeSocketAPISettings.POOL_RANGE_FROM]
+
+					if SublimeSocketAPISettings.POOL_RANGE_TO in rangeDict:
+						toParam = rangeDict[SublimeSocketAPISettings.POOL_RANGE_TO]
+
+					assert 0 <= fromParam, "fromParam should not be negative."
+
+					if toParam == 0:
+						datas = self.dataPool[fromParam:]
+					else:
+						datas = self.dataPool[fromParam:toParam]
+
+				else:
+					datas = self.dataPool
+				break
+
+			if case(SublimeSocketAPISettings.POOL_METHOD_REWIND):
+				assert SublimeSocketAPISettings.POOL_DATA not in params, "pool rewind must run without 'data' param."
+				
+				if SublimeSocketAPISettings.POOL_RANGE in params:
+					rangeDict = params[SublimeSocketAPISettings.POOL_RANGE]
+					
+					fromParam = 0
+					toParam = 0
+
+					if SublimeSocketAPISettings.POOL_RANGE_FROM in rangeDict:
+						fromParam = rangeDict[SublimeSocketAPISettings.POOL_RANGE_FROM]
+
+					if SublimeSocketAPISettings.POOL_RANGE_TO in rangeDict:
+						toParam = rangeDict[SublimeSocketAPISettings.POOL_RANGE_TO]
+
+					assert 0 <= fromParam, "fromParam should not be negative."
+					
+					if toParam == 0:
+						datas = list(reversed(self.dataPool))[fromParam:]
+					else:
+						datas = list(reversed(self.dataPool))[fromParam:toParam]
+
+				else:
+					datas = list(reversed(self.dataPool))
+				break
+			
+			if case(SublimeSocketAPISettings.POOL_METHOD_RESET):
+				assert SublimeSocketAPISettings.POOL_DATA not in params, "pool reset must run without 'data' param."
+				self.dataPool = []
+				break
+
+		for data in datas:
+			SushiJSONParser.runSelectors(
+				params,
+				SublimeSocketAPISettings.POOL_INJECTIONS,
+				[data],
+				self.runAPI
+			)
 
 	def forcelySave(self, params):
 		(view, path, name) = self.internal_getViewAndPathFromViewOrName(params, SublimeSocketAPISettings.FORCELYSAVE_VIEW, SublimeSocketAPISettings.FORCELYSAVE_NAME)
