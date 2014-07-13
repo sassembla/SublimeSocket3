@@ -62,7 +62,7 @@ SSAPI_PREFIX_SUB			= "ss"
 SSAPI_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]->
 
 
-SSAPI_VERSION				= "1.6.0"
+SSAPI_VERSION				= "1.5.0"
 SSSOCKET_VERSION			= 3	# for Sublime Text 3
 
 
@@ -1626,45 +1626,6 @@ RUNCOMPLETION_FORMATTAIL	= "formattail"
 RUNCOMPLETION_POOL          = "pool"
 RUNCOMPLETION_SHOW          = "show"
 RUNCOMPLETION_INJECTIONS	= [RUNCOMPLETION_PATH, RUNCOMPLETION_NAME]
-
-
-"""
-@apiGroup pool
-@api {SushiJSON} pool:{JSON} pool data with read/write.
-
-@apiExample [example]
-pool: {
-    "method": "read+forward",
-    "index": 0,
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "[data]"
-            }
-        }
-    ]
-}
-
-@apiParam {String} method method for pool. write, overwrite, read, rewind or reset.
-@apiParam {String} data data for pooling. use with write (+new). 
-@apiParam {Dictionary(Optional)} range use with read. keys and values of range. [from]:Int and [to]:Int. both or a part will work.
-@apiParam {Selectors(Optional)} selectors selectors with each pooled data. if 2 data pooled, run twice.
-
-@apiSuccess {String} data pooled data, written or read.
-""" 
-API_POOL                = "pool"
-POOL_METHOD             = "method"
-POOL_METHOD_WRITE       = "write"
-POOL_METHOD_OVERWRITE   = "overwrite"
-POOL_METHOD_READ        = "read"
-POOL_METHOD_REWIND      = "rewind"
-POOL_METHOD_RESET       = "reset"
-POOL_RANGE              = "range"
-POOL_RANGE_FROM         = "from"
-POOL_RANGE_TO           = "to"
-POOL_METHODS            = [POOL_METHOD, POOL_METHOD_WRITE, POOL_METHOD_OVERWRITE, POOL_METHOD_READ, POOL_METHOD_REWIND, POOL_METHOD_RESET]
-POOL_DATA               = "data"
-POOL_INJECTIONS         = [POOL_DATA]
 
 
 """

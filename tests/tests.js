@@ -12,11 +12,6 @@ beforeafter>thebeforeafterselectors/selector: {
             }
         },
         {
-            "pool": {
-                "method": "reset"
-            }
-        },
-        {
             "showAtLog": {
                 "message": "test over"
             }
@@ -3780,7 +3775,7 @@ test>バージョンの出力/versionVerify: {
     "id": "code and message will enable.",
     "contains": {
         "showAtLog": {
-            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.6.0, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3804,7 +3799,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
     "id": "situation-please update possible",
     "contains": {
         "showAtLog": {
-            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.6.0, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3813,7 +3808,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 
 test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
-    "apiVersion": "1.6.0",
+    "apiVersion": "1.5.0",
     "injects": {
         "message": "reason"
     },
@@ -3828,7 +3823,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     "id": "situation-latest version",
     "contains": {
         "showAtLog": {
-            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.6.0, SublimeSocket 3"
+            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.5.0, SublimeSocket 3"
         }
     },
     "description": "not match."
@@ -3853,7 +3848,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.6.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -3878,7 +3873,7 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     "id": "situation-should update client",
     "contains": {
         "showAtLog": {
-            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.6.0, this client requires api version = 0.0.0, required api version is too old. please update this client."
+            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this client requires api version = 0.0.0, required api version is too old. please update this client."
         }
     },
     "description": "not match."
@@ -3903,7 +3898,7 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.6.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -4313,430 +4308,6 @@ test>get settings of view/createBuffer: {
     },
     "description": "not match."
 }
-
-
-test>pool new data for rerunning with new chamber./pool: {
-    "data": "sample data",
-    "method": "overwrite",
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool overwrite succeded",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>pool data for rerunning for add to the end of pool./pool: {
-    "data": "sample data",
-    "method": "write",
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool write succeded",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>read pooled data from pool./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "method": "read",
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool read succeded",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>read pooled data from pool with all range./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "method": "read",
-    "range": {
-        "from": 0,
-        "to": 1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool read succeded with range",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>read pooled data from pool with all range from 1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "method": "read",
-    "range": {
-        "from": 1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [1:] read succeded",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:] read succeded",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>read pooled data from pool with range 0 to -1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "method": "read",
-    "range": {
-        "to": -1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [:-1] read succeded1",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [:-1] read succeded2",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>read pooled data from pool with range 1 to -1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "data": "3rd sample data",
-    "method": "write"
-}->pool: {
-    "method": "read",
-    "range": {
-        "from": 1,
-        "to": -1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [1:-1] read succeded1",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:-1] read succeded2",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 3rd sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:-1] read succeded3",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>rewind pooled data from pool with all range from 1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "method": "rewind",
-    "range": {
-        "from": 1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [1:] rewind succeded1",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:] rewind succeded2",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>rewind pooled data from pool with range 0 to -1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "method": "rewind",
-    "range": {
-        "to": -1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [:-1] rewind succeded1",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [:-1] rewind succeded2",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>rewind pooled data from pool with range 1 to -1./pool: {
-    "data": "1st sample data",
-    "method": "overwrite"
-}->pool: {
-    "data": "2nd sample data",
-    "method": "write"
-}->pool: {
-    "data": "3rd sample data",
-    "method": "write"
-}->pool: {
-    "method": "rewind",
-    "range": {
-        "from": 1,
-        "to": -1
-    },
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "pooled, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool range [1:-1] rewind succeded1",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 1st sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:-1] rewind succeded2",
-    "notcontains": {
-        "showAtLog": {
-            "output": "pooled, 3rd sample data"
-        }
-    },
-    "description": "not match."
-}->assertResult: {
-    "id": "pool range [1:-1] rewind succeded3",
-    "contains": {
-        "showAtLog": {
-            "output": "pooled, 2nd sample data"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>filtering then pool./defineFilter: {
-    "name": "poolWithFilter",
-    "filters": [
-        {
-            "(.*)": {
-                "injects": {
-                    "source": "data"
-                },
-                "selectors": [
-                    {
-                        "pool<-data": {
-                            "method": "overwrite"
-                        }
-                    }
-                ]
-            }
-        }
-    ]
-}->filtering: {
-    "name": "poolWithFilter",
-    "source": "source for pool"
-}->pool: {
-    "method": "read",
-    "selectors": [
-        {
-            "showAtLog<-data": {
-                "format": "filered, [data]"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "pool with filter",
-    "contains": {
-        "showAtLog": {
-            "output": "filered, source for pool"
-        }
-    },
-    "description": "not match."
-}
-
-
-test>define filter, pool, then filtering./defineFilter: {
-    "name": "poolWithFilter2",
-    "filters": [
-        {
-            "(.*)": {
-                "selectors": [
-                    {
-                        "showAtLog<-source": {
-                            "format": "filter through pool, [source]"
-                        }
-                    }
-                ]
-            }
-        }
-    ]
-}->pool: {
-    "method": "overwrite",
-    "data": "source for pool, then filtering"
-}->pool: {
-    "method": "read",
-    "injects": {
-        "data": "source"
-    },
-    "selectors": [
-        {
-            "filtering<-source": {
-                "name": "poolWithFilter2"
-            }
-        }
-    ]
-}->assertResult: {
-    "id": "define filter, pool, then filtering.",
-    "contains": {
-        "showAtLog": {
-            "output": "filter through pool, source for pool, then filtering"
-        }
-    },
-    "description": "not match."
-}
-
-
-
-
 
 
 
