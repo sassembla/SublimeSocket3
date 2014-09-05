@@ -1742,6 +1742,9 @@ class SublimeSocketAPI:
 
 		else:
 			body = self.editorAPI.bodyOfView(view)
+			
+			if ":" in path:
+				path = path.split(":")[1]
 
 			modifiedPath = path.replace(":","&").replace("\\", "/")
 
