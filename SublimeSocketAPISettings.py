@@ -62,7 +62,7 @@ SSAPI_PREFIX_SUB			= "ss"
 SSAPI_DEFINE_DELIM			= "@"	# sublimesocket@commandA:{}->commandB:{}->commandC:[]->
 
 
-SSAPI_VERSION				= "1.5.0"
+SSAPI_VERSION				= "1.5.1"
 SSSOCKET_VERSION			= 3	# for Sublime Text 3
 
 
