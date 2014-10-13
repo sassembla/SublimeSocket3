@@ -3775,7 +3775,7 @@ test>バージョンの出力/versionVerify: {
     "id": "code and message will enable.",
     "contains": {
         "showAtLog": {
-            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2 VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.1, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3799,7 +3799,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
     "id": "situation-please update possible",
     "contains": {
         "showAtLog": {
-            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.0, this client requires api version = 1.-1.0, please update this client if possible."
+            "output": "2, VERIFIED/CLIENT_UPDATE: The current running SublimeSocket api version = 1.5.1, this client requires api version = 1.-1.0, please update this client if possible."
         }
     },
     "description": "not match."
@@ -3808,7 +3808,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが低いので�
 
 test>バージョンの精査、apiVersionmajorが一致、minorが一致、verifyの突破/versionVerify: {
     "socketVersion": 3,
-    "apiVersion": "1.5.0",
+    "apiVersion": "1.5.1",
     "injects": {
         "message": "reason"
     },
@@ -3823,7 +3823,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが一致、veri
     "id": "situation-latest version",
     "contains": {
         "showAtLog": {
-            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.5.0, SublimeSocket 3"
+            "output": "1, VERIFIED:\tThe current running SublimeSocket api version = 1.5.1, SublimeSocket 3"
         }
     },
     "description": "not match."
@@ -3848,7 +3848,7 @@ test>バージョンの精査、apiVersionmajorが一致、minorが高いので�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.1, this is out of date. please update SublimeSocket. this client requires SublimeSocket 1.100.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
@@ -3873,7 +3873,7 @@ test>バージョンの精査、apiVersionmajorが低いので、クライアン
     "id": "situation-should update client",
     "contains": {
         "showAtLog": {
-            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this client requires api version = 0.0.0, required api version is too old. please update this client."
+            "output": "-2, REFUSED/CLIENT_UPDATE:\tThe current running SublimeSocket api version = 1.5.1, this client requires api version = 0.0.0, required api version is too old. please update this client."
         }
     },
     "description": "not match."
@@ -3898,7 +3898,7 @@ test>バージョンの精査、apiVersionmajorが高いので、SSをupdateす�
     "id": "situation-should update ss",
     "contains": {
         "showAtLog": {
-            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.0, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
+            "output": "-1, REFUSED/SUBLIMESOCKET_UPDATE:\tThe current running SublimeSocket api version = 1.5.1, this is out of date. please update SublimeSocket. this client requires SublimeSocket 2.0.0, see https:\/\/github.com\/sassembla\/SublimeSocket"
         }
     },
     "description": "not match."
