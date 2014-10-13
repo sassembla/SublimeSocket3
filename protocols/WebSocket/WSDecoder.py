@@ -97,9 +97,9 @@ class WSDecoder:
 		if not len(mask_key):
 			raise ValueError(1011, 'Reading mask key failed.')
 		
-		print("test check empty string or force quit from client:SublimeSocketAsset, len", length)
+		print("from SSA:len", length)
 		data = client.read(length)
-		
+		print("from SSA:data", data)
 		# python-switch
 		for case in PythonSwitch(opcode):
 			if case(OP_PING):
