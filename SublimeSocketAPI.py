@@ -2474,9 +2474,14 @@ class SublimeSocketAPI:
 		elif nameParamKey and nameParamKey in params:
 			name = params[nameParamKey]
 			
-			if name:
-				(view, name) = self.internal_detectViewInstance(name)
-				path = self.internal_detectViewPath(view)
+			if not name:
+				return (None, None, None)
+
+			if name == None:
+				return (None, None, None)
+
+			(view, name) = self.internal_detectViewInstance(name)
+			path = self.internal_detectViewPath(view)
 
 		if view != None and path:
 			return (view, path, name)
