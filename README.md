@@ -8,7 +8,7 @@ Control EditorAPI by inputted **JSON string**.
 
 You can construct **the chain of filters and events** that you want to do. 
 
-ver 1.4.1
+ver 1.4.2
 
 
 ##demos & samples
